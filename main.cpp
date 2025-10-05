@@ -16,3 +16,5 @@ int main() {
     std::cout << "Game closed successfully!" << std::endl;
     return 0;
 }
+
+// DLL FILES IN CMAKE-BUILD-DEBUG DIR PLAATSEN, KOPIEER DIE VAN DE SFML DIR
