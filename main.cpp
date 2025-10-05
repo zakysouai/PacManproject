@@ -1,25 +1,18 @@
-#include <SFML/Graphics.hpp>
+#include "Game.h"
 #include <iostream>
+#include <exception>
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(800, 600), "SFML 2.5.1 Test");
+    try {
+        // Create and run the game
+        PacMan::Game game(800, 600, "Pac-Man - Advanced Programming 2025");
+        game.run();
 
-    sf::CircleShape shape(50);
-    shape.setFillColor(sf::Color::Yellow);
-    shape.setPosition(375, 275);
-
-    while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
-                window.close();
-        }
-
-        window.clear();
-        window.draw(shape);
-        window.display();
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
     }
 
-    std::cout << "SFML 2.5.1 werkt!" << std::endl;
+    std::cout << "Game closed successfully!" << std::endl;
     return 0;
 }
