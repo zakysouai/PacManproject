@@ -1,16 +1,17 @@
+// src/representation/LevelState.h (UPDATE)
 #ifndef LEVELSTATE_H
 #define LEVELSTATE_H
 
 #include "State.h"
 #include "World.h"
 #include "Camera.h"
+#include "PacManView.h"
+#include "GhostView.h"
 #include <memory>
+#include <vector>
 
 namespace PacMan {
 
-    /**
-     * @brief State representing active gameplay
-     */
     class LevelState : public State {
     public:
         LevelState();
@@ -24,9 +25,14 @@ namespace PacMan {
 
     private:
         void renderMaze(sf::RenderWindow& window);
+        void renderEntities(sf::RenderWindow& window);
 
         std::unique_ptr<Logic::World> m_world;
         std::unique_ptr<Camera> m_camera;
+
+        // Entity views
+        std::unique_ptr<PacManView> m_pacmanView;
+        std::vector<std::unique_ptr<GhostView>> m_ghostViews;
     };
 
 } // namespace PacMan

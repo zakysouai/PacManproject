@@ -13,6 +13,12 @@ namespace PacMan {
         // Initialize stopwatch
         m_stopwatch = Stopwatch::getInstance();
 
+        // Load sprite sheet - BELANGRIJK!
+        auto spriteManager = SpriteManager::getInstance();
+        if (!spriteManager->loadSpriteSheet("../assets/sprites/sprite.png")) {
+            throw std::runtime_error("Failed to load sprite sheet! Make sure sprite.png is in ../assets/sprites/");
+        }
+
         // Start with menu state
         m_stateManager.pushState(std::make_unique<MenuState>());
     }
