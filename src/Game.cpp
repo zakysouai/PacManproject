@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "MenuState.h"
+#include "SpriteManager.h"
 #include "Stopwatch.h"
 
 namespace PacMan {
@@ -15,7 +16,7 @@ namespace PacMan {
 
         // Load sprite sheet - BELANGRIJK!
         auto spriteManager = SpriteManager::getInstance();
-        if (!spriteManager->loadSpriteSheet("../assets/sprites/sprite.png")) {
+        if (!spriteManager->loadSpriteSheet("../resources/sprite.png")) {
             throw std::runtime_error("Failed to load sprite sheet! Make sure sprite.png is in ../assets/sprites/");
         }
 
