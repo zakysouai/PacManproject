@@ -1,18 +1,17 @@
+// src/logic/World.h - UPDATED met file loading
 #ifndef WORLD_H
 #define WORLD_H
 
 #include "TileType.h"
 #include <vector>
 #include <memory>
+#include <string>
 
 namespace PacMan {
 namespace Logic {
 
 /**
  * @brief Represents the game world containing the maze and all entities
- *
- * The World uses normalized coordinates where the maze spans [-1, 1] in both dimensions.
- * This makes the game logic independent of screen resolution.
  */
 class World {
 public:
@@ -28,6 +27,13 @@ public:
      * @brief Load the standard Pac-Man maze layout
      */
     void loadStandardMaze();
+
+    /**
+     * @brief Load maze from a text file
+     * @param filename Path to the map file (e.g., "../resources/map.txt")
+     * @return true if loading succeeded, false otherwise
+     */
+    bool loadFromFile(const std::string& filename);
 
     /**
      * @brief Update game logic
@@ -53,25 +59,16 @@ public:
 
     /**
      * @brief Convert normalized coordinates to grid coordinates
-     * @param normalizedX X in range [-1, 1]
-     * @param normalizedY Y in range [-1, 1]
-     * @return Pair of grid coordinates
      */
     std::pair<int, int> normalizedToGrid(float normalizedX, float normalizedY) const;
 
     /**
      * @brief Convert grid coordinates to normalized coordinates
-     * @param gridX X coordinate in grid
-     * @param gridY Y coordinate in grid
-     * @return Pair of normalized coordinates
      */
     std::pair<float, float> gridToNormalized(int gridX, int gridY) const;
 
     /**
      * @brief Check if a position is walkable (not a wall)
-     * @param normalizedX X in range [-1, 1]
-     * @param normalizedY Y in range [-1, 1]
-     * @return true if position is walkable
      */
     bool isWalkable(float normalizedX, float normalizedY) const;
 
@@ -82,22 +79,23 @@ public:
 
     /**
      * @brief Get Pac-Man's spawn position in grid coordinates
-     * @return Pair of grid coordinates (x, y)
      */
     std::pair<int, int> getPacManSpawnPosition() const { return m_pacmanSpawn; }
 
     /**
-     * @brief Get Ghost spawn position in grid coordinates
-     * @return Pair of grid coordinates (x, y)
+     * @brief Get Ghost spawn positions in grid coordinates
+     * @return Vector of ghost spawn positions (can be multiple)
      */
-    std::pair<int, int> getGhostSpawnPosition() const { return m_ghostSpawn; }
+    const std::vector<std::pair<int, int>>& getGhostSpawnPositions() const {
+        return m_ghostSpawns;
+    }
 
 private:
     int m_width;
     int m_height;
     std::vector<std::vector<TileType>> m_maze;
     std::pair<int, int> m_pacmanSpawn;
-    std::pair<int, int> m_ghostSpawn;
+    std::vector<std::pair<int, int>> m_ghostSpawns;  // Meerdere ghost spawns mogelijk
 };
 
 } // namespace Logic
