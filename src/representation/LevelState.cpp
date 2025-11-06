@@ -151,9 +151,6 @@ void LevelState::renderMaze(sf::RenderWindow& window) {
 }
 
 void LevelState::renderEntities(sf::RenderWindow& window) {
-    // TODO: Krijg de actuele posities van entities uit de World
-    // Voor nu: dummy posities om sprites te testen
-
     int width = m_world->getWidth();
     int height = m_world->getHeight();
     sf::Vector2f tileSize = m_camera->getTileSize(width, height);
@@ -161,20 +158,29 @@ void LevelState::renderEntities(sf::RenderWindow& window) {
     // Schaal voor sprites (1 tile = 1 sprite)
     float spriteScale = tileSize.x / 16.0f;  // 16 is de base sprite size
 
-    // Render PacMan (bijvoorbeeld in het midden)
-    auto [pacmanNormX, pacmanNormY] = m_world->gridToNormalized(14, 15);
+    // Render PacMan op zijn spawn positie (waar de rode pijl wijst)
+    auto [pacmanGridX, pacmanGridY] = m_world->getPacManSpawnPosition();
+    auto [pacmanNormX, pacmanNormY] = m_world->gridToNormalized(pacmanGridX, pacmanGridY);
     sf::Vector2f pacmanPos = m_camera->normalizedToScreen(pacmanNormX, pacmanNormY);
     pacmanPos.x += tileSize.x * 0.5f;
     pacmanPos.y += tileSize.y * 0.5f;
     m_pacmanView->draw(window, pacmanPos, sf::Vector2f(spriteScale, spriteScale));
 
-    // Render Ghosts (bijvoorbeeld rondom het centrum)
-    std::vector<std::pair<int, int>> ghostPositions = {
-        {13, 14}, {14, 14}, {13, 15}, {14, 15}
+    // Render Ghosts op hun spawn positie (centrum)
+    auto [ghostGridX, ghostGridY] = m_world->getGhostSpawnPosition();
+
+    // Plaats de 4 ghosts naast elkaar in het centrum
+    std::vector<std::pair<int, int>> ghostOffsets = {
+        {-1, 0},  // Red: links van centrum
+        {0, 0},   // Pink: exact centrum
+        {1, 0},   // Blue: rechts van centrum
+        {0, 1}    // Orange: onder centrum
     };
 
-    for (size_t i = 0; i < m_ghostViews.size() && i < ghostPositions.size(); ++i) {
-        auto [gx, gy] = ghostPositions[i];
+    for (size_t i = 0; i < m_ghostViews.size() && i < ghostOffsets.size(); ++i) {
+        int gx = ghostGridX + ghostOffsets[i].first;
+        int gy = ghostGridY + ghostOffsets[i].second;
+
         auto [ghostNormX, ghostNormY] = m_world->gridToNormalized(gx, gy);
         sf::Vector2f ghostPos = m_camera->normalizedToScreen(ghostNormX, ghostNormY);
         ghostPos.x += tileSize.x * 0.5f;

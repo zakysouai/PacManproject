@@ -17,7 +17,7 @@ namespace PacMan {
         // Load sprite sheet - BELANGRIJK!
         auto spriteManager = SpriteManager::getInstance();
         if (!spriteManager->loadSpriteSheet("../resources/sprite.png")) {
-            throw std::runtime_error("Failed to load sprite sheet! Make sure sprite.png is in ../assets/sprites/");
+            throw std::runtime_error("Failed to load sprite sheet! Make sure sprite.png is in ../resources/");
         }
 
         // Start with menu state

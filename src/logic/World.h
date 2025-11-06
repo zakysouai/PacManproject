@@ -10,7 +10,7 @@ namespace Logic {
 
 /**
  * @brief Represents the game world containing the maze and all entities
- * 
+ *
  * The World uses normalized coordinates where the maze spans [-1, 1] in both dimensions.
  * This makes the game logic independent of screen resolution.
  */
@@ -80,10 +80,24 @@ public:
     int getHeight() const { return m_height; }
     const std::vector<std::vector<TileType>>& getMaze() const { return m_maze; }
 
+    /**
+     * @brief Get Pac-Man's spawn position in grid coordinates
+     * @return Pair of grid coordinates (x, y)
+     */
+    std::pair<int, int> getPacManSpawnPosition() const { return m_pacmanSpawn; }
+
+    /**
+     * @brief Get Ghost spawn position in grid coordinates
+     * @return Pair of grid coordinates (x, y)
+     */
+    std::pair<int, int> getGhostSpawnPosition() const { return m_ghostSpawn; }
+
 private:
     int m_width;
     int m_height;
     std::vector<std::vector<TileType>> m_maze;
+    std::pair<int, int> m_pacmanSpawn;
+    std::pair<int, int> m_ghostSpawn;
 };
 
 } // namespace Logic

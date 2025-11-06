@@ -6,8 +6,10 @@ namespace PacMan {
 namespace Logic {
 
 World::World(int width, int height) 
-    : m_width(width), m_height(height) {
-    
+    : m_width(width), m_height(height),
+      m_pacmanSpawn(14, 23),  // Pac-Man spawnt in onderste helft (waar rode pijl wijst)
+      m_ghostSpawn(14, 14) {   // Ghosts spawnen in het centrum
+
     // Initialize maze with empty tiles
     m_maze.resize(m_height);
     for (auto& row : m_maze) {
@@ -19,7 +21,7 @@ void World::loadStandardMaze() {
     // Standard Pac-Man maze layout (28x31 tiles is typical)
     // For simplicity, we'll create a 28x31 maze
     // W = Wall, . = Coin, P = Power Pellet, E = Empty, G = Ghost Spawn
-    
+
     const std::vector<std::string> mazeLayout = {
         "WWWWWWWWWWWWWWWWWWWWWWWWWWWW",
         "W............WW............W",
@@ -44,7 +46,7 @@ void World::loadStandardMaze() {
         "W............WW............W",
         "W.WWWW.WWWWW.WW.WWWWW.WWWW.W",
         "W.WWWW.WWWWW.WW.WWWWW.WWWW.W",
-        "W...WW.......  .......WW...W",
+        "W...WW.......  .......WW...W",  // Rij 23: Pac-Man spawn positie (14, 23)
         "WWW.WW.WW.WWWWWWWW.WW.WW.WWW",
         "WWW.WW.WW.WWWWWWWW.WW.WW.WWW",
         "W......WW....WW....WW......W",
@@ -53,14 +55,14 @@ void World::loadStandardMaze() {
         "W..........................W",
         "WWWWWWWWWWWWWWWWWWWWWWWWWWWW"
     };
-    
+
     // Resize maze to match layout
     m_height = static_cast<int>(mazeLayout.size());
     m_width = static_cast<int>(mazeLayout[0].length());
-    
+
     m_maze.clear();
     m_maze.resize(m_height);
-    
+
     for (int y = 0; y < m_height; ++y) {
         m_maze[y].resize(m_width);
         for (int x = 0; x < m_width; ++x) {
@@ -90,7 +92,7 @@ void World::loadStandardMaze() {
             }
         }
     }
-    
+
     // Add power pellets at corners
     if (m_width > 0 && m_height > 0) {
         m_maze[1][1] = TileType::PowerPellet;                    // Top-left
@@ -98,6 +100,10 @@ void World::loadStandardMaze() {
         m_maze[m_height - 2][1] = TileType::PowerPellet;         // Bottom-left
         m_maze[m_height - 2][m_width - 2] = TileType::PowerPellet; // Bottom-right
     }
+
+    // Update spawn positions based on actual maze
+    m_pacmanSpawn = {14, 23};  // Onderste helft, waar rode pijl wijst
+    m_ghostSpawn = {14, 14};   // Centrum van de maze (bij de G's)
 }
 
 void World::update(float deltaTime) {
