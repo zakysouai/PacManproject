@@ -7,7 +7,7 @@ find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
 # Collect all representation sources
 set(REPRESENTATION_SOURCES
         # Main
-        ../main.cpp
+        ${CMAKE_SOURCE_DIR}/main.cpp
         src/Game.cpp
         src/ConcreteFactory.cpp
 

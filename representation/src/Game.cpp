@@ -8,8 +8,6 @@ namespace pacman::representation {
 Game::Game()
     : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "PacMan - Advanced Programming") {
 
-    std::cout << "Game wordt gecalled" << std::endl;
-
     window.setFramerateLimit(FPS_LIMIT);
     
     // Start with MenuState
