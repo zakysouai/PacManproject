@@ -1,0 +1,20 @@
+#pragma once
+#include "EntityView.h"
+#include "logic/entities/Fruit.h"
+
+namespace pacman::representation {
+
+class FruitView : public EntityView {
+public:
+    FruitView(pacman::Fruit* model, const pacman::Camera& camera);
+    ~FruitView() override = default;
+    
+    void draw(sf::RenderWindow& window) override;
+    
+private:
+    pacman::Fruit* fruitModel;
+    
+    void loadTexture();
+};
+
+} // namespace pacman::representation
