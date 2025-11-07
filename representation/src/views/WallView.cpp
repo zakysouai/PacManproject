@@ -9,9 +9,15 @@ WallView::WallView(pacman::Wall* model, const pacman::Camera& camera)
 
 void WallView::setupRectangle() {
     float size = camera.getSpriteSize();
-    rectangle.setSize(sf::Vector2f(size, size));
+
+    // Make walls slightly larger to ensure no gaps (add 1 pixel overlap)
+    float sizeWithOverlap = size + 1.0f;
+
+    rectangle.setSize(sf::Vector2f(sizeWithOverlap, sizeWithOverlap));
     rectangle.setFillColor(sf::Color::Blue);
-    rectangle.setOrigin(size / 2, size / 2);
+
+    // Center the origin
+    rectangle.setOrigin(sizeWithOverlap / 2.0f, sizeWithOverlap / 2.0f);
 }
 
 void WallView::draw(sf::RenderWindow& window) {

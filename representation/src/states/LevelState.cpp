@@ -22,9 +22,9 @@ void LevelState::onEnter() {
     // Create world
     world = std::make_unique<pacman::World>(factory.get());
     
-    // Load level
-    world->loadLevel("resources/maps/map_small.txt");
-    
+    // Load level - currently only loads walls
+    world->loadLevel("resources/maps/map.txt");  // Use the full map, not map_small.txt
+
     // Setup UI
     loadFont();
     setupUI();
@@ -45,12 +45,12 @@ void LevelState::setupUI() {
     scoreText.setCharacterSize(24);
     scoreText.setFillColor(sf::Color::Yellow);
     scoreText.setPosition(10, 10);
-    
+
     livesText.setFont(font);
     livesText.setCharacterSize(24);
     livesText.setFillColor(sf::Color::White);
     livesText.setPosition(10, 40);
-    
+
     levelText.setFont(font);
     levelText.setCharacterSize(24);
     levelText.setFillColor(sf::Color::White);
@@ -64,14 +64,15 @@ void LevelState::handleInput(const sf::Event& event) {
             finish(StateAction::PUSH, std::make_unique<PausedState>());
         }
     }
-    
+
+    // Only handle player input if PacMan exists
     handlePlayerInput();
 }
 
 void LevelState::handlePlayerInput() {
     auto* pacman = world->getPacMan();
-    if (!pacman) return;
-    
+    if (!pacman) return;  // Skip if PacMan doesn't exist yet
+
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
         pacman->setDirection(pacman::Direction::UP);
     } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
@@ -86,30 +87,35 @@ void LevelState::handlePlayerInput() {
 void LevelState::update(float deltaTime) {
     // Update world
     world->update(deltaTime);
-    
+
     // Update UI
     updateUI();
-    
-    // Check game state
-    checkGameState();
+
+    // Check game state (skip for now since we don't have PacMan/coins yet)
+    // checkGameState();
 }
 
 void LevelState::updateUI() {
     auto* score = world->getScore();
     auto* pacman = world->getPacMan();
-    
+
     if (score) {
         scoreText.setString("SCORE: " + std::to_string(score->getCurrentScore()));
     }
-    
+
     if (pacman) {
         livesText.setString("LIVES: " + std::to_string(pacman->getLives()));
+    } else {
+        livesText.setString("LIVES: N/A (PacMan not loaded yet)");
     }
-    
-    levelText.setString("LEVEL: " + std::to_string(currentLevel));
+
+    levelText.setString("LEVEL: " + std::to_string(currentLevel) + " (Map Test Mode)");
 }
 
 void LevelState::checkGameState() {
+    // Skip game state checks for now
+    // This will be re-enabled once we have PacMan, coins, etc.
+    /*
     if (world->isGameOver()) {
         // Game over
         int finalScore = world->getScore()->getCurrentScore();
@@ -119,6 +125,7 @@ void LevelState::checkGameState() {
         int finalScore = world->getScore()->getCurrentScore();
         finish(StateAction::SWITCH, std::make_unique<VictoryState>(true, finalScore));
     }
+    */
 }
 
 void LevelState::render(sf::RenderWindow& window) {
