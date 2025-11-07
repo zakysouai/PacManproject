@@ -23,7 +23,7 @@ void LevelState::onEnter() {
     world = std::make_unique<pacman::World>(factory.get());
     
     // Load level
-    world->loadLevel("resources/map.txt");
+    world->loadLevel("resources/maps/map.txt");
     
     // Setup UI
     loadFont();
