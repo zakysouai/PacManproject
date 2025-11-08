@@ -7,6 +7,14 @@ namespace pacman::representation {
 GhostView::GhostView(pacman::Ghost* model, const pacman::Camera& camera)
     : EntityView(model, camera), ghostModel(model) {
 
+    // ✅ Assign unique color based on creation order
+    static int ghostCounter = 0;
+    static const std::vector<std::string> colors = {"red", "pink", "cyan", "orange"};
+    ghostColor = colors[ghostCounter % colors.size()];
+    ghostCounter++;
+
+    std::cout << "GhostView: Created with color " << ghostColor << std::endl;
+
     // Get the shared sprite sheet texture
     auto& spriteManager = SpriteManager::getInstance();
     sprite.setTexture(spriteManager.getTexture());
@@ -72,11 +80,8 @@ std::string GhostView::getAnimationName() const {
         return "ghost_scared";
     }
 
-    // Otherwise, use ghost-type specific animation
-    // For now, we'll use "red" for all ghosts as placeholder
-    // In Stap 5, we can differentiate by ghost type
-
-    std::string ghostColor = "red";  // TODO: Get color based on ghost type
+    // Use the color assigned in constructor
+    // ghostColor is a member variable set during construction
 
     // Get direction suffix
     std::string directionSuffix = "up";  // Default
@@ -95,17 +100,20 @@ std::string GhostView::getAnimationName() const {
 void GhostView::updateSpriteFromAnimation() {
     auto& spriteManager = SpriteManager::getInstance();
 
+    // Get current sprite name from animation
     std::string spriteName = animationController.getCurrentSpriteName();
+
     if (spriteName.empty()) {
         return;
     }
 
+    // Look up and apply sprite rectangle
     try {
         if (spriteManager.hasSpriteRect(spriteName)) {
             sf::IntRect rect = spriteManager.getSpriteRect(spriteName);
             sprite.setTextureRect(rect);
 
-            // ✅ Origin in texture coordinates
+            // Set origin in texture coordinates (center of sprite)
             sprite.setOrigin(rect.width / 2.0f, rect.height / 2.0f);
 
             // Scale sprite appropriately
@@ -130,7 +138,6 @@ void GhostView::draw(sf::RenderWindow& window) {
 
 void GhostView::onNotify(const pacman::Event& event) {
     // Handle ghost-specific events
-    // (Currently handled through update() checking ghost state)
     EntityView::onNotify(event);
 }
 

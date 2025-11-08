@@ -2,6 +2,7 @@
 #include "EntityView.h"
 #include "logic/entities/Ghost.h"
 #include "representation/AnimationController.h"
+#include <string>
 
 namespace pacman::representation {
 
@@ -21,6 +22,9 @@ private:
     AnimationController animationController;
     pacman::Direction lastDirection = pacman::Direction::RIGHT;
     bool lastFearState = false;
+
+    // ✅ Ghost color (assigned at construction)
+    std::string ghostColor;
 
     /**
      * @brief Update animation based on ghost's current state and direction
