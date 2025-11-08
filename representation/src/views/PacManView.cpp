@@ -21,10 +21,6 @@ PacManView::PacManView(pacman::PacMan* model, const pacman::Camera& camera)
         std::cerr << "PacManView: Failed to load default animation: " << e.what() << std::endl;
     }
 
-    // Set initial sprite size and origin
-    float size = camera.getSpriteSize();
-    sprite.setOrigin(size / 2.0f, size / 2.0f);
-
     // Do initial update to set the first frame
     updateSpriteFromAnimation();
 }
@@ -90,7 +86,6 @@ void PacManView::updateSpriteFromAnimation() {
     std::string spriteName = animationController.getCurrentSpriteName();
 
     if (spriteName.empty()) {
-        // No valid sprite name (animation not playing or invalid)
         return;
     }
 
@@ -99,6 +94,9 @@ void PacManView::updateSpriteFromAnimation() {
         if (spriteManager.hasSpriteRect(spriteName)) {
             sf::IntRect rect = spriteManager.getSpriteRect(spriteName);
             sprite.setTextureRect(rect);
+
+            // ✅ Set origin in TEXTURE coordinates (center of the sprite rect)
+            sprite.setOrigin(rect.width / 2.0f, rect.height / 2.0f);
 
             // Scale the sprite to the appropriate size for the game
             float targetSize = camera.getSpriteSize();
@@ -116,29 +114,8 @@ void PacManView::updateSpriteFromAnimation() {
 void PacManView::draw(sf::RenderWindow& window) {
     if (!pacmanModel) return;
 
-    // DEBUG: Check sprite info
-    auto pos = sprite.getPosition();
-    auto rect = sprite.getTextureRect();
-    auto scale = sprite.getScale();
-
-    static int debugCounter = 0;
-    if (debugCounter++ % 60 == 0) {  // Print every 60 frames (1x per seconde)
-        std::cout << "PacMan sprite:"
-                  << " Pos(" << pos.x << "," << pos.y << ")"
-                  << " Rect(" << rect.left << "," << rect.top << "," << rect.width << "x" << rect.height << ")"
-                  << " Scale(" << scale.x << "," << scale.y << ")"
-                  << std::endl;
-    }
-
     // Draw the animated sprite
     window.draw(sprite);
-
-    // DEBUG: Draw a temporary circle at PacMan's position so we can see where he is
-    sf::CircleShape debugCircle(10.f);
-    debugCircle.setFillColor(sf::Color::Red);
-    debugCircle.setOrigin(10.f, 10.f);
-    debugCircle.setPosition(pos.x, pos.y);
-    window.draw(debugCircle);  // Red circle shows where PacMan should be
 }
 
 void PacManView::onNotify(const pacman::Event& event) {

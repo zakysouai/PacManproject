@@ -87,13 +87,16 @@ void LevelState::update(float deltaTime) {
     // Update world
     world->update(deltaTime);
 
+    for (const auto& view : factory->getViews()) {
+        view->update(deltaTime);
+    }
+
     // Update UI
     updateUI();
 
-    // Check game state (NOW ENABLED!)
+    // Check game state
     checkGameState();
 }
-
 void LevelState::updateUI() {
     auto* score = world->getScore();
     auto* pacman = world->getPacMan();

@@ -22,10 +22,6 @@ GhostView::GhostView(pacman::Ghost* model, const pacman::Camera& camera)
         std::cerr << "GhostView: Failed to load initial animation: " << e.what() << std::endl;
     }
 
-    // Set sprite size and origin
-    float size = camera.getSpriteSize();
-    sprite.setOrigin(size / 2.0f, size / 2.0f);
-
     // Initial update
     updateSpriteFromAnimation();
 }
@@ -99,18 +95,18 @@ std::string GhostView::getAnimationName() const {
 void GhostView::updateSpriteFromAnimation() {
     auto& spriteManager = SpriteManager::getInstance();
 
-    // Get current sprite name from animation
     std::string spriteName = animationController.getCurrentSpriteName();
-
     if (spriteName.empty()) {
         return;
     }
 
-    // Look up and apply sprite rectangle
     try {
         if (spriteManager.hasSpriteRect(spriteName)) {
             sf::IntRect rect = spriteManager.getSpriteRect(spriteName);
             sprite.setTextureRect(rect);
+
+            // ✅ Origin in texture coordinates
+            sprite.setOrigin(rect.width / 2.0f, rect.height / 2.0f);
 
             // Scale sprite appropriately
             float targetSize = camera.getSpriteSize();

@@ -17,6 +17,8 @@ void SpriteManager::loadSpriteSheet(const std::string& path) {
         throw std::runtime_error("Failed to load sprite sheet: " + path);
     }
 
+    spriteSheet.setSmooth(false);
+
     textureLoaded = true;
     std::cout << "Sprite sheet loaded: " << path << std::endl;
     std::cout << "Texture size: " << spriteSheet.getSize().x << "x"
@@ -80,124 +82,140 @@ void SpriteManager::initialize() {
     std::cout << "Defined " << animations.size() << " animations" << std::endl;
 }
 
+// ========================================
+// UPDATED SpriteManager::defineAllSprites()
+// Replace the existing method in representation/src/SpriteManager.cpp
+// ========================================
+
 void SpriteManager::defineAllSprites() {
-    // SPRITE SHEET LAYOUT (sprite.png - 936x939 pixels)
-    // - Left side: Ghosts in 6 colors × 8 rows
-    // - Middle: Fruits, dots, power pellets
-    // - Right side: PacMan sprites (yellow and gray variants)
+    // ===== PACMAN SPRITES =====
+    // Closed mouth (circle - used for all directions when closed)
+    defineSpriteRect("pacman_closed", sf::IntRect(853, 5, 33, 33));
 
-    // Sprite size is approximately 14-16 pixels
-    // Using 14×14 as base size with some 16×16 for larger sprites
+    // RIGHT direction
+    defineSpriteRect("pacman_right_closed", sf::IntRect(853, 5, 33, 33));
+    defineSpriteRect("pacman_right_half", sf::IntRect(853, 55, 30, 33));    // Half open
+    defineSpriteRect("pacman_right_open", sf::IntRect(853, 105, 23, 33));   // Wide open
 
-    // ===== PACMAN SPRITES (Right side - columns 20-22) =====
-    // Yellow PacMan facing RIGHT
-    defineSpriteRect("pacman_right_closed", sf::IntRect(868, 14, 14, 14));   // Full circle
-    defineSpriteRect("pacman_right_open", sf::IntRect(868, 28, 14, 14));      // Mouth open
+    // DOWN direction
+    defineSpriteRect("pacman_down_closed", sf::IntRect(853, 5, 33, 33));
+    defineSpriteRect("pacman_down_half", sf::IntRect(852, 205, 33, 30));    // Half open
+    defineSpriteRect("pacman_down_open", sf::IntRect(852, 255, 33, 23));    // Wide open
 
-    // Yellow PacMan facing LEFT
-    defineSpriteRect("pacman_left_closed", sf::IntRect(868, 42, 14, 14));
-    defineSpriteRect("pacman_left_open", sf::IntRect(868, 56, 14, 14));
+    // LEFT direction
+    defineSpriteRect("pacman_left_closed", sf::IntRect(853, 5, 33, 33));
+    defineSpriteRect("pacman_left_half", sf::IntRect(855, 355, 30, 33));    // Half open
+    defineSpriteRect("pacman_left_open", sf::IntRect(862, 405, 23, 33));    // Wide open
 
-    // Yellow PacMan facing UP
-    defineSpriteRect("pacman_up_closed", sf::IntRect(868, 70, 14, 14));
-    defineSpriteRect("pacman_up_open", sf::IntRect(868, 84, 14, 14));
+    // UP direction
+    defineSpriteRect("pacman_up_closed", sf::IntRect(853, 5, 33, 33));
+    defineSpriteRect("pacman_up_half", sf::IntRect(853, 507, 33, 30));      // Half open
+    defineSpriteRect("pacman_up_open", sf::IntRect(853, 564, 33, 23));      // Wide open
 
-    // Yellow PacMan facing DOWN
-    defineSpriteRect("pacman_down_closed", sf::IntRect(868, 98, 14, 14));
-    defineSpriteRect("pacman_down_open", sf::IntRect(868, 112, 14, 14));
+    // ===== GHOST RED =====
+    defineSpriteRect("ghost_red_right_1", sf::IntRect(1, 4, 35, 35));
+    defineSpriteRect("ghost_red_right_2", sf::IntRect(1, 4, 35, 35));  // Same sprite (no animation frames)
+    defineSpriteRect("ghost_red_down_1", sf::IntRect(1, 104, 35, 35));
+    defineSpriteRect("ghost_red_down_2", sf::IntRect(1, 104, 35, 35));
+    defineSpriteRect("ghost_red_left_1", sf::IntRect(1, 204, 35, 35));
+    defineSpriteRect("ghost_red_left_2", sf::IntRect(1, 204, 35, 35));
+    defineSpriteRect("ghost_red_up_1", sf::IntRect(1, 304, 35, 35));
+    defineSpriteRect("ghost_red_up_2", sf::IntRect(1, 304, 35, 35));
 
-    // ===== GHOST SPRITES (Left side - 6 colors) =====
-    // Ghost RED (column 0)
-    defineSpriteRect("ghost_red_up_1", sf::IntRect(0, 0, 14, 14));
-    defineSpriteRect("ghost_red_up_2", sf::IntRect(0, 14, 14, 14));
-    defineSpriteRect("ghost_red_down_1", sf::IntRect(0, 28, 14, 14));
-    defineSpriteRect("ghost_red_down_2", sf::IntRect(0, 42, 14, 14));
-    defineSpriteRect("ghost_red_left_1", sf::IntRect(0, 56, 14, 14));
-    defineSpriteRect("ghost_red_left_2", sf::IntRect(0, 70, 14, 14));
-    defineSpriteRect("ghost_red_right_1", sf::IntRect(0, 84, 14, 14));
-    defineSpriteRect("ghost_red_right_2", sf::IntRect(0, 98, 14, 14));
+    // ===== GHOST PINK =====
+    defineSpriteRect("ghost_pink_right_1", sf::IntRect(51, 4, 35, 35));
+    defineSpriteRect("ghost_pink_right_2", sf::IntRect(51, 4, 35, 35));
+    defineSpriteRect("ghost_pink_down_1", sf::IntRect(51, 104, 35, 35));
+    defineSpriteRect("ghost_pink_down_2", sf::IntRect(51, 104, 35, 35));
+    defineSpriteRect("ghost_pink_left_1", sf::IntRect(51, 204, 35, 35));
+    defineSpriteRect("ghost_pink_left_2", sf::IntRect(51, 204, 35, 35));
+    defineSpriteRect("ghost_pink_up_1", sf::IntRect(51, 304, 35, 35));
+    defineSpriteRect("ghost_pink_up_2", sf::IntRect(51, 304, 35, 35));
 
-    // Ghost PINK (column 1)
-    defineSpriteRect("ghost_pink_up_1", sf::IntRect(16, 0, 14, 14));
-    defineSpriteRect("ghost_pink_up_2", sf::IntRect(16, 14, 14, 14));
-    defineSpriteRect("ghost_pink_down_1", sf::IntRect(16, 28, 14, 14));
-    defineSpriteRect("ghost_pink_down_2", sf::IntRect(16, 42, 14, 14));
-    defineSpriteRect("ghost_pink_left_1", sf::IntRect(16, 56, 14, 14));
-    defineSpriteRect("ghost_pink_left_2", sf::IntRect(16, 70, 14, 14));
-    defineSpriteRect("ghost_pink_right_1", sf::IntRect(16, 84, 14, 14));
-    defineSpriteRect("ghost_pink_right_2", sf::IntRect(16, 98, 14, 14));
+    // ===== GHOST CYAN =====
+    defineSpriteRect("ghost_cyan_right_1", sf::IntRect(101, 4, 35, 35));
+    defineSpriteRect("ghost_cyan_right_2", sf::IntRect(101, 4, 35, 35));
+    defineSpriteRect("ghost_cyan_down_1", sf::IntRect(101, 104, 35, 35));
+    defineSpriteRect("ghost_cyan_down_2", sf::IntRect(101, 104, 35, 35));
+    defineSpriteRect("ghost_cyan_left_1", sf::IntRect(101, 204, 35, 35));
+    defineSpriteRect("ghost_cyan_left_2", sf::IntRect(101, 204, 35, 35));
+    defineSpriteRect("ghost_cyan_up_1", sf::IntRect(101, 304, 35, 35));
+    defineSpriteRect("ghost_cyan_up_2", sf::IntRect(101, 304, 35, 35));
 
-    // Ghost CYAN (column 2)
-    defineSpriteRect("ghost_cyan_up_1", sf::IntRect(32, 0, 14, 14));
-    defineSpriteRect("ghost_cyan_up_2", sf::IntRect(32, 14, 14, 14));
-    defineSpriteRect("ghost_cyan_down_1", sf::IntRect(32, 28, 14, 14));
-    defineSpriteRect("ghost_cyan_down_2", sf::IntRect(32, 42, 14, 14));
-    defineSpriteRect("ghost_cyan_left_1", sf::IntRect(32, 56, 14, 14));
-    defineSpriteRect("ghost_cyan_left_2", sf::IntRect(32, 70, 14, 14));
-    defineSpriteRect("ghost_cyan_right_1", sf::IntRect(32, 84, 14, 14));
-    defineSpriteRect("ghost_cyan_right_2", sf::IntRect(32, 98, 14, 14));
+    // ===== GHOST ORANGE =====
+    defineSpriteRect("ghost_orange_right_1", sf::IntRect(151, 4, 35, 35));
+    defineSpriteRect("ghost_orange_right_2", sf::IntRect(151, 4, 35, 35));
+    defineSpriteRect("ghost_orange_down_1", sf::IntRect(151, 104, 35, 35));
+    defineSpriteRect("ghost_orange_down_2", sf::IntRect(151, 104, 35, 35));
+    defineSpriteRect("ghost_orange_left_1", sf::IntRect(151, 204, 35, 35));
+    defineSpriteRect("ghost_orange_left_2", sf::IntRect(151, 204, 35, 35));
+    defineSpriteRect("ghost_orange_up_1", sf::IntRect(151, 304, 35, 35));
+    defineSpriteRect("ghost_orange_up_2", sf::IntRect(151, 304, 35, 35));
 
-    // Ghost ORANGE (column 3)
-    defineSpriteRect("ghost_orange_up_1", sf::IntRect(48, 0, 14, 14));
-    defineSpriteRect("ghost_orange_up_2", sf::IntRect(48, 14, 14, 14));
-    defineSpriteRect("ghost_orange_down_1", sf::IntRect(48, 28, 14, 14));
-    defineSpriteRect("ghost_orange_down_2", sf::IntRect(48, 42, 14, 14));
-    defineSpriteRect("ghost_orange_left_1", sf::IntRect(48, 56, 14, 14));
-    defineSpriteRect("ghost_orange_left_2", sf::IntRect(48, 70, 14, 14));
-    defineSpriteRect("ghost_orange_right_1", sf::IntRect(48, 84, 14, 14));
-    defineSpriteRect("ghost_orange_right_2", sf::IntRect(48, 98, 14, 14));
+    // ===== GHOST GREEN =====
+    defineSpriteRect("ghost_green_right_1", sf::IntRect(201, 4, 35, 35));
+    defineSpriteRect("ghost_green_right_2", sf::IntRect(201, 4, 35, 35));
+    defineSpriteRect("ghost_green_down_1", sf::IntRect(201, 104, 35, 35));
+    defineSpriteRect("ghost_green_down_2", sf::IntRect(201, 104, 35, 35));
+    defineSpriteRect("ghost_green_left_1", sf::IntRect(201, 204, 35, 35));
+    defineSpriteRect("ghost_green_left_2", sf::IntRect(201, 204, 35, 35));
+    defineSpriteRect("ghost_green_up_1", sf::IntRect(201, 304, 35, 35));
+    defineSpriteRect("ghost_green_up_2", sf::IntRect(201, 304, 35, 35));
 
-    // Ghost SCARED (gray/blue - middle area)
-    defineSpriteRect("ghost_scared_1", sf::IntRect(352, 14, 14, 14));
-    defineSpriteRect("ghost_scared_2", sf::IntRect(352, 28, 14, 14));
+    // ===== GHOST PURPLE =====
+    defineSpriteRect("ghost_purple_right_1", sf::IntRect(251, 4, 35, 35));
+    defineSpriteRect("ghost_purple_right_2", sf::IntRect(251, 4, 35, 35));
+    defineSpriteRect("ghost_purple_down_1", sf::IntRect(251, 104, 35, 35));
+    defineSpriteRect("ghost_purple_down_2", sf::IntRect(251, 104, 35, 35));
+    defineSpriteRect("ghost_purple_left_1", sf::IntRect(251, 204, 35, 35));
+    defineSpriteRect("ghost_purple_left_2", sf::IntRect(251, 204, 35, 35));
+    defineSpriteRect("ghost_purple_up_1", sf::IntRect(251, 304, 35, 35));
+    defineSpriteRect("ghost_purple_up_2", sf::IntRect(251, 304, 35, 35));
+
+    // ===== GHOST SCARED (fear mode) =====
+    // TODO: Find correct scared ghost coordinates with spritecow
+    defineSpriteRect("ghost_scared_1", sf::IntRect(353, 9, 33, 23));
+    defineSpriteRect("ghost_scared_2", sf::IntRect(351, 62, 37, 20));
 
     // ===== COLLECTIBLES =====
-    // Dot/Coin (small white dot)
     defineSpriteRect("coin", sf::IntRect(304, 98, 8, 8));
-
-    // Fruits (middle-right area)
-    defineSpriteRect("fruit_cherry", sf::IntRect(560, 28, 14, 14));
-    defineSpriteRect("fruit_strawberry", sf::IntRect(560, 42, 14, 14));
-    defineSpriteRect("fruit_orange", sf::IntRect(560, 56, 14, 14));
-    defineSpriteRect("fruit_apple", sf::IntRect(560, 70, 14, 14));
 }
 
 void SpriteManager::defineAllAnimations() {
     // ===== PACMAN ANIMATIONS =====
+    // Using closed → open → closed for smooth animation
 
-    // Walking RIGHT
     defineAnimation("pacman_walk_right", Animation{
-        {"pacman_right_closed", "pacman_right_open"},
+        {"pacman_right_closed", "pacman_right_half", "pacman_right_open", "pacman_right_half"},
         0.1f,  // 10 FPS
         true   // Loop
     });
 
-    // Walking LEFT
     defineAnimation("pacman_walk_left", Animation{
-        {"pacman_left_closed", "pacman_left_open"},
+        {"pacman_left_closed", "pacman_left_half", "pacman_left_open", "pacman_left_half"},
         0.1f,
         true
     });
 
-    // Walking UP
     defineAnimation("pacman_walk_up", Animation{
-        {"pacman_up_closed", "pacman_up_open"},
+        {"pacman_up_closed", "pacman_up_half", "pacman_up_open", "pacman_up_half"},
         0.1f,
         true
     });
 
-    // Walking DOWN
     defineAnimation("pacman_walk_down", Animation{
-        {"pacman_down_closed", "pacman_down_open"},
+        {"pacman_down_closed", "pacman_down_half", "pacman_down_open", "pacman_down_half"},
         0.1f,
         true
     });
 
     // ===== GHOST ANIMATIONS =====
+    // Note: Ghosts have no animation frames in this sprite sheet
+    // So we just use the same sprite twice for consistency with existing code
 
     // Ghost RED
-    defineAnimation("ghost_red_walk_up", Animation{
-        {"ghost_red_up_1", "ghost_red_up_2"},
+    defineAnimation("ghost_red_walk_right", Animation{
+        {"ghost_red_right_1", "ghost_red_right_2"},
         0.15f,
         true
     });
@@ -214,15 +232,15 @@ void SpriteManager::defineAllAnimations() {
         true
     });
 
-    defineAnimation("ghost_red_walk_right", Animation{
-        {"ghost_red_right_1", "ghost_red_right_2"},
+    defineAnimation("ghost_red_walk_up", Animation{
+        {"ghost_red_up_1", "ghost_red_up_2"},
         0.15f,
         true
     });
 
     // Ghost PINK
-    defineAnimation("ghost_pink_walk_up", Animation{
-        {"ghost_pink_up_1", "ghost_pink_up_2"},
+    defineAnimation("ghost_pink_walk_right", Animation{
+        {"ghost_pink_right_1", "ghost_pink_right_2"},
         0.15f,
         true
     });
@@ -239,15 +257,15 @@ void SpriteManager::defineAllAnimations() {
         true
     });
 
-    defineAnimation("ghost_pink_walk_right", Animation{
-        {"ghost_pink_right_1", "ghost_pink_right_2"},
+    defineAnimation("ghost_pink_walk_up", Animation{
+        {"ghost_pink_up_1", "ghost_pink_up_2"},
         0.15f,
         true
     });
 
     // Ghost CYAN
-    defineAnimation("ghost_cyan_walk_up", Animation{
-        {"ghost_cyan_up_1", "ghost_cyan_up_2"},
+    defineAnimation("ghost_cyan_walk_right", Animation{
+        {"ghost_cyan_right_1", "ghost_cyan_right_2"},
         0.15f,
         true
     });
@@ -264,15 +282,15 @@ void SpriteManager::defineAllAnimations() {
         true
     });
 
-    defineAnimation("ghost_cyan_walk_right", Animation{
-        {"ghost_cyan_right_1", "ghost_cyan_right_2"},
+    defineAnimation("ghost_cyan_walk_up", Animation{
+        {"ghost_cyan_up_1", "ghost_cyan_up_2"},
         0.15f,
         true
     });
 
     // Ghost ORANGE
-    defineAnimation("ghost_orange_walk_up", Animation{
-        {"ghost_orange_up_1", "ghost_orange_up_2"},
+    defineAnimation("ghost_orange_walk_right", Animation{
+        {"ghost_orange_right_1", "ghost_orange_right_2"},
         0.15f,
         true
     });
@@ -289,8 +307,8 @@ void SpriteManager::defineAllAnimations() {
         true
     });
 
-    defineAnimation("ghost_orange_walk_right", Animation{
-        {"ghost_orange_right_1", "ghost_orange_right_2"},
+    defineAnimation("ghost_orange_walk_up", Animation{
+        {"ghost_orange_up_1", "ghost_orange_up_2"},
         0.15f,
         true
     });
