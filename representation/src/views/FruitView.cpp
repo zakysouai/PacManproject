@@ -1,32 +1,56 @@
 #include "representation/views/FruitView.h"
+#include "representation/SpriteManager.h"
+
+#include <iostream>
 
 namespace pacman::representation {
 
 FruitView::FruitView(pacman::Fruit* model, const pacman::Camera& camera)
     : EntityView(model, camera), fruitModel(model) {
-    loadTexture();
+    loadSprite();
 }
 
-void FruitView::loadTexture() {
-    // TODO: Load sprite sheet
-    // texture.loadFromFile("resources/sprites/fruit.png");
-    // sprite.setTexture(texture);
+void FruitView::loadSprite() {
+    // Get the shared sprite sheet texture from SpriteManager
+    auto& spriteManager = SpriteManager::getInstance();
+    sprite.setTexture(spriteManager.getTexture());
+
+    // Load the fruit sprite
+    updateSpriteFromTexture();
+}
+
+void FruitView::updateSpriteFromTexture() {
+    auto& spriteManager = SpriteManager::getInstance();
+
+    try {
+        if (spriteManager.hasSpriteRect("fruit")) {
+            sf::IntRect rect = spriteManager.getSpriteRect("fruit");
+            sprite.setTextureRect(rect);
+
+            // ✅ Set origin in texture coordinates (center of sprite)
+            sprite.setOrigin(rect.width / 2.0f, rect.height / 2.0f);
+
+            // Scale sprite appropriately
+            float targetSize = camera.getSpriteSize();
+            float scaleX = targetSize / rect.width;
+            float scaleY = targetSize / rect.height;
+            sprite.setScale(scaleX, scaleY);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "FruitView: Error loading sprite: " << e.what() << std::endl;
+    }
+}
+
+void FruitView::update(float deltaTime) {
+    // Update sprite position
+    updateSpritePosition();
 }
 
 void FruitView::draw(sf::RenderWindow& window) {
-    if (!fruitModel || fruitModel->isCollected()) return;
-    
-    auto worldPos = fruitModel->getPosition();
-    auto screenPos = camera.worldToScreen(worldPos);
-    
-    // Draw as a simple shape for now
-    float size = camera.getSpriteSize() * 0.5f;
-    sf::RectangleShape rect(sf::Vector2f(size, size));
-    rect.setFillColor(sf::Color(255, 140, 0));  // Orange
-    rect.setOrigin(size / 2, size / 2);
-    rect.setPosition(screenPos.x, screenPos.y);
-    
-    window.draw(rect);
+    // Only draw if not collected
+    if (!fruitModel->isCollected()) {
+        window.draw(sprite);
+    }
 }
 
 } // namespace pacman::representation

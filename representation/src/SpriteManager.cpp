@@ -178,6 +178,9 @@ void SpriteManager::defineAllSprites() {
 
     // ===== COLLECTIBLES =====
     defineSpriteRect("coin", sf::IntRect(601, 153, 36, 36));
+
+    // ===== FRUITS =====
+    defineSpriteRect("fruit",sf::IntRect(601, 153, 36, 36));
 }
 
 void SpriteManager::defineAllAnimations() {

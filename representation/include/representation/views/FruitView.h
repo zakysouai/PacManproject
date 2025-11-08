@@ -10,11 +10,13 @@ public:
     ~FruitView() override = default;
     
     void draw(sf::RenderWindow& window) override;
-    
+    void update(float deltaTime) override;
+
 private:
     pacman::Fruit* fruitModel;
-    
-    void loadTexture();
+
+    void loadSprite();
+    void updateSpriteFromTexture();
 };
 
 } // namespace pacman::representation
