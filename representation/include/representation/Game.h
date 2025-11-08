@@ -21,7 +21,7 @@ private:
     void render();
     
     // Configuration
-    static constexpr int WINDOW_WIDTH = 800;
+    static constexpr int WINDOW_WIDTH = 1000;
     static constexpr int WINDOW_HEIGHT = 600;
     static constexpr int FPS_LIMIT = 60;
 };

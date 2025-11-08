@@ -173,12 +173,11 @@ void SpriteManager::defineAllSprites() {
     defineSpriteRect("ghost_purple_up_2", sf::IntRect(251, 304, 35, 35));
 
     // ===== GHOST SCARED (fear mode) =====
-    // TODO: Find correct scared ghost coordinates with spritecow
-    defineSpriteRect("ghost_scared_1", sf::IntRect(353, 9, 33, 23));
-    defineSpriteRect("ghost_scared_2", sf::IntRect(351, 62, 37, 20));
+    defineSpriteRect("ghost_scared_1", sf::IntRect(1, 554, 35, 35));
+    defineSpriteRect("ghost_scared_2", sf::IntRect(51, 554, 35, 35));
 
     // ===== COLLECTIBLES =====
-    defineSpriteRect("coin", sf::IntRect(304, 98, 8, 8));
+    defineSpriteRect("coin", sf::IntRect(601, 153, 36, 36));
 }
 
 void SpriteManager::defineAllAnimations() {

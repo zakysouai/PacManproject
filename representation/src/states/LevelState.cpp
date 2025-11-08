@@ -14,7 +14,7 @@ void LevelState::onEnter() {
     std::cout << "Entering LevelState (Level " << currentLevel << ")" << std::endl;
     
     // Create camera
-    camera = std::make_unique<pacman::Camera>(800, 600);
+    camera = std::make_unique<pacman::Camera>(1000, 600);
     
     // Create factory
     factory = std::make_unique<ConcreteFactory>(*camera);

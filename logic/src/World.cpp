@@ -185,11 +185,19 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     ghosts.clear();
 
     Position pacmanSpawnPos(0, 0);
-    Position ghostSpawnPos(0, 0);
     bool pacmanSpawned = false;
-    bool ghostSpawnSet = false;
     int wallCount = 0;
     int coinCount = 0;
+
+    // Track ghost spawn positions by color
+    Position redGhostPos(0, 0);
+    Position pinkGhostPos(0, 0);
+    Position cyanGhostPos(0, 0);
+    Position orangeGhostPos(0, 0);
+    bool redSpawned = false;
+    bool pinkSpawned = false;
+    bool cyanSpawned = false;
+    bool orangeSpawned = false;
 
     // Parse the map and create entities
     for (int row = 0; row < totalRows; ++row) {
@@ -209,32 +217,51 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
                 case ' ':  // Empty space with coin
                     coins.push_back(factory->createCoin(worldPos));
                     coinCount++;
-                    // Set ghost spawn to center-ish empty space if not yet set
-                    if (!ghostSpawnSet && row > totalRows / 3 && row < 2 * totalRows / 3) {
-                        ghostSpawnPos = worldPos;
-                        ghostSpawnSet = true;
-                    }
                     break;
 
-                case 'P':  // PacMan spawn position
-                case 'p':
+                case 'p':  // PacMan spawn position
+                case 'P':
                     pacmanSpawnPos = worldPos;
                     pacmanSpawned = true;
+                    std::cout << "Found PacMan spawn at grid(" << row << "," << col << ")" << std::endl;
                     break;
 
-                case 'G':  // Ghost spawn position
-                case 'g':
-                    ghostSpawnPos = worldPos;
-                    ghostSpawnSet = true;
+                case 'r':  // Red ghost spawn
+                case 'R':
+                    redGhostPos = worldPos;
+                    redSpawned = true;
+                    std::cout << "Found Red ghost spawn at grid(" << row << "," << col << ")" << std::endl;
                     break;
 
-                case 'F':  // Fruit
-                case 'f':
+                case 'o':  // Orange ghost spawn
+                case 'O':
+                    orangeGhostPos = worldPos;
+                    orangeSpawned = true;
+                    std::cout << "Found Orange ghost spawn at grid(" << row << "," << col << ")" << std::endl;
+                    break;
+
+                case 'g':  // Green/Cyan ghost spawn (we'll use cyan)
+                case 'G':
+                    cyanGhostPos = worldPos;
+                    cyanSpawned = true;
+                    std::cout << "Found Cyan ghost spawn at grid(" << row << "," << col << ")" << std::endl;
+                    break;
+
+                case 'i':  // pInk ghost spawn (using 'i' since 'p' is pacman)
+                case 'I':
+                    pinkGhostPos = worldPos;
+                    pinkSpawned = true;
+                    std::cout << "Found Pink ghost spawn at grid(" << row << "," << col << ")" << std::endl;
+                    break;
+
+                case 'c':  // Coin/Fruit (power pellet)
+                case 'C':
                     fruits.push_back(factory->createFruit(worldPos));
+                    std::cout << "Found Fruit spawn at grid(" << row << "," << col << ")" << std::endl;
                     break;
 
                 default:
-                    // Unknown character, treat as empty space
+                    // Unknown character, ignore
                     break;
             }
         }
@@ -246,42 +273,49 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     if (!pacmanSpawned) {
         // Default spawn near bottom center if not specified in map
         pacmanSpawnPos = Position(0, 0.7f);
+        std::cout << "Using default PacMan spawn position" << std::endl;
     }
     pacman = factory->createPacMan(pacmanSpawnPos);
     pacman->attach(&score);
     std::cout << "Created PacMan at (" << pacmanSpawnPos.x << ", " << pacmanSpawnPos.y << ")" << std::endl;
 
-    // Add fruits in corners if not specified in map
+    // Create ghosts at their spawn positions
+    // If no spawn position specified, use default center position
+    Position defaultGhostPos(0, 0);
+
+    // Ghost 1: Red (RANDOM type)
+    Position ghost1Pos = redSpawned ? redGhostPos : defaultGhostPos;
+    auto ghost1 = factory->createGhost(ghost1Pos, GhostType::RANDOM);
+    ghost1->setSpawnDelay(0.0f);
+    ghosts.push_back(std::move(ghost1));
+
+    // Ghost 2: Pink (CHASER type)
+    Position ghost2Pos = pinkSpawned ? pinkGhostPos : defaultGhostPos + Position(0.1f, 0);
+    auto ghost2 = factory->createGhost(ghost2Pos, GhostType::CHASER);
+    ghost2->setSpawnDelay(0.0f);
+    ghosts.push_back(std::move(ghost2));
+
+    // Ghost 3: Cyan (PREDICTOR type)
+    Position ghost3Pos = cyanSpawned ? cyanGhostPos : defaultGhostPos + Position(-0.1f, 0);
+    auto ghost3 = factory->createGhost(ghost3Pos, GhostType::PREDICTOR);
+    ghost3->setSpawnDelay(5.0f);
+    ghosts.push_back(std::move(ghost3));
+
+    // Ghost 4: Orange (CHASER type)
+    Position ghost4Pos = orangeSpawned ? orangeGhostPos : defaultGhostPos + Position(0, 0.1f);
+    auto ghost4 = factory->createGhost(ghost4Pos, GhostType::CHASER);
+    ghost4->setSpawnDelay(10.0f);
+    ghosts.push_back(std::move(ghost4));
+
+    std::cout << "Created 4 ghosts" << std::endl;
+
+    // Add default fruits if none specified in map
     if (fruits.empty()) {
         fruits.push_back(factory->createFruit(Position(-0.8f, -0.8f)));  // Top-left
         fruits.push_back(factory->createFruit(Position(0.8f, 0.8f)));    // Bottom-right
         std::cout << "Created 2 default fruits" << std::endl;
     }
 
-    // Create ghosts at ghost spawn position
-    if (!ghostSpawnSet) {
-        // Default ghost spawn near center
-        ghostSpawnPos = Position(0, -0.2f);
-    }
-
-    // Create 4 ghosts with different types
-    auto ghost1 = factory->createGhost(ghostSpawnPos, GhostType::RANDOM);
-    ghost1->setSpawnDelay(0.0f);
-    ghosts.push_back(std::move(ghost1));
-
-    auto ghost2 = factory->createGhost(ghostSpawnPos + Position(0.1f, 0), GhostType::CHASER);
-    ghost2->setSpawnDelay(0.0f);
-    ghosts.push_back(std::move(ghost2));
-
-    auto ghost3 = factory->createGhost(ghostSpawnPos + Position(-0.1f, 0), GhostType::PREDICTOR);
-    ghost3->setSpawnDelay(5.0f);
-    ghosts.push_back(std::move(ghost3));
-
-    auto ghost4 = factory->createGhost(ghostSpawnPos + Position(0, 0.1f), GhostType::CHASER);
-    ghost4->setSpawnDelay(10.0f);
-    ghosts.push_back(std::move(ghost4));
-
-    std::cout << "Created 4 ghosts at (" << ghostSpawnPos.x << ", " << ghostSpawnPos.y << ")" << std::endl;
     std::cout << "Map loading complete!" << std::endl;
 }
 
