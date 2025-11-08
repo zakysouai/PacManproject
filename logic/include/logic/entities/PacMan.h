@@ -23,7 +23,17 @@ public:
     // State
     bool isAlive() const { return lives > 0; }
     
-    float getCollisionRadius() const override { return 0.04f; }
+    /**
+     * @brief Get PacMan's collision radius
+     *
+     * PacMan's collision radius is set to exactly one tile size.
+     * A tile is approximately 0.182 world units (2.0 / 11), so the
+     * radius is 0.091 (half a tile). This ensures consistent collision
+     * detection and prevents any visual issues with walls.
+     *
+     * @return Collision radius = 0.091 (exactly half a tile)
+     */
+    float getCollisionRadius() const override { return 0.091f; }
     
 private:
     Direction currentDirection = Direction::NONE;

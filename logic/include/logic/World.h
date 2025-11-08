@@ -59,6 +59,18 @@ private:
     void handleCollisions();
     bool checkWallCollision(const Position& pos, Direction dir) const;
     
+    /**
+     * @brief Check if a position is blocked by walls
+     *
+     * This method checks if placing an entity with the given radius at the given
+     * position would cause a collision with any wall in the world.
+     *
+     * @param pos The position to check
+     * @param radius The collision radius of the entity
+     * @return true if the position is blocked (collision with wall), false otherwise
+     */
+    bool isPositionBlocked(const Position& pos, float radius) const;
+
     // Level loading helpers
     void parseMap(const std::string& mapFile);
     void spawnEntities(const std::vector<std::string>& mapData);

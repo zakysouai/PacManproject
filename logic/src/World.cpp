@@ -14,9 +14,29 @@ void World::update(float deltaTime) {
     // Update score timer
     score.updateComboTimer(deltaTime);
 
-    // Update PacMan
+    // Update PacMan with per-axis collision detection
     if (pacman) {
+        Position oldPos = pacman->getPosition();
         pacman->update(deltaTime);
+        Position newPos = pacman->getPosition();
+
+        // Per-axis collision detection to allow sliding along walls
+        Position finalPos = newPos;
+
+        // Check X-axis collision (horizontal movement)
+        Position testPosX(newPos.x, oldPos.y);
+        if (isPositionBlocked(testPosX, pacman->getCollisionRadius())) {
+            finalPos.x = oldPos.x;  // Block horizontal movement only
+        }
+
+        // Check Y-axis collision (vertical movement)
+        Position testPosY(oldPos.x, newPos.y);
+        if (isPositionBlocked(testPosY, pacman->getCollisionRadius())) {
+            finalPos.y = oldPos.y;  // Block vertical movement only
+        }
+
+        // Apply final position (may have blocked one axis but not the other)
+        pacman->setPosition(finalPos);
     }
 
     // Update ghosts
@@ -34,6 +54,25 @@ void World::update(float deltaTime) {
         event.value = 500 * currentLevel;  // Bonus points
         score.onNotify(event);
     }
+}
+
+bool World::isPositionBlocked(const Position& pos, float radius) const {
+    // Check collision with all walls
+    for (const auto& wall : walls) {
+        float distance = pos.distance(wall->getPosition());
+        // If distance between centers is less than sum of radii, there's a collision
+        if (distance < radius + wall->getCollisionRadius()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool World::checkWallCollision(const Position& pos, Direction dir) const {
+    // This is a simpler interface that uses isPositionBlocked internally
+    // We use PacMan's collision radius as default
+    const float defaultRadius = 0.04f;
+    return isPositionBlocked(pos, defaultRadius);
 }
 
 void World::handleCollisions() {

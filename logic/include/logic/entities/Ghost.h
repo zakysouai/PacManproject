@@ -35,7 +35,17 @@ public:
     void reset(const Position& centerPos);
     void respawn(const Position& centerPos);
     
-    float getCollisionRadius() const override { return 0.04f; }
+    /**
+     * @brief Get Ghost's collision radius
+     *
+     * Ghost collision radius is set to exactly one tile size, matching
+     * PacMan's collision radius. A tile is approximately 0.182 world units
+     * (2.0 / 11), so the radius is 0.091 (half a tile). This ensures
+     * consistent collision detection between all entities.
+     *
+     * @return Collision radius = 0.091 (exactly half a tile)
+     */
+    float getCollisionRadius() const override { return 0.091f; }
     
 private:
     GhostType type;
