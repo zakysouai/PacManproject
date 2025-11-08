@@ -41,7 +41,7 @@ float Camera::getSpriteSize() const {
     // Assuming approximately 11 rows (typical Pac-Man maze)
     const float approximateTileSize = 2.0f / 11.0f;  // ~0.182 world units per tile
 
-    return scale * approximateTileSize;
+    return scale * approximateTileSize * 0.8;
 }
 
 void Camera::setWindowSize(int width, int height) {
