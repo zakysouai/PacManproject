@@ -10,6 +10,9 @@ set(REPRESENTATION_SOURCES
         ${CMAKE_SOURCE_DIR}/main.cpp
         src/Game.cpp
         src/ConcreteFactory.cpp
+        include/representation/Animation.h
+        src/AnimationController.cpp
+        src/SpriteManager.cpp
 
         # States
         src/states/State.cpp

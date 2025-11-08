@@ -22,8 +22,8 @@ void LevelState::onEnter() {
     // Create world
     world = std::make_unique<pacman::World>(factory.get());
     
-    // Load level - currently only loads walls
-    world->loadLevel("resources/maps/map.txt");  // Use the full map, not map_small.txt
+    // Load level - now loads FULL map with all entities
+    world->loadLevel("resources/maps/map.txt");
 
     // Setup UI
     loadFont();
@@ -65,13 +65,12 @@ void LevelState::handleInput(const sf::Event& event) {
         }
     }
 
-    // Only handle player input if PacMan exists
     handlePlayerInput();
 }
 
 void LevelState::handlePlayerInput() {
     auto* pacman = world->getPacMan();
-    if (!pacman) return;  // Skip if PacMan doesn't exist yet
+    if (!pacman) return;
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
         pacman->setDirection(pacman::Direction::UP);
@@ -91,8 +90,8 @@ void LevelState::update(float deltaTime) {
     // Update UI
     updateUI();
 
-    // Check game state (skip for now since we don't have PacMan/coins yet)
-    // checkGameState();
+    // Check game state (NOW ENABLED!)
+    checkGameState();
 }
 
 void LevelState::updateUI() {
@@ -105,17 +104,12 @@ void LevelState::updateUI() {
 
     if (pacman) {
         livesText.setString("LIVES: " + std::to_string(pacman->getLives()));
-    } else {
-        livesText.setString("LIVES: N/A (PacMan not loaded yet)");
     }
 
-    levelText.setString("LEVEL: " + std::to_string(currentLevel) + " (Map Test Mode)");
+    levelText.setString("LEVEL: " + std::to_string(currentLevel));
 }
 
 void LevelState::checkGameState() {
-    // Skip game state checks for now
-    // This will be re-enabled once we have PacMan, coins, etc.
-    /*
     if (world->isGameOver()) {
         // Game over
         int finalScore = world->getScore()->getCurrentScore();
@@ -125,7 +119,6 @@ void LevelState::checkGameState() {
         int finalScore = world->getScore()->getCurrentScore();
         finish(StateAction::SWITCH, std::make_unique<VictoryState>(true, finalScore));
     }
-    */
 }
 
 void LevelState::render(sf::RenderWindow& window) {

@@ -1,77 +1,140 @@
 #include "representation/views/GhostView.h"
+#include "representation/SpriteManager.h"
 #include <iostream>
 
 namespace pacman::representation {
 
 GhostView::GhostView(pacman::Ghost* model, const pacman::Camera& camera)
     : EntityView(model, camera), ghostModel(model) {
-    loadTexture();
-}
 
-void GhostView::loadTexture() {
-    // TODO: Load sprite sheet
-    // texture.loadFromFile("resources/sprites/ghosts.png");
-    // sprite.setTexture(texture);
+    // Get the shared sprite sheet texture
+    auto& spriteManager = SpriteManager::getInstance();
+    sprite.setTexture(spriteManager.getTexture());
+
+    // Start with default animation
+    try {
+        std::string initialAnim = getAnimationName();
+        if (spriteManager.hasAnimation(initialAnim)) {
+            animationController.play(spriteManager.getAnimation(initialAnim));
+            std::cout << "GhostView: Started with animation: " << initialAnim << std::endl;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "GhostView: Failed to load initial animation: " << e.what() << std::endl;
+    }
+
+    // Set sprite size and origin
+    float size = camera.getSpriteSize();
+    sprite.setOrigin(size / 2.0f, size / 2.0f);
+
+    // Initial update
+    updateSpriteFromAnimation();
 }
 
 void GhostView::update(float deltaTime) {
-    EntityView::update(deltaTime);  // Update position
-    updateAnimation(deltaTime);
-    updateColor();
+    // Update sprite position
+    updateSpritePosition();
+
+    // Check if we need to switch animation
+    updateAnimation();
+
+    // Update animation controller
+    animationController.update(deltaTime);
+
+    // Update sprite texture rect
+    updateSpriteFromAnimation();
 }
 
-void GhostView::updateAnimation(float deltaTime) {
-    animationTimer += deltaTime;
-    
-    if (animationTimer >= 0.2f) {  // Animation speed
-        animationTimer = 0.0f;
-        currentFrame = (currentFrame + 1) % 2;  // 2 frames
+void GhostView::updateAnimation() {
+    // Check if ghost state or direction changed
+    pacman::Direction currentDirection = lastDirection; // TODO: Get from ghost movement
+    bool currentFearState = ghostModel->isFeared();
+
+    // If state changed, switch animation
+    if (currentFearState != lastFearState || currentDirection != lastDirection) {
+        std::string animationName = getAnimationName();
+
+        auto& spriteManager = SpriteManager::getInstance();
+        try {
+            if (spriteManager.hasAnimation(animationName)) {
+                animationController.play(spriteManager.getAnimation(animationName));
+                std::cout << "GhostView: Switched to animation: " << animationName << std::endl;
+            } else {
+                std::cerr << "GhostView: Animation not found: " << animationName << std::endl;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "GhostView: Error switching animation: " << e.what() << std::endl;
+        }
+
+        lastFearState = currentFearState;
+        lastDirection = currentDirection;
     }
 }
 
-void GhostView::updateColor() {
-    // Change color based on mode (fear mode = blue)
-    // This will be applied when drawing
+std::string GhostView::getAnimationName() const {
+    // If in fear mode, use scared animation (same for all ghosts)
+    if (ghostModel->isFeared()) {
+        return "ghost_scared";
+    }
+
+    // Otherwise, use ghost-type specific animation
+    // For now, we'll use "red" for all ghosts as placeholder
+    // In Stap 5, we can differentiate by ghost type
+
+    std::string ghostColor = "red";  // TODO: Get color based on ghost type
+
+    // Get direction suffix
+    std::string directionSuffix = "up";  // Default
+    switch (lastDirection) {
+        case pacman::Direction::UP:    directionSuffix = "up"; break;
+        case pacman::Direction::DOWN:  directionSuffix = "down"; break;
+        case pacman::Direction::LEFT:  directionSuffix = "left"; break;
+        case pacman::Direction::RIGHT: directionSuffix = "right"; break;
+        default: break;
+    }
+
+    // Construct animation name: "ghost_red_walk_up"
+    return "ghost_" + ghostColor + "_walk_" + directionSuffix;
+}
+
+void GhostView::updateSpriteFromAnimation() {
+    auto& spriteManager = SpriteManager::getInstance();
+
+    // Get current sprite name from animation
+    std::string spriteName = animationController.getCurrentSpriteName();
+
+    if (spriteName.empty()) {
+        return;
+    }
+
+    // Look up and apply sprite rectangle
+    try {
+        if (spriteManager.hasSpriteRect(spriteName)) {
+            sf::IntRect rect = spriteManager.getSpriteRect(spriteName);
+            sprite.setTextureRect(rect);
+
+            // Scale sprite appropriately
+            float targetSize = camera.getSpriteSize();
+            float scaleX = targetSize / rect.width;
+            float scaleY = targetSize / rect.height;
+            sprite.setScale(scaleX, scaleY);
+        } else {
+            std::cerr << "GhostView: Sprite not found: " << spriteName << std::endl;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "GhostView: Error updating sprite: " << e.what() << std::endl;
+    }
 }
 
 void GhostView::draw(sf::RenderWindow& window) {
     if (!ghostModel) return;
-    
-    auto worldPos = ghostModel->getPosition();
-    auto screenPos = camera.worldToScreen(worldPos);
-    
-    float radius = camera.getSpriteSize() * 0.4f;
-    sf::CircleShape circle(radius);
-    
-    // Color based on ghost type and mode
-    if (ghostModel->isFeared()) {
-        circle.setFillColor(sf::Color::Blue);
-    } else {
-        // Different colors for different ghost types
-        switch (ghostModel->getType()) {
-            case pacman::GhostType::RANDOM:
-                circle.setFillColor(sf::Color::Red);
-                break;
-            case pacman::GhostType::CHASER:
-                circle.setFillColor(sf::Color::Magenta);
-                break;
-            case pacman::GhostType::PREDICTOR:
-                circle.setFillColor(sf::Color::Cyan);
-                break;
-            default:
-                circle.setFillColor(sf::Color::Red);
-                break;
-        }
-    }
-    
-    circle.setOrigin(radius, radius);
-    circle.setPosition(screenPos.x, screenPos.y);
-    
-    window.draw(circle);
+
+    // Draw the animated sprite
+    window.draw(sprite);
 }
 
 void GhostView::onNotify(const pacman::Event& event) {
     // Handle ghost-specific events
+    // (Currently handled through update() checking ghost state)
     EntityView::onNotify(event);
 }
 

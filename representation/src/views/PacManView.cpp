@@ -1,67 +1,161 @@
 #include "representation/views/PacManView.h"
+#include "representation/SpriteManager.h"
 #include <iostream>
 
 namespace pacman::representation {
 
 PacManView::PacManView(pacman::PacMan* model, const pacman::Camera& camera)
     : EntityView(model, camera), pacmanModel(model) {
-    loadTexture();
-}
 
-void PacManView::loadTexture() {
-    // TODO: Load sprite sheet
-    // For now, create a simple yellow circle
-    // texture.loadFromFile("resources/sprites/pacman.png");
-    // sprite.setTexture(texture);
+    // Get the shared sprite sheet texture from SpriteManager
+    auto& spriteManager = SpriteManager::getInstance();
+    sprite.setTexture(spriteManager.getTexture());
+
+    // Start with a default animation (PacMan facing right, but not moving yet)
+    // We'll use "pacman_walk_right" as the default
+    // (Later we could add an "idle" animation if we want)
+    try {
+        animationController.play(spriteManager.getAnimation("pacman_walk_right"));
+        std::cout << "PacManView: Started with walk_right animation" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "PacManView: Failed to load default animation: " << e.what() << std::endl;
+    }
+
+    // Set initial sprite size and origin
+    float size = camera.getSpriteSize();
+    sprite.setOrigin(size / 2.0f, size / 2.0f);
+
+    // Do initial update to set the first frame
+    updateSpriteFromAnimation();
 }
 
 void PacManView::update(float deltaTime) {
-    EntityView::update(deltaTime);  // Update position
-    updateAnimation(deltaTime);
-    updateSpriteDirection();
+    // Update sprite position based on model
+    updateSpritePosition();
+
+    // Check if direction changed
+    pacman::Direction currentDirection = pacmanModel->getDirection();
+    if (currentDirection != lastDirection && currentDirection != pacman::Direction::NONE) {
+        switchAnimation(currentDirection);
+        lastDirection = currentDirection;
+    }
+
+    // Update the animation controller
+    animationController.update(deltaTime);
+
+    // Update sprite texture rect based on current animation frame
+    updateSpriteFromAnimation();
 }
 
-void PacManView::updateAnimation(float deltaTime) {
-    animationTimer += deltaTime;
+void PacManView::switchAnimation(pacman::Direction direction) {
+    auto& spriteManager = SpriteManager::getInstance();
 
-    if (animationTimer >= animationSpeed) {
-        animationTimer = 0.0f;
-        currentFrame = (currentFrame + 1) % totalFrames;
+    // Choose animation based on direction
+    std::string animationName;
+    switch (direction) {
+        case pacman::Direction::RIGHT:
+            animationName = "pacman_walk_right";
+            break;
+        case pacman::Direction::LEFT:
+            animationName = "pacman_walk_left";
+            break;
+        case pacman::Direction::UP:
+            animationName = "pacman_walk_up";
+            break;
+        case pacman::Direction::DOWN:
+            animationName = "pacman_walk_down";
+            break;
+        default:
+            // No valid direction, don't switch animation
+            return;
+    }
+
+    // Try to play the new animation
+    try {
+        if (spriteManager.hasAnimation(animationName)) {
+            animationController.play(spriteManager.getAnimation(animationName));
+            std::cout << "PacManView: Switched to animation: " << animationName << std::endl;
+        } else {
+            std::cerr << "PacManView: Animation not found: " << animationName << std::endl;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "PacManView: Error switching animation: " << e.what() << std::endl;
     }
 }
 
-void PacManView::updateSpriteDirection() {
-    // TODO: Rotate sprite based on pacmanModel->getDirection()
-    // For now, just update position
+void PacManView::updateSpriteFromAnimation() {
+    auto& spriteManager = SpriteManager::getInstance();
+
+    // Get the current sprite name from the animation controller
+    std::string spriteName = animationController.getCurrentSpriteName();
+
+    if (spriteName.empty()) {
+        // No valid sprite name (animation not playing or invalid)
+        return;
+    }
+
+    // Look up the sprite rectangle
+    try {
+        if (spriteManager.hasSpriteRect(spriteName)) {
+            sf::IntRect rect = spriteManager.getSpriteRect(spriteName);
+            sprite.setTextureRect(rect);
+
+            // Scale the sprite to the appropriate size for the game
+            float targetSize = camera.getSpriteSize();
+            float scaleX = targetSize / rect.width;
+            float scaleY = targetSize / rect.height;
+            sprite.setScale(scaleX, scaleY);
+        } else {
+            std::cerr << "PacManView: Sprite not found: " << spriteName << std::endl;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "PacManView: Error updating sprite: " << e.what() << std::endl;
+    }
 }
 
 void PacManView::draw(sf::RenderWindow& window) {
     if (!pacmanModel) return;
 
-    // For now, draw a simple yellow circle
-    auto worldPos = pacmanModel->getPosition();
-    auto screenPos = camera.worldToScreen(worldPos);
+    // DEBUG: Check sprite info
+    auto pos = sprite.getPosition();
+    auto rect = sprite.getTextureRect();
+    auto scale = sprite.getScale();
 
-    float radius = camera.getSpriteSize() * 0.4f;
-    sf::CircleShape circle(radius);
-    circle.setFillColor(sf::Color::Yellow);
-    circle.setOrigin(radius, radius);
-    circle.setPosition(screenPos.x, screenPos.y);
+    static int debugCounter = 0;
+    if (debugCounter++ % 60 == 0) {  // Print every 60 frames (1x per seconde)
+        std::cout << "PacMan sprite:"
+                  << " Pos(" << pos.x << "," << pos.y << ")"
+                  << " Rect(" << rect.left << "," << rect.top << "," << rect.width << "x" << rect.height << ")"
+                  << " Scale(" << scale.x << "," << scale.y << ")"
+                  << std::endl;
+    }
 
-    window.draw(circle);
+    // Draw the animated sprite
+    window.draw(sprite);
+
+    // DEBUG: Draw a temporary circle at PacMan's position so we can see where he is
+    sf::CircleShape debugCircle(10.f);
+    debugCircle.setFillColor(sf::Color::Red);
+    debugCircle.setOrigin(10.f, 10.f);
+    debugCircle.setPosition(pos.x, pos.y);
+    window.draw(debugCircle);  // Red circle shows where PacMan should be
 }
 
 void PacManView::onNotify(const pacman::Event& event) {
-    // Handle events like direction changes, death, etc.
+    // Handle PacMan-specific events
     switch (event.type) {
-    case pacman::EventType::DIRECTION_CHANGED:
-        updateSpriteDirection();
-        break;
-    case pacman::EventType::PACMAN_DIED:
-        std::cout << "PacMan died!" << std::endl;
-        break;
-    default:
-        break;
+        case pacman::EventType::DIRECTION_CHANGED:
+            // Direction change is already handled in update()
+            break;
+
+        case pacman::EventType::PACMAN_DIED:
+            std::cout << "PacManView: PacMan died! (death animation not implemented yet)" << std::endl;
+            // TODO: In Stap 5, add death animation
+            // animationController.play(SpriteManager::getInstance().getAnimation("pacman_death"));
+            break;
+
+        default:
+            break;
     }
 }
 
