@@ -14,45 +14,87 @@ void World::update(float deltaTime) {
     // Update score timer
     score.updateComboTimer(deltaTime);
 
-    // Update PacMan with per-axis collision detection
+    // Update PacMan with per-axis collision checking
     if (pacman) {
-        Position oldPos = pacman->getPosition();
-        pacman->update(deltaTime);
-        Position newPos = pacman->getPosition();
-
-        // Per-axis collision detection to allow sliding along walls
-        Position finalPos = newPos;
-
-        // Check X-axis collision (horizontal movement)
-        Position testPosX(newPos.x, oldPos.y);
-        if (isPositionBlocked(testPosX, pacman->getCollisionRadius())) {
-            finalPos.x = oldPos.x;  // Block horizontal movement only
-        }
-
-        // Check Y-axis collision (vertical movement)
-        Position testPosY(oldPos.x, newPos.y);
-        if (isPositionBlocked(testPosY, pacman->getCollisionRadius())) {
-            finalPos.y = oldPos.y;  // Block vertical movement only
-        }
-
-        // Apply final position (may have blocked one axis but not the other)
-        pacman->setPosition(finalPos);
+        updatePacManWithCollisions(deltaTime);
     }
 
     // Update ghosts
     for (auto& ghost : ghosts) {
         ghost->update(deltaTime);
+        // TODO: Add ghost collision with walls later
     }
 
-    // Handle collisions
+    // Handle entity collisions (not wall collisions)
     handleCollisions();
 
     // Check level complete
     if (isLevelComplete()) {
         Event event;
         event.type = EventType::LEVEL_CLEARED;
-        event.value = 500 * currentLevel;  // Bonus points
+        event.value = 500 * currentLevel;
         score.onNotify(event);
+    }
+}
+
+void World::updatePacManWithCollisions(float deltaTime) {
+    Direction dir = pacman->getDirection();
+    if (dir == Direction::NONE) {
+        return;
+    }
+
+    Position currentPos = pacman->getPosition();
+    Position dirVector = getDirectionVector(dir);
+    float speed = pacman->getSpeed();
+
+    // Calculate full movement
+    Position movement = dirVector * speed * deltaTime;
+
+    // ✅ CRITICAL: Small epsilon for float precision
+    const float EPSILON = 0.001f;
+
+    // ✅ Per-axis collision detection with AABB
+    if (dir == Direction::LEFT || dir == Direction::RIGHT) {
+        // Horizontal movement - try X-axis first
+        Position testPos = Position(currentPos.x + movement.x, currentPos.y);
+
+        // Temporarily set position to test collision
+        Position originalPos = pacman->getPosition();
+        pacman->setPosition(testPos);
+
+        bool collisionX = false;
+        for (const auto& wall : walls) {
+            if (pacman->intersects(*wall)) {
+                collisionX = true;
+                break;
+            }
+        }
+
+        if (collisionX) {
+            // Restore original position - can't move in X
+            pacman->setPosition(originalPos);
+        }
+        // else: keep the new position (movement successful)
+
+    } else if (dir == Direction::UP || dir == Direction::DOWN) {
+        // Vertical movement - try Y-axis first
+        Position testPos = Position(currentPos.x, currentPos.y + movement.y);
+
+        Position originalPos = pacman->getPosition();
+        pacman->setPosition(testPos);
+
+        bool collisionY = false;
+        for (const auto& wall : walls) {
+            if (pacman->intersects(*wall)) {
+                collisionY = true;
+                break;
+            }
+        }
+
+        if (collisionY) {
+            // Restore original position - can't move in Y
+            pacman->setPosition(originalPos);
+        }
     }
 }
 
@@ -68,11 +110,17 @@ bool World::isPositionBlocked(const Position& pos, float radius) const {
     return false;
 }
 
-bool World::checkWallCollision(const Position& pos, Direction dir) const {
-    // This is a simpler interface that uses isPositionBlocked internally
-    // We use PacMan's collision radius as default
-    const float defaultRadius = 0.04f;
-    return isPositionBlocked(pos, defaultRadius);
+bool World::checkWallCollision(const Position& pos, float radius) const {
+    // Check if position would collide with any wall
+    for (const auto& wall : walls) {
+        float distance = pos.distance(wall->getPosition());
+        float minDistance = radius + wall->getCollisionRadius();
+
+        if (distance < minDistance) {
+            return true;  // Collision detected!
+        }
+    }
+    return false;  // No collision, movement is safe
 }
 
 void World::handleCollisions() {
@@ -97,22 +145,42 @@ void World::handleCollisions() {
     }
 
     // Check ghost collisions
-    for (auto& ghost : ghosts) {
-        if (pacman->intersects(*ghost)) {
-            if (ghost->isFeared()) {
-                // Eat the ghost
-                Event event;
-                event.type = EventType::GHOST_EATEN;
-                event.value = 200;
-                score.onNotify(event);
-                ghost->respawn(Position(0, 0));  // Respawn at center
-            } else if (ghost->getMode() == GhostMode::CHASING) {
-                // PacMan dies
-                pacman->loseLife();
-                // Reset positions
-                reset();
+    // Only check if enough time has passed since last death (invulnerability period)
+    if (timeSinceLastDeath >= DEATH_COOLDOWN) {
+        for (auto& ghost : ghosts) {
+            if (pacman->intersects(*ghost)) {
+                if (ghost->isFeared()) {
+                    // Eat the ghost
+                    Event event;
+                    event.type = EventType::GHOST_EATEN;
+                    event.value = 200;
+                    score.onNotify(event);
+                    ghost->respawn(Position(0, 0));  // Respawn at center
+                } else if (ghost->getMode() == GhostMode::CHASING) {
+                    // PacMan dies
+                    std::cout << "PacMan hit by ghost! Lives before: " << pacman->getLives() << std::endl;
+
+                    pacman->loseLife();
+
+                    std::cout << "Lives after: " << pacman->getLives() << std::endl;
+
+                    // Reset death timer for invulnerability period
+                    timeSinceLastDeath = 0.0f;
+
+                    std::cout << "Starting " << DEATH_COOLDOWN << "s invulnerability period" << std::endl;
+
+                    // Reset positions
+                    reset();
+
+                    // Break to prevent multiple deaths in one frame
+                    break;
+                }
             }
         }
+    } else {
+        // Still in invulnerability period
+        // Optionally log this for debugging
+        // std::cout << "Invulnerable (" << (DEATH_COOLDOWN - timeSinceLastDeath) << "s remaining)" << std::endl;
     }
 }
 
@@ -138,12 +206,17 @@ void World::nextLevel() {
 }
 
 void World::reset() {
-    // Reset PacMan and ghosts to start positions
+    // Reset PacMan to his original spawn position from the map
     if (pacman) {
-        pacman->reset(Position(0, 0.5f));
+        pacman->reset(pacmanSpawnPosition);
+        std::cout << "Reset PacMan to spawn position ("
+                  << pacmanSpawnPosition.x << ", "
+                  << pacmanSpawnPosition.y << ")" << std::endl;
     }
+
+    // Reset ghosts to their center position
     for (auto& ghost : ghosts) {
-        ghost->reset(Position(0, 0));
+        ghost->reset(ghostCenterPosition);
     }
 }
 
@@ -311,9 +384,13 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     // Create PacMan
     if (!pacmanSpawned) {
         // Default spawn near bottom center if not specified in map
-        pacmanSpawnPos = Position(0, 0.7f);
+        pacmanSpawnPos = Position(0, 0.73f);
         std::cout << "Using default PacMan spawn position" << std::endl;
     }
+
+    // Save spawn position for later resets
+    pacmanSpawnPosition = pacmanSpawnPos;
+
     pacman = factory->createPacMan(pacmanSpawnPos);
     pacman->attach(&score);
     std::cout << "Created PacMan at (" << pacmanSpawnPos.x << ", " << pacmanSpawnPos.y << ")" << std::endl;
@@ -321,6 +398,9 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     // Create ghosts at their spawn positions
     // If no spawn position specified, use default center position
     Position defaultGhostPos(0, 0);
+
+    // Save ghost center for resets
+    ghostCenterPosition = defaultGhostPos;
 
     // Ghost 1: Red (RANDOM type)
     Position ghost1Pos = redSpawned ? redGhostPos : defaultGhostPos;

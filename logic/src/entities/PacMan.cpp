@@ -8,6 +8,14 @@ PacMan::PacMan(const Position& pos)
 }
 
 void PacMan::update(float deltaTime) {
+    // Update invulnerability timer
+    if (invulnerabilityTimer > 0.0f) {
+        invulnerabilityTimer -= deltaTime;
+        if (invulnerabilityTimer < 0.0f) {
+            invulnerabilityTimer = 0.0f;
+        }
+    }
+
     // Move in current direction
     if (currentDirection != Direction::NONE) {
         Position dirVector = getDirectionVector(currentDirection);
@@ -18,9 +26,8 @@ void PacMan::update(float deltaTime) {
 void PacMan::setDirection(Direction dir) {
     if (dir != currentDirection) {
         nextDirection = dir;
-        // Try to apply immediately, or wait for next intersection
         currentDirection = dir;
-        
+
         Event event;
         event.type = EventType::DIRECTION_CHANGED;
         notify(event);
@@ -28,9 +35,17 @@ void PacMan::setDirection(Direction dir) {
 }
 
 void PacMan::loseLife() {
+    // Don't lose a life if already invulnerable (prevents multiple rapid deaths)
+    if (invulnerabilityTimer > 0.0f) {
+        return;
+    }
+
     if (lives > 0) {
         lives--;
-        
+
+        // Activate invulnerability period
+        invulnerabilityTimer = INVULNERABILITY_DURATION;
+
         Event event;
         event.type = EventType::PACMAN_DIED;
         notify(event);
@@ -42,6 +57,9 @@ void PacMan::reset(const Position& startPos) {
     startPosition = startPos;
     currentDirection = Direction::NONE;
     nextDirection = Direction::NONE;
+
+    // Reset invulnerability timer (will be set by loseLife if called)
+    // Don't reset it here to allow invulnerability after respawn
 }
 
 } // namespace pacman

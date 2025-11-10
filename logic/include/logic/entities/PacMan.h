@@ -24,6 +24,16 @@ public:
     bool isAlive() const { return lives > 0; }
     
     /**
+     * @brief Check if PacMan is currently invulnerable
+     *
+     * After losing a life, PacMan is invulnerable for a short period
+     * to prevent losing multiple lives immediately.
+     *
+     * @return true if invulnerable, false otherwise
+     */
+    bool isInvulnerable() const { return invulnerabilityTimer > 0.0f; }
+
+    /**
      * @brief Get PacMan's collision radius
      *
      * PacMan's collision radius is set to exactly one tile size.
@@ -33,13 +43,17 @@ public:
      *
      * @return Collision radius = 0.091 (exactly half a tile)
      */
-    float getCollisionRadius() const override { return 0.06f; }
-    
+    float getCollisionRadius() const override { return 0.08f; }
+
 private:
     Direction currentDirection = Direction::NONE;
     Direction nextDirection = Direction::NONE;
     int lives = 3;
     Position startPosition;
+
+    // Invulnerability after losing a life
+    float invulnerabilityTimer = 0.0f;
+    const float INVULNERABILITY_DURATION = 2.0f;  // 2 seconds
 };
 
 } // namespace pacman

@@ -54,11 +54,19 @@ private:
     // Game state
     int currentLevel = 1;
     Score score;
-    
+
+    // Spawn positions (saved from map loading)
+    Position pacmanSpawnPosition = Position(0, 0);
+    Position ghostCenterPosition = Position(0, 0);
+
+    // Death tracking to prevent multiple deaths
+    float timeSinceLastDeath = 999.0f;  // Large number = no recent death
+    const float DEATH_COOLDOWN = 2.0f;   // 2 seconds invulnerability
+
     // Collision detection
     void handleCollisions();
     bool checkWallCollision(const Position& pos, Direction dir) const;
-    
+
     /**
      * @brief Check if a position is blocked by walls
      *
@@ -75,6 +83,10 @@ private:
     void parseMap(const std::string& mapFile);
     void spawnEntities(const std::vector<std::string>& mapData);
     Position gridToWorld(int row, int col, int totalRows, int totalCols) const;
+
+    // Collision detection helpers
+    void updatePacManWithCollisions(float deltaTime);
+    bool checkWallCollision(const Position& pos, float radius) const;
     
     // Difficulty scaling
     void applyDifficultyScaling();
