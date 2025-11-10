@@ -29,6 +29,23 @@ void PacManView::update(float deltaTime) {
     // Update sprite position based on model
     updateSpritePosition();
 
+    if (playingDeathAnimation) {
+        animationController.update(deltaTime);
+        updateSpriteFromAnimation();
+
+        // Check if death animation finished
+        if (animationController.isFinished()) {
+            playingDeathAnimation = false;
+            // Reset to default animation after death
+            try {
+                animationController.play(SpriteManager::getInstance().getAnimation("pacman_walk_right"));
+            } catch (const std::exception& e) {
+                std::cerr << "PacManView: Error resetting animation after death: " << e.what() << std::endl;
+            }
+        }
+        return;  // Skip normal animation updates while dying
+    }
+
     // Check if direction changed
     pacman::Direction currentDirection = pacmanModel->getDirection();
     if (currentDirection != lastDirection && currentDirection != pacman::Direction::NONE) {
@@ -119,20 +136,35 @@ void PacManView::draw(sf::RenderWindow& window) {
 }
 
 void PacManView::onNotify(const pacman::Event& event) {
-    // Handle PacMan-specific events
     switch (event.type) {
-        case pacman::EventType::DIRECTION_CHANGED:
-            // Direction change is already handled in update()
+    case pacman::EventType::DIRECTION_CHANGED:
+        // Direction change is already handled in update()
             break;
 
-        case pacman::EventType::PACMAN_DIED:
-            std::cout << "PacManView: PacMan died! (death animation not implemented yet)" << std::endl;
-            // TODO: In Stap 5, add death animation
-            // animationController.play(SpriteManager::getInstance().getAnimation("pacman_death"));
-            break;
+    case pacman::EventType::PACMAN_DIED:
+        std::cout << "PacManView: PacMan died! Playing death animation..." << std::endl;
 
-        default:
-            break;
+        // ✅ IMPLEMENT DEATH ANIMATION
+        playingDeathAnimation = true;
+
+        try {
+            // Play the death animation (non-looping)
+            auto& spriteManager = SpriteManager::getInstance();
+            if (spriteManager.hasAnimation("pacman_death")) {
+                animationController.play(spriteManager.getAnimation("pacman_death"));
+                std::cout << "PacManView: Death animation started" << std::endl;
+            } else {
+                std::cerr << "PacManView: Death animation not found!" << std::endl;
+                playingDeathAnimation = false;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "PacManView: Error playing death animation: " << e.what() << std::endl;
+            playingDeathAnimation = false;
+        }
+        break;
+
+    default:
+        break;
     }
 }
 

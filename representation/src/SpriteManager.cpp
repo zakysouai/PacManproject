@@ -112,6 +112,19 @@ void SpriteManager::defineAllSprites() {
     defineSpriteRect("pacman_up_half", sf::IntRect(853, 507, 33, 30));      // Half open
     defineSpriteRect("pacman_up_open", sf::IntRect(853, 564, 33, 23));      // Wide open
 
+    // ===== PACMAN DEATH ANIMATION =====
+    defineSpriteRect("pacman_death_0", sf::IntRect(353, 9, 33, 23));
+    defineSpriteRect("pacman_death_1", sf::IntRect(351, 62, 37, 20));
+    defineSpriteRect("pacman_death_2", sf::IntRect(351, 117, 37, 15));
+    defineSpriteRect("pacman_death_3", sf::IntRect(351, 170, 37, 12));
+    defineSpriteRect("pacman_death_4", sf::IntRect(351, 222, 37, 13));
+    defineSpriteRect("pacman_death_5", sf::IntRect(351, 272, 37, 15));
+    defineSpriteRect("pacman_death_6", sf::IntRect(353, 322, 33, 18));
+    defineSpriteRect("pacman_death_7", sf::IntRect(358, 372, 23, 18));
+    defineSpriteRect("pacman_death_8", sf::IntRect(363, 422, 13, 18));
+    defineSpriteRect("pacman_death_9", sf::IntRect(368, 472, 3, 15));
+    defineSpriteRect("pacman_death_10", sf::IntRect(356, 517, 27, 25));
+
     // ===== GHOST RED =====
     defineSpriteRect("ghost_red_right_1", sf::IntRect(1, 4, 35, 35));
     defineSpriteRect("ghost_red_right_2", sf::IntRect(1, 4, 35, 35));  // Same sprite (no animation frames)
@@ -320,6 +333,32 @@ void SpriteManager::defineAllAnimations() {
         {"ghost_scared_1", "ghost_scared_2"},
         0.2f,  // Slower animation
         true
+    });
+
+    defineAnimation("pacman_walk_down", Animation{
+    {"pacman_down_closed", "pacman_down_half", "pacman_down_open", "pacman_down_half"},
+    0.1f,
+    true
+    });
+
+    // ===== PACMAN DEATH ANIMATION =====
+    // Non-looping animation showing PacMan's death
+    defineAnimation("pacman_death", Animation{
+        {
+            "pacman_death_0",
+            "pacman_death_1",
+            "pacman_death_2",
+            "pacman_death_3",
+            "pacman_death_4",
+            "pacman_death_5",
+            "pacman_death_6",
+            "pacman_death_7",
+            "pacman_death_8",
+            "pacman_death_9",
+            "pacman_death_10"
+        },
+        0.1f,  // 10 FPS - adjust for desired speed
+        false  // DON'T loop - play once and stay on last frame
     });
 }
 

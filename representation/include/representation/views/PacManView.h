@@ -21,6 +21,8 @@ private:
     AnimationController animationController;
     pacman::Direction lastDirection = pacman::Direction::NONE;
 
+    bool playingDeathAnimation = false;
+
     /**
      * @brief Switch to the appropriate animation based on PacMan's direction
      *
