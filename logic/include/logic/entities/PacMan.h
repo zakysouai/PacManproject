@@ -15,6 +15,17 @@ public:
     Direction getDirection() const { return currentDirection; }
     Direction getNextDirection() const { return nextDirection; }
     
+    /**
+     * @brief Attempt to change PacMan's current direction
+     *
+     * This is called by World when it determines that a direction change
+     * is possible (e.g., at an intersection). It updates currentDirection
+     * and notifies observers for animation updates.
+     *
+     * @param newDir The new direction to change to
+     */
+    void tryChangeDirection(Direction newDir);
+
     // Lives
     int getLives() const { return lives; }
     void loseLife();

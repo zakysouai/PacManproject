@@ -37,7 +37,8 @@ void MenuState::setupTexts() {
     playButton.setSize(sf::Vector2f(200, 60));
     playButton.setPosition(300, 250);
     playButton.setFillColor(sf::Color(0, 100, 200));
-    
+
+    // TODO: zorg er voor dat de positie van de play button niet hardcoded is SO naar eray
     playButtonText.setFont(font);
     playButtonText.setString("PLAY");
     playButtonText.setCharacterSize(36);

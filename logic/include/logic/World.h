@@ -79,6 +79,33 @@ private:
      */
     bool isPositionBlocked(const Position& pos, float radius) const;
 
+    /**
+     * @brief Check if PacMan can move in a specific direction from a position
+     *
+     * This tests if moving a small distance in the given direction would cause
+     * a wall collision. Used to determine if a direction change is viable.
+     *
+     * @param pos The position to test from
+     * @param dir The direction to test
+     * @param radius The collision radius
+     * @return true if movement is possible, false if blocked by wall
+     */
+    bool canMoveInDirection(const Position& pos, Direction dir, float radius) const;
+
+    /**
+     * @brief Check if PacMan is at an intersection
+     *
+     * An intersection is a position where PacMan can turn perpendicular to
+     * the current direction. This is used to determine when direction changes
+     * should be allowed.
+     *
+     * @param pos Current position
+     * @param currentDir Current direction of movement
+     * @param radius Collision radius
+     * @return true if at an intersection, false otherwise
+     */
+    bool isAtIntersection(const Position& pos, Direction currentDir, float radius) const;
+
     // Level loading helpers
     void parseMap(const std::string& mapFile);
     void spawnEntities(const std::vector<std::string>& mapData);

@@ -16,18 +16,23 @@ void PacMan::update(float deltaTime) {
         }
     }
 
-    // Move in current direction
-    if (currentDirection != Direction::NONE) {
-        Position dirVector = getDirectionVector(currentDirection);
-        position = position + dirVector * speed * deltaTime;
-    }
+    // Movement is now handled by World::updatePacManWithCollisions
+    // to properly support direction changes at intersections
 }
 
 void PacMan::setDirection(Direction dir) {
-    if (dir != currentDirection) {
+    // Store the requested direction - it will be applied at the next intersection
+    // where this direction is viable
+    if (dir != nextDirection && dir != Direction::NONE) {
         nextDirection = dir;
-        currentDirection = dir;
+    }
+}
 
+void PacMan::tryChangeDirection(Direction newDir) {
+    if (newDir != currentDirection && newDir != Direction::NONE) {
+        currentDirection = newDir;
+
+        // Notify observers that direction changed (for animation)
         Event event;
         event.type = EventType::DIRECTION_CHANGED;
         notify(event);

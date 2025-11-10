@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <cmath>
 
 namespace pacman {
 
@@ -37,24 +38,107 @@ void World::update(float deltaTime) {
     }
 }
 
+bool World::canMoveInDirection(const Position& pos, Direction dir, float radius) const {
+    // Calculate where PacMan would be if moving in this direction
+    Position dirVector = getDirectionVector(dir);
+
+    // Test a small step ahead to see if this direction is viable
+    const float TEST_DISTANCE = 0.02f;  // Small test distance
+    Position testPos = Position(
+        pos.x + dirVector.x * TEST_DISTANCE,
+        pos.y + dirVector.y * TEST_DISTANCE
+    );
+
+    // Create a temporary bounding box at the test position
+    BoundingBox testBox(
+        testPos.x - radius,
+        testPos.y - radius,
+        radius * 2.0f,
+        radius * 2.0f
+    );
+
+    // Check if this test position would collide with any wall
+    for (const auto& wall : walls) {
+        if (testBox.intersects(wall->getBoundingBox())) {
+            return false;  // Can't move in this direction
+        }
+    }
+
+    return true;  // Direction is viable
+}
+
+bool World::isAtIntersection(const Position& pos, Direction currentDir, float radius) const {
+    // An intersection is where you can move in a direction perpendicular to your current movement
+
+    if (currentDir == Direction::NONE) {
+        return true;  // Not moving yet, so we can go any direction
+    }
+
+    // Get perpendicular directions
+    std::vector<Direction> perpendicular;
+    if (currentDir == Direction::UP || currentDir == Direction::DOWN) {
+        perpendicular = {Direction::LEFT, Direction::RIGHT};
+    } else {
+        perpendicular = {Direction::UP, Direction::DOWN};
+    }
+
+    // Check if we can move in at least one perpendicular direction
+    for (Direction dir : perpendicular) {
+        if (canMoveInDirection(pos, dir, radius)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void World::updatePacManWithCollisions(float deltaTime) {
-    Direction dir = pacman->getDirection();
-    if (dir == Direction::NONE) {
-        return;
+    Direction currentDir = pacman->getDirection();
+    Direction nextDir = pacman->getNextDirection();
+
+    // If nextDirection is different from currentDirection, try to switch at intersection
+    if (nextDir != Direction::NONE && nextDir != currentDir) {
+        // Check if we're at an intersection or if the next direction is opposite to current
+        bool isOpposite = (
+            (currentDir == Direction::UP && nextDir == Direction::DOWN) ||
+            (currentDir == Direction::DOWN && nextDir == Direction::UP) ||
+            (currentDir == Direction::LEFT && nextDir == Direction::RIGHT) ||
+            (currentDir == Direction::RIGHT && nextDir == Direction::LEFT)
+        );
+
+        // Allow direction change if:
+        // 1. At an intersection (can turn perpendicular)
+        // 2. Opposite direction (instant 180° turn)
+        // 3. Not moving yet (just started)
+        Position currentPos = pacman->getPosition();
+        float radius = pacman->getCollisionRadius();
+
+        if (isOpposite || currentDir == Direction::NONE ||
+            isAtIntersection(currentPos, currentDir, radius)) {
+
+            // Try to move in the next direction
+            if (canMoveInDirection(currentPos, nextDir, radius)) {
+                // Direction change is possible!
+                pacman->tryChangeDirection(nextDir);
+                currentDir = nextDir;  // Update for the movement below
+            }
+        }
+    }
+
+    // Now move in the current direction (which may have just been updated)
+    if (currentDir == Direction::NONE) {
+        return;  // Not moving
     }
 
     Position currentPos = pacman->getPosition();
-    Position dirVector = getDirectionVector(dir);
+    Position dirVector = getDirectionVector(currentDir);
     float speed = pacman->getSpeed();
 
     // Calculate full movement
     Position movement = dirVector * speed * deltaTime;
 
-    // ✅ CRITICAL: Small epsilon for float precision
-    const float EPSILON = 0.001f;
-
-    // ✅ Per-axis collision detection with AABB
-    if (dir == Direction::LEFT || dir == Direction::RIGHT) {
+    // Per-axis collision detection with AABB
+    if (currentDir == Direction::LEFT || currentDir == Direction::RIGHT) {
         // Horizontal movement - try X-axis first
         Position testPos = Position(currentPos.x + movement.x, currentPos.y);
 
@@ -74,9 +158,8 @@ void World::updatePacManWithCollisions(float deltaTime) {
             // Restore original position - can't move in X
             pacman->setPosition(originalPos);
         }
-        // else: keep the new position (movement successful)
 
-    } else if (dir == Direction::UP || dir == Direction::DOWN) {
+    } else if (currentDir == Direction::UP || currentDir == Direction::DOWN) {
         // Vertical movement - try Y-axis first
         Position testPos = Position(currentPos.x, currentPos.y + movement.y);
 
@@ -178,9 +261,8 @@ void World::handleCollisions() {
             }
         }
     } else {
-        // Still in invulnerability period
-        // Optionally log this for debugging
-        // std::cout << "Invulnerable (" << (DEATH_COOLDOWN - timeSinceLastDeath) << "s remaining)" << std::endl;
+        // Still in invulnerability period, increment timer
+        timeSinceLastDeath += Stopwatch::getInstance().getDeltaTime();
     }
 }
 
