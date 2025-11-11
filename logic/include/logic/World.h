@@ -13,6 +13,11 @@
 
 namespace pacman {
 
+struct MapDimensions {
+    int rows;
+    int cols;
+};
+
 class World {
 public:
     explicit World(AbstractFactory* factory);
@@ -40,6 +45,8 @@ public:
     
     // Score
     Score* getScore() { return &score; }
+
+    MapDimensions getMapDimensions() const { return {mapRows, mapCols}; }
     
 private:
     AbstractFactory* factory;  // Non-owning pointer
@@ -62,6 +69,9 @@ private:
     // Death tracking to prevent multiple deaths
     float timeSinceLastDeath = 999.0f;  // Large number = no recent death
     const float DEATH_COOLDOWN = 2.0f;   // 2 seconds invulnerability
+
+    int mapRows = 0;
+    int mapCols = 0;
 
     // Collision detection
     void handleCollisions();
@@ -114,6 +124,18 @@ private:
     // Collision detection helpers
     void updatePacManWithCollisions(float deltaTime);
     bool checkWallCollision(const Position& pos, float radius) const;
+
+    /**
+     * @brief Update a ghost's position with collision detection
+     *
+     * Similar to updatePacManWithCollisions, this method handles ghost movement
+     * with per-axis collision checking against walls. The ghost will stop moving
+     * when hitting a wall, but can slide along walls perpendicular to the collision.
+     *
+     * @param ghost Pointer to the ghost to update
+     * @param deltaTime Time elapsed since last update
+     */
+    void updateGhostWithCollisions(Ghost* ghost, float deltaTime);
     
     // Difficulty scaling
     void applyDifficultyScaling();

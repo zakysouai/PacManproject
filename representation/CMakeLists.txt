@@ -58,5 +58,13 @@ if(WIN32)
     file(COPY ${SFML_DLLS} DESTINATION ${CMAKE_BINARY_DIR})
 endif()
 
-# Copy resources to build directory
-file(COPY ${CMAKE_SOURCE_DIR}/resources DESTINATION ${CMAKE_BINARY_DIR})
+# ✅ Maak een custom target die ALTIJD runt
+add_custom_target(copy_resources ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/resources
+        ${CMAKE_BINARY_DIR}/resources
+        COMMENT "Copying resources..."
+)
+
+# Zorg dat PacManAP afhankelijk is van copy_resources
+add_dependencies(PacManAP copy_resources)

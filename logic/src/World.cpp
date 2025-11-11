@@ -20,10 +20,20 @@ void World::update(float deltaTime) {
         updatePacManWithCollisions(deltaTime);
     }
 
-    // Update ghosts
+    // ✅ UPDATE: Ghosts with AI and collision detection
     for (auto& ghost : ghosts) {
+        // Update internal state (spawn timer, fear mode timer, movement)
         ghost->update(deltaTime);
-        // TODO: Add ghost collision with walls later
+
+        // Update AI to choose direction (only if not spawning)
+        if (ghost->getMode() != GhostMode::SPAWNING && pacman) {
+            ghost->updateAI(*pacman, deltaTime);
+        }
+
+        // Apply collision detection with walls (only if actively moving)
+        if (ghost->getMode() != GhostMode::SPAWNING) {
+            updateGhostWithCollisions(ghost.get(), deltaTime);
+        }
     }
 
     // Handle entity collisions (not wall collisions)
@@ -309,6 +319,66 @@ void World::applyDifficultyScaling() {
     }
 }
 
+void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
+    Direction currentDir = ghost->getCurrentDirection();
+
+    // If ghost isn't moving, no collision detection needed
+    if (currentDir == Direction::NONE) {
+        return;
+    }
+
+    Position currentPos = ghost->getPosition();
+    Position dirVector = getDirectionVector(currentDir);
+    float speed = ghost->getSpeed();
+
+    // Calculate full movement for this frame
+    Position movement = dirVector * speed * deltaTime;
+
+    // Per-axis collision detection with AABB (same approach as PacMan)
+    if (currentDir == Direction::LEFT || currentDir == Direction::RIGHT) {
+        // ===== HORIZONTAL MOVEMENT =====
+        Position testPos = Position(currentPos.x + movement.x, currentPos.y);
+
+        // Temporarily move ghost to test position
+        Position originalPos = ghost->getPosition();
+        ghost->setPosition(testPos);
+
+        // Check collision with all walls
+        bool collisionX = false;
+        for (const auto& wall : walls) {
+            if (ghost->intersects(*wall)) {
+                collisionX = true;
+                break;
+            }
+        }
+
+        if (collisionX) {
+            // Restore original position - can't move in X direction
+            ghost->setPosition(originalPos);
+        }
+
+    } else if (currentDir == Direction::UP || currentDir == Direction::DOWN) {
+        // ===== VERTICAL MOVEMENT =====
+        Position testPos = Position(currentPos.x, currentPos.y + movement.y);
+
+        Position originalPos = ghost->getPosition();
+        ghost->setPosition(testPos);
+
+        bool collisionY = false;
+        for (const auto& wall : walls) {
+            if (ghost->intersects(*wall)) {
+                collisionY = true;
+                break;
+            }
+        }
+
+        if (collisionY) {
+            // Restore original position - can't move in Y direction
+            ghost->setPosition(originalPos);
+        }
+    }
+}
+
 Position World::gridToWorld(int row, int col, int totalRows, int totalCols) const {
     // Convert grid coordinates to normalized world coordinates
     // We need to preserve the aspect ratio of the map
@@ -345,6 +415,7 @@ void World::parseMap(const std::string& mapFile) {
     while (std::getline(file, line)) {
         if (!line.empty()) {
             mapData.push_back(line);
+            std::cout << "Map line " << mapData.size() << ": " << line << std::endl;
         }
     }
     file.close();
@@ -369,6 +440,9 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
             totalCols = row.length();
         }
     }
+
+    mapRows = totalRows;
+    mapCols = totalCols;
 
     std::cout << "Map size: " << totalRows << "x" << totalCols << std::endl;
 
@@ -519,5 +593,6 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
 
     std::cout << "Map loading complete!" << std::endl;
 }
+
 
 } // namespace pacman

@@ -1,4 +1,6 @@
 #include "logic/Camera.h"
+#include <algorithm>
+#include <iostream>
 
 namespace pacman {
 
@@ -7,21 +9,39 @@ Camera::Camera(int windowWidth, int windowHeight)
     calculateScale();
 }
 
-void Camera::calculateScale() {
-    // World is [-1, 1], so 2 units total
-    // We want to use the full window while maintaining aspect ratio
+void Camera::setMapDimensions(int rows, int cols) {
+    mapRows = rows;
+    mapCols = cols;
 
-    // Calculate scale based on both dimensions
-    float scaleX = windowWidth / 2.0f;   // Pixels per world unit in X
-    float scaleY = windowHeight / 2.0f;  // Pixels per world unit in Y
+    // ✅ Bereken world bounds op basis van aspect ratio
+    float mapAspectRatio = static_cast<float>(cols) / static_cast<float>(rows);
+    worldWidth = mapAspectRatio;
+    worldHeight = 1.0f;
+
+    // Herbereken scale
+    calculateScale();
+
+    std::cout << "Camera: Map " << rows << "x" << cols
+              << " → World bounds [" << -worldWidth << "," << worldWidth
+              << "] x [" << -worldHeight << "," << worldHeight << "]" << std::endl;
+}
+
+void Camera::calculateScale() {
+    // ✅ World bounds zijn nu [-worldWidth, worldWidth] x [-worldHeight, worldHeight]
+    // Totale world grootte: 2*worldWidth x 2*worldHeight
+
+    float scaleX = windowWidth / (2.0f * worldWidth);   // Pixels per world unit in X
+    float scaleY = windowHeight / (2.0f * worldHeight); // Pixels per world unit in Y
 
     // Use the smaller scale to ensure everything fits
     scale = std::min(scaleX, scaleY);
+
+    std::cout << "Camera: Scale = " << scale << " pixels/unit" << std::endl;
 }
 
 Position Camera::worldToScreen(const Position& worldPos) const {
-    // Transform from [-1, 1] to screen coordinates
-    // Center the content in the window
+    // ✅ Transform from [-worldWidth, worldWidth] x [-worldHeight, worldHeight]
+    //    to screen coordinates
 
     float screenX = windowWidth / 2.0f + worldPos.x * scale;
     float screenY = windowHeight / 2.0f + worldPos.y * scale;
@@ -36,12 +56,9 @@ Position Camera::screenToWorld(int screenX, int screenY) const {
 }
 
 float Camera::getSpriteSize() const {
-    // For a typical map (e.g., 20x11), each tile is about 2.0/11 = 0.18 world units
-    // We use height because that's what we normalized to [-1, 1]
-    // Assuming approximately 11 rows (typical Pac-Man maze)
-    const float approximateTileSize = 2.0f / 11.0f;  // ~0.182 world units per tile
-
-    return scale * approximateTileSize * 0.9;
+    // ✅ Gebruik mapRows voor tile grootte
+    const float approximateTileSize = 2.0f * worldHeight / mapRows;
+    return scale * approximateTileSize * 0.9f;
 }
 
 void Camera::setWindowSize(int width, int height) {

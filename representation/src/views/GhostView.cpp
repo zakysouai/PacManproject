@@ -38,19 +38,10 @@ void GhostView::update(float deltaTime) {
     // Update sprite position
     updateSpritePosition();
 
-    // Check if we need to switch animation
-    updateAnimation();
+    // ✅ Get current direction from ghost model
+    pacman::Direction currentDirection = ghostModel->getCurrentDirection();
 
-    // Update animation controller
-    animationController.update(deltaTime);
-
-    // Update sprite texture rect
-    updateSpriteFromAnimation();
-}
-
-void GhostView::updateAnimation() {
     // Check if ghost state or direction changed
-    pacman::Direction currentDirection = lastDirection; // TODO: Get from ghost movement
     bool currentFearState = ghostModel->isFeared();
 
     // If state changed, switch animation
@@ -72,6 +63,12 @@ void GhostView::updateAnimation() {
         lastFearState = currentFearState;
         lastDirection = currentDirection;
     }
+
+    // Update animation controller
+    animationController.update(deltaTime);
+
+    // Update sprite texture rect
+    updateSpriteFromAnimation();
 }
 
 std::string GhostView::getAnimationName() const {
@@ -80,17 +77,17 @@ std::string GhostView::getAnimationName() const {
         return "ghost_scared";
     }
 
-    // Use the color assigned in constructor
-    // ghostColor is a member variable set during construction
+    // ✅ Get direction from ghost model
+    pacman::Direction currentDirection = ghostModel->getCurrentDirection();
 
     // Get direction suffix
-    std::string directionSuffix = "up";  // Default
-    switch (lastDirection) {
+    std::string directionSuffix = "right";  // Default
+    switch (currentDirection) {
         case pacman::Direction::UP:    directionSuffix = "up"; break;
         case pacman::Direction::DOWN:  directionSuffix = "down"; break;
         case pacman::Direction::LEFT:  directionSuffix = "left"; break;
         case pacman::Direction::RIGHT: directionSuffix = "right"; break;
-        default: break;
+        default: directionSuffix = "right"; break;
     }
 
     // Construct animation name: "ghost_red_walk_up"
