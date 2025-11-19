@@ -23,7 +23,7 @@ void LevelState::onEnter() {
     world = std::make_unique<pacman::World>(factory.get());
     
     // Load level - now loads FULL map with all entities
-    world->loadLevel("resources/maps/map.txt");
+    world->loadLevel("../resources/maps/map.txt");
 
     // ✅ NIEUW: Update camera met werkelijke map dimensies
     auto dims = world->getMapDimensions();

@@ -17,7 +17,7 @@ Game::Game()
 
     try {
         // Load the sprite sheet
-        spriteManager.loadSpriteSheet("resources/sprites/sprite.png");
+        spriteManager.loadSpriteSheet("../resources/sprites/sprite.png");
 
         // Initialize all sprites and animations
         spriteManager.initialize();
