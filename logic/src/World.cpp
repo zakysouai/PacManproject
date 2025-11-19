@@ -20,20 +20,20 @@ void World::update(float deltaTime) {
         updatePacManWithCollisions(deltaTime);
     }
 
-    // ✅ UPDATE: Ghosts with AI and collision detection
+    // Update ghosts with AI and collision detection
     for (auto& ghost : ghosts) {
-        // Update internal state (spawn timer, fear mode timer, movement)
+        // Update internal state (spawn timer, fear mode timer)
         ghost->update(deltaTime);
 
-        // Update AI to choose direction (only if not spawning)
+        // ✅ UPDATED: AI only for CHASING/FEAR ghosts
+        // SPAWNING ghosts just move in their current direction (no AI decision)
         if (ghost->getMode() != GhostMode::SPAWNING && pacman) {
             ghost->updateAI(*pacman, deltaTime);
         }
 
-        // Apply collision detection with walls (only if actively moving)
-        if (ghost->getMode() != GhostMode::SPAWNING) {
-            updateGhostWithCollisions(ghost.get(), deltaTime);
-        }
+        // ✅ CRITICAL: ALL ghosts use collision detection, including SPAWNING
+        // This ensures ghosts NEVER go through walls
+        updateGhostWithCollisions(ghost.get(), deltaTime);
     }
 
     // Handle entity collisions (not wall collisions)
@@ -48,8 +48,9 @@ void World::update(float deltaTime) {
     }
 }
 
+// ✅ NOW PUBLIC: Moved from private to public for Ghost access
 bool World::canMoveInDirection(const Position& pos, Direction dir, float radius) const {
-    // Calculate where PacMan would be if moving in this direction
+    // Calculate where entity would be if moving in this direction
     Position dirVector = getDirectionVector(dir);
 
     // Test a small step ahead to see if this direction is viable
@@ -319,6 +320,7 @@ void World::applyDifficultyScaling() {
     }
 }
 
+// ✅ UPDATED: Improved ghost collision handling with forced direction changes
 void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
     Direction currentDir = ghost->getCurrentDirection();
 
@@ -334,7 +336,9 @@ void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
     // Calculate full movement for this frame
     Position movement = dirVector * speed * deltaTime;
 
-    // Per-axis collision detection with AABB (same approach as PacMan)
+    bool blocked = false;
+
+    // Per-axis collision detection with AABB
     if (currentDir == Direction::LEFT || currentDir == Direction::RIGHT) {
         // ===== HORIZONTAL MOVEMENT =====
         Position testPos = Position(currentPos.x + movement.x, currentPos.y);
@@ -344,17 +348,12 @@ void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
         ghost->setPosition(testPos);
 
         // Check collision with all walls
-        bool collisionX = false;
         for (const auto& wall : walls) {
             if (ghost->intersects(*wall)) {
-                collisionX = true;
+                blocked = true;
+                ghost->setPosition(originalPos);  // Restore
                 break;
             }
-        }
-
-        if (collisionX) {
-            // Restore original position - can't move in X direction
-            ghost->setPosition(originalPos);
         }
 
     } else if (currentDir == Direction::UP || currentDir == Direction::DOWN) {
@@ -364,17 +363,96 @@ void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
         Position originalPos = ghost->getPosition();
         ghost->setPosition(testPos);
 
-        bool collisionY = false;
         for (const auto& wall : walls) {
             if (ghost->intersects(*wall)) {
-                collisionY = true;
+                blocked = true;
+                ghost->setPosition(originalPos);  // Restore
                 break;
             }
         }
+    }
 
-        if (collisionY) {
-            // Restore original position - can't move in Y direction
-            ghost->setPosition(originalPos);
+    // ✅ UPDATED: Handle blocked ghosts differently based on mode
+    if (blocked) {
+        if (ghost->getMode() == GhostMode::SPAWNING) {
+            // ✅ SPAWNING ghosts: search for an exit
+            // Try all directions to find a way out of spawn center
+            std::vector<Direction> tryDirections = {
+                Direction::UP,    // Usually the exit is up
+                Direction::RIGHT,
+                Direction::DOWN,
+                Direction::LEFT
+            };
+
+            for (Direction dir : tryDirections) {
+                if (canMoveInDirection(currentPos, dir, ghost->getCollisionRadius())) {
+                    ghost->setCurrentDirection(dir);
+
+                    // Try to move in this direction
+                    Position newDirVector = getDirectionVector(dir);
+                    Position newMovement = newDirVector * speed * deltaTime;
+
+                    Position newTestPos;
+                    if (dir == Direction::LEFT || dir == Direction::RIGHT) {
+                        newTestPos = Position(currentPos.x + newMovement.x, currentPos.y);
+                    } else {
+                        newTestPos = Position(currentPos.x, currentPos.y + newMovement.y);
+                    }
+
+                    ghost->setPosition(newTestPos);
+                    bool newBlocked = false;
+                    for (const auto& wall : walls) {
+                        if (ghost->intersects(*wall)) {
+                            newBlocked = true;
+                            ghost->setPosition(currentPos);
+                            break;
+                        }
+                    }
+
+                    if (!newBlocked) {
+                        // Successfully found an exit direction!
+                        return;
+                    }
+                }
+            }
+
+            // If no direction works, stay at current position
+            ghost->setPosition(currentPos);
+
+        } else if (pacman) {
+            // ✅ CHASING/FEAR ghosts: use AI to choose new direction
+            Direction newDir = ghost->chooseDirection(*pacman);
+
+            if (newDir != Direction::NONE && newDir != currentDir) {
+                if (canMoveInDirection(currentPos, newDir, ghost->getCollisionRadius())) {
+                    ghost->setCurrentDirection(newDir);
+
+                    // Try to move in the new direction immediately
+                    Position newDirVector = getDirectionVector(newDir);
+                    Position newMovement = newDirVector * speed * deltaTime;
+
+                    Position newTestPos;
+                    if (newDir == Direction::LEFT || newDir == Direction::RIGHT) {
+                        newTestPos = Position(currentPos.x + newMovement.x, currentPos.y);
+                    } else {
+                        newTestPos = Position(currentPos.x, currentPos.y + newMovement.y);
+                    }
+
+                    ghost->setPosition(newTestPos);
+                    bool newBlocked = false;
+                    for (const auto& wall : walls) {
+                        if (ghost->intersects(*wall)) {
+                            newBlocked = true;
+                            ghost->setPosition(currentPos);
+                            break;
+                        }
+                    }
+
+                    if (newBlocked) {
+                        ghost->setPosition(currentPos);
+                    }
+                }
+            }
         }
     }
 }
@@ -508,14 +586,14 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
                 std::cout << "Found Orange ghost spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
 
-            case 'g':  // Green/Cyan ghost spawn (we'll use cyan)
+            case 'g':  // Green/Cyan ghost spawn
             case 'G':
                 cyanGhostPos = worldPos;
                 cyanSpawned = true;
                 std::cout << "Found Cyan ghost spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
 
-            case 'i':  // pInk ghost spawn (using 'i' since 'p' is pacman)
+            case 'i':  // pInk ghost spawn
             case 'I':
                 pinkGhostPos = worldPos;
                 pinkSpawned = true;
@@ -537,7 +615,7 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
 
     std::cout << "Created " << wallCount << " walls and " << coinCount << " coins" << std::endl;
 
-    // ✅ ONLY create PacMan if specified in map
+    // Create PacMan if specified in map
     if (pacmanSpawned) {
         pacmanSpawnPosition = pacmanSpawnPos;
         pacman = factory->createPacMan(pacmanSpawnPos);
@@ -545,10 +623,9 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
         std::cout << "Created PacMan at (" << pacmanSpawnPos.x << ", " << pacmanSpawnPos.y << ")" << std::endl;
     } else {
         std::cout << "WARNING: No PacMan ('p' or 'P') found in map - no PacMan spawned!" << std::endl;
-        // Don't create PacMan at all!
     }
 
-    // ✅ Calculate ghost center (for respawn after death)
+    // Calculate ghost center (for respawn after death)
     if (redSpawned || pinkSpawned || cyanSpawned || orangeSpawned) {
         Position sumPos(0, 0);
         int count = 0;
@@ -561,12 +638,13 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
         ghostCenterPosition = Position(0, 0);
     }
 
-    // ✅ ONLY create ghosts that exist in map
+    // ✅ UPDATED: Create ghosts and give them access to World
     int ghostsCreated = 0;
 
     if (redSpawned) {
         auto ghost1 = factory->createGhost(redGhostPos, GhostType::RANDOM);
         ghost1->setSpawnDelay(0.0f);
+        ghost1->setWorld(this);  // ✅ Give ghost access to world for collision checking
         ghosts.push_back(std::move(ghost1));
         ghostsCreated++;
     }
@@ -574,6 +652,7 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     if (pinkSpawned) {
         auto ghost2 = factory->createGhost(pinkGhostPos, GhostType::CHASER);
         ghost2->setSpawnDelay(0.0f);
+        ghost2->setWorld(this);  // ✅ Give ghost access to world
         ghosts.push_back(std::move(ghost2));
         ghostsCreated++;
     }
@@ -581,6 +660,7 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     if (cyanSpawned) {
         auto ghost3 = factory->createGhost(cyanGhostPos, GhostType::PREDICTOR);
         ghost3->setSpawnDelay(5.0f);
+        ghost3->setWorld(this);  // ✅ Give ghost access to world
         ghosts.push_back(std::move(ghost3));
         ghostsCreated++;
     }
@@ -588,14 +668,14 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     if (orangeSpawned) {
         auto ghost4 = factory->createGhost(orangeGhostPos, GhostType::CHASER);
         ghost4->setSpawnDelay(10.0f);
+        ghost4->setWorld(this);  // ✅ Give ghost access to world
         ghosts.push_back(std::move(ghost4));
         ghostsCreated++;
     }
 
-    std::cout << "Created " << ghostsCreated << " ghosts" << std::endl;
+    std::cout << "Created " << ghostsCreated << " ghosts (with world access)" << std::endl;
     std::cout << "Created " << fruits.size() << " fruits from map" << std::endl;
     std::cout << "Map loading complete!" << std::endl;
 }
-
 
 } // namespace pacman

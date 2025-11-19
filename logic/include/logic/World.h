@@ -47,17 +47,20 @@ public:
     Score* getScore() { return &score; }
 
     MapDimensions getMapDimensions() const { return {mapRows, mapCols}; }
-    
+
+    // ✅ NOW PUBLIC: Used by Ghost AI to determine viable directions
+    bool canMoveInDirection(const Position& pos, Direction dir, float radius) const;
+
 private:
     AbstractFactory* factory;  // Non-owning pointer
-    
+
     // Entities
     std::unique_ptr<PacMan> pacman;
     std::vector<std::unique_ptr<Ghost>> ghosts;
     std::vector<std::unique_ptr<Coin>> coins;
     std::vector<std::unique_ptr<Fruit>> fruits;
     std::vector<std::unique_ptr<Wall>> walls;
-    
+
     // Game state
     int currentLevel = 1;
     Score score;
@@ -77,43 +80,8 @@ private:
     void handleCollisions();
     bool checkWallCollision(const Position& pos, Direction dir) const;
 
-    /**
-     * @brief Check if a position is blocked by walls
-     *
-     * This method checks if placing an entity with the given radius at the given
-     * position would cause a collision with any wall in the world.
-     *
-     * @param pos The position to check
-     * @param radius The collision radius of the entity
-     * @return true if the position is blocked (collision with wall), false otherwise
-     */
     bool isPositionBlocked(const Position& pos, float radius) const;
 
-    /**
-     * @brief Check if PacMan can move in a specific direction from a position
-     *
-     * This tests if moving a small distance in the given direction would cause
-     * a wall collision. Used to determine if a direction change is viable.
-     *
-     * @param pos The position to test from
-     * @param dir The direction to test
-     * @param radius The collision radius
-     * @return true if movement is possible, false if blocked by wall
-     */
-    bool canMoveInDirection(const Position& pos, Direction dir, float radius) const;
-
-    /**
-     * @brief Check if PacMan is at an intersection
-     *
-     * An intersection is a position where PacMan can turn perpendicular to
-     * the current direction. This is used to determine when direction changes
-     * should be allowed.
-     *
-     * @param pos Current position
-     * @param currentDir Current direction of movement
-     * @param radius Collision radius
-     * @return true if at an intersection, false otherwise
-     */
     bool isAtIntersection(const Position& pos, Direction currentDir, float radius) const;
 
     // Level loading helpers
@@ -125,16 +93,7 @@ private:
     void updatePacManWithCollisions(float deltaTime);
     bool checkWallCollision(const Position& pos, float radius) const;
 
-    /**
-     * @brief Update a ghost's position with collision detection
-     *
-     * Similar to updatePacManWithCollisions, this method handles ghost movement
-     * with per-axis collision checking against walls. The ghost will stop moving
-     * when hitting a wall, but can slide along walls perpendicular to the collision.
-     *
-     * @param ghost Pointer to the ghost to update
-     * @param deltaTime Time elapsed since last update
-     */
+    // ✅ UPDATED: Now handles forced direction changes when ghost hits wall
     void updateGhostWithCollisions(Ghost* ghost, float deltaTime);
     
     // Difficulty scaling

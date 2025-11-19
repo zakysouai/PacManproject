@@ -1,5 +1,6 @@
 #include "logic/entities/Ghost.h"
 #include "logic/entities/PacMan.h"
+#include "logic/World.h"
 #include "logic/utils/Random.h"
 #include "logic/utils/Stopwatch.h"
 #include <cmath>
@@ -30,9 +31,8 @@ void Ghost::update(float deltaTime) {
         }
     }
 
-    // Move in current direction
-    Position dirVector = getDirectionVector(currentDirection);
-    position = position + dirVector * speed * deltaTime;
+    // ✅ FIXED: Movement is now handled by World::updateGhostWithCollisions()
+    // Don't move here - World will do collision-aware movement
 }
 
 void Ghost::updateAI(const PacMan& pacman, float deltaTime) {
@@ -41,7 +41,7 @@ void Ghost::updateAI(const PacMan& pacman, float deltaTime) {
         return;
     }
 
-    // Choose new direction at intersections
+    // ✅ UPDATED: Choose new direction only at intersections
     if (isAtIntersection()) {
         Direction newDirection = chooseDirection(pacman);
         if (newDirection != Direction::NONE && newDirection != currentDirection) {
@@ -68,6 +68,7 @@ Direction Ghost::chooseDirection(const PacMan& pacman) {
 }
 
 Direction Ghost::chooseRandomDirection() {
+    // ✅ UPDATED: Now gets viable directions (filtered by walls)
     auto viable = getViableDirections();
     if (viable.empty()) return currentDirection;
 
@@ -81,6 +82,7 @@ Direction Ghost::chooseRandomDirection() {
 
 Direction Ghost::chooseChasingDirection(const PacMan& pacman) {
     // Chase PacMan by minimizing Manhattan distance
+    // ✅ UPDATED: Now gets viable directions (filtered by walls)
     auto viable = getViableDirections();
     if (viable.empty()) return currentDirection;
 
@@ -90,11 +92,6 @@ Direction Ghost::chooseChasingDirection(const PacMan& pacman) {
 
     // Try each viable direction and pick the one that gets closest to PacMan
     for (Direction dir : viable) {
-        // Don't go backwards unless it's the only option
-        if (isOppositeDirection(dir, currentDirection) && viable.size() > 1) {
-            continue;
-        }
-
         // Calculate where we'd be if we moved in this direction
         Position dirVector = getDirectionVector(dir);
         Position testPos = position + dirVector * 0.1f;  // Small step ahead
@@ -113,6 +110,7 @@ Direction Ghost::chooseChasingDirection(const PacMan& pacman) {
 
 Direction Ghost::choosePredictorDirection(const PacMan& pacman) {
     // Move towards where PacMan is facing (predict future position)
+    // ✅ UPDATED: Now gets viable directions (filtered by walls)
     auto viable = getViableDirections();
     if (viable.empty()) return currentDirection;
 
@@ -128,11 +126,6 @@ Direction Ghost::choosePredictorDirection(const PacMan& pacman) {
 
     // Try each viable direction and pick the one that gets closest to predicted position
     for (Direction dir : viable) {
-        // Don't go backwards unless it's the only option
-        if (isOppositeDirection(dir, currentDirection) && viable.size() > 1) {
-            continue;
-        }
-
         Position testDirVector = getDirectionVector(dir);
         Position testPos = position + testDirVector * 0.1f;
 
@@ -149,6 +142,7 @@ Direction Ghost::choosePredictorDirection(const PacMan& pacman) {
 
 Direction Ghost::chooseFearDirection(const PacMan& pacman) {
     // Run away: maximize distance instead of minimize
+    // ✅ UPDATED: Now gets viable directions (filtered by walls)
     auto viable = getViableDirections();
     if (viable.empty()) return currentDirection;
 
@@ -158,11 +152,6 @@ Direction Ghost::chooseFearDirection(const PacMan& pacman) {
 
     // Try each viable direction and pick the one that gets furthest from PacMan
     for (Direction dir : viable) {
-        // Don't go backwards unless it's the only option
-        if (isOppositeDirection(dir, currentDirection) && viable.size() > 1) {
-            continue;
-        }
-
         Position dirVector = getDirectionVector(dir);
         Position testPos = position + dirVector * 0.1f;
 
@@ -209,21 +198,83 @@ void Ghost::respawn(const Position& centerPos) {
     mode = GhostMode::CHASING;
 }
 
+// ✅ UPDATED: Now actually checks if at intersection using world pointer
 bool Ghost::isAtIntersection() const {
-    // For simplified AI: always allow direction changes
-    // In more advanced implementation, check grid alignment
-    return true;
+    // If we don't have world access, fallback to always allowing direction changes
+    if (!world) {
+        return true;
+    }
+
+    // An intersection is where we can move in at least one perpendicular direction
+    std::vector<Direction> perpendicular;
+
+    if (currentDirection == Direction::UP || currentDirection == Direction::DOWN) {
+        perpendicular = {Direction::LEFT, Direction::RIGHT};
+    } else if (currentDirection == Direction::LEFT || currentDirection == Direction::RIGHT) {
+        perpendicular = {Direction::UP, Direction::DOWN};
+    } else {
+        // Not moving yet, so we can change direction anywhere
+        return true;
+    }
+
+    // Check if at least one perpendicular direction is open
+    float radius = getCollisionRadius();
+    for (Direction dir : perpendicular) {
+        if (world->canMoveInDirection(position, dir, radius)) {
+            return true;  // At an intersection!
+        }
+    }
+
+    return false;  // Not at intersection, continue in current direction
 }
 
+// ✅ UPDATED: Now filters out blocked directions using world pointer
 std::vector<Direction> Ghost::getViableDirections() const {
-    // Return all cardinal directions
-    // World will filter out directions blocked by walls
-    std::vector<Direction> directions;
-    directions.push_back(Direction::UP);
-    directions.push_back(Direction::DOWN);
-    directions.push_back(Direction::LEFT);
-    directions.push_back(Direction::RIGHT);
-    return directions;
+    std::vector<Direction> all = {
+        Direction::UP,
+        Direction::DOWN,
+        Direction::LEFT,
+        Direction::RIGHT
+    };
+
+    // If we don't have world access, return all directions (fallback)
+    if (!world) {
+        return all;
+    }
+
+    // Filter out directions that are blocked by walls or opposite to current direction
+    std::vector<Direction> viable;
+    float radius = getCollisionRadius();
+
+    for (Direction dir : all) {
+        // Don't allow 180° turns (going backwards) unless it's the only option
+        if (isOppositeDirection(dir, currentDirection)) {
+            continue;
+        }
+
+        // Check if this direction is viable (not blocked by wall)
+        if (world->canMoveInDirection(position, dir, radius)) {
+            viable.push_back(dir);
+        }
+    }
+
+    // If no viable directions found (shouldn't happen in well-designed maps),
+    // allow going backwards
+    if (viable.empty()) {
+        for (Direction dir : all) {
+            if (world->canMoveInDirection(position, dir, radius)) {
+                viable.push_back(dir);
+            }
+        }
+    }
+
+    // Last resort: if still no viable directions, return all
+    // (this means ghost is stuck, but at least it won't crash)
+    if (viable.empty()) {
+        return all;
+    }
+
+    return viable;
 }
 
 bool Ghost::isOppositeDirection(Direction dir1, Direction dir2) const {
