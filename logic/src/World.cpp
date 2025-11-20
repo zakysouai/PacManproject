@@ -320,7 +320,7 @@ void World::applyDifficultyScaling() {
     }
 }
 
-// ✅ UPDATED: Improved ghost collision handling with forced direction changes
+// ✅ UPDATED: Improved ghost collision handling
 void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
     Direction currentDir = ghost->getCurrentDirection();
 
@@ -372,89 +372,75 @@ void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
         }
     }
 
-    // ✅ UPDATED: Handle blocked ghosts differently based on mode
-    if (blocked) {
-        if (ghost->getMode() == GhostMode::SPAWNING) {
-            // ✅ SPAWNING ghosts: search for an exit
-            // Try all directions to find a way out of spawn center
-            std::vector<Direction> tryDirections = {
-                Direction::UP,    // Usually the exit is up
-                Direction::RIGHT,
-                Direction::DOWN,
-                Direction::LEFT
-            };
+    // ✅ FIXED: Only handle SPAWNING ghosts when blocked
+    // CHASING/FEAR ghosts change direction ONLY at intersections (via updateAI)
+    if (blocked && ghost->getMode() == GhostMode::SPAWNING) {
+        // ✅ SPAWNING ghosts: try to exit spawn center
+        // Strategy: Move towards ghost center position (horizontal), then up
 
-            for (Direction dir : tryDirections) {
-                if (canMoveInDirection(currentPos, dir, ghost->getCollisionRadius())) {
-                    ghost->setCurrentDirection(dir);
+        // Use the actual ghost center position calculated during map loading
+        Position centerPos = ghostCenterPosition;
 
-                    // Try to move in this direction
-                    Position newDirVector = getDirectionVector(dir);
-                    Position newMovement = newDirVector * speed * deltaTime;
+        // First priority: Move horizontally towards center if not already there
+        float horizontalDist = currentPos.x - centerPos.x;
 
-                    Position newTestPos;
-                    if (dir == Direction::LEFT || dir == Direction::RIGHT) {
-                        newTestPos = Position(currentPos.x + newMovement.x, currentPos.y);
-                    } else {
-                        newTestPos = Position(currentPos.x, currentPos.y + newMovement.y);
-                    }
+        std::vector<Direction> exitStrategy;
 
-                    ghost->setPosition(newTestPos);
-                    bool newBlocked = false;
-                    for (const auto& wall : walls) {
-                        if (ghost->intersects(*wall)) {
-                            newBlocked = true;
-                            ghost->setPosition(currentPos);
-                            break;
-                        }
-                    }
+        if (std::abs(horizontalDist) > 0.05f) {
+            // Not at center horizontally - move towards it first
+            if (horizontalDist > 0) {
+                exitStrategy.push_back(Direction::LEFT);  // Move left towards center
+            } else {
+                exitStrategy.push_back(Direction::RIGHT); // Move right towards center
+            }
+            exitStrategy.push_back(Direction::UP);    // Then try up
+            exitStrategy.push_back(Direction::DOWN);  // Last resort
+        } else {
+            // Already at center horizontally - prioritize going UP (typical exit)
+            exitStrategy.push_back(Direction::UP);
+            exitStrategy.push_back(Direction::RIGHT);
+            exitStrategy.push_back(Direction::LEFT);
+            exitStrategy.push_back(Direction::DOWN);
+        }
 
-                    if (!newBlocked) {
-                        // Successfully found an exit direction!
-                        return;
+        // Try directions in priority order
+        for (Direction dir : exitStrategy) {
+            if (canMoveInDirection(currentPos, dir, ghost->getCollisionRadius())) {
+                ghost->setCurrentDirection(dir);
+
+                // Try to move in this direction
+                Position newDirVector = getDirectionVector(dir);
+                Position newMovement = newDirVector * speed * deltaTime;
+
+                Position newTestPos;
+                if (dir == Direction::LEFT || dir == Direction::RIGHT) {
+                    newTestPos = Position(currentPos.x + newMovement.x, currentPos.y);
+                } else {
+                    newTestPos = Position(currentPos.x, currentPos.y + newMovement.y);
+                }
+
+                ghost->setPosition(newTestPos);
+                bool newBlocked = false;
+                for (const auto& wall : walls) {
+                    if (ghost->intersects(*wall)) {
+                        newBlocked = true;
+                        ghost->setPosition(currentPos);
+                        break;
                     }
                 }
-            }
 
-            // If no direction works, stay at current position
-            ghost->setPosition(currentPos);
-
-        } else if (pacman) {
-            // ✅ CHASING/FEAR ghosts: use AI to choose new direction
-            Direction newDir = ghost->chooseDirection(*pacman);
-
-            if (newDir != Direction::NONE && newDir != currentDir) {
-                if (canMoveInDirection(currentPos, newDir, ghost->getCollisionRadius())) {
-                    ghost->setCurrentDirection(newDir);
-
-                    // Try to move in the new direction immediately
-                    Position newDirVector = getDirectionVector(newDir);
-                    Position newMovement = newDirVector * speed * deltaTime;
-
-                    Position newTestPos;
-                    if (newDir == Direction::LEFT || newDir == Direction::RIGHT) {
-                        newTestPos = Position(currentPos.x + newMovement.x, currentPos.y);
-                    } else {
-                        newTestPos = Position(currentPos.x, currentPos.y + newMovement.y);
-                    }
-
-                    ghost->setPosition(newTestPos);
-                    bool newBlocked = false;
-                    for (const auto& wall : walls) {
-                        if (ghost->intersects(*wall)) {
-                            newBlocked = true;
-                            ghost->setPosition(currentPos);
-                            break;
-                        }
-                    }
-
-                    if (newBlocked) {
-                        ghost->setPosition(currentPos);
-                    }
+                if (!newBlocked) {
+                    // Successfully moved in this direction!
+                    return;
                 }
             }
         }
+
+        // If no direction works, stay at current position
+        ghost->setPosition(currentPos);
     }
+    // ✅ For CHASING/FEAR ghosts: Do nothing when blocked
+    // They will change direction naturally at the next intersection via updateAI()
 }
 
 Position World::gridToWorld(int row, int col, int totalRows, int totalCols) const {

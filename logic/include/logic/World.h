@@ -48,6 +48,9 @@ public:
 
     MapDimensions getMapDimensions() const { return {mapRows, mapCols}; }
 
+    // ✅ Get ghost spawn center position (for spawning ghosts to find exit)
+    Position getGhostCenterPosition() const { return ghostCenterPosition; }
+
     // ✅ NOW PUBLIC: Used by Ghost AI to determine viable directions
     bool canMoveInDirection(const Position& pos, Direction dir, float radius) const;
 

@@ -45,8 +45,8 @@ public:
     // ✅ NEW: Set world pointer for collision checking
     void setWorld(World* worldPtr) { world = worldPtr; }
 
-    // ✅ Slightly smaller than walls (0.091) to fit through openings
-    float getCollisionRadius() const override { return 0.08f; }
+    // ✅ Smaller radius to fit through narrow spawn exits
+    float getCollisionRadius() const override { return 0.09f; }
 
 private:
     GhostType type;

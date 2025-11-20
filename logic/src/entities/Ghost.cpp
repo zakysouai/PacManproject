@@ -10,6 +10,26 @@ namespace pacman {
 
 Ghost::Ghost(const Position& pos, GhostType type)
     : EntityModel(pos, 0.3f), type(type), startPosition(pos) {
+
+    // ✅ Set initial direction based on ghost type for exiting spawn center
+    switch (type) {
+        case GhostType::RANDOM:
+            currentDirection = Direction::UP;
+            lockedDirection = Direction::UP;
+            break;
+        case GhostType::CHASER:
+            currentDirection = Direction::RIGHT;
+            lockedDirection = Direction::RIGHT;
+            break;
+        case GhostType::PREDICTOR:
+            currentDirection = Direction::DOWN;
+            lockedDirection = Direction::DOWN;
+            break;
+        default:
+            currentDirection = Direction::LEFT;
+            lockedDirection = Direction::LEFT;
+            break;
+    }
 }
 
 void Ghost::update(float deltaTime) {
@@ -19,6 +39,9 @@ void Ghost::update(float deltaTime) {
         if (spawnTimer <= 0) {
             mode = GhostMode::CHASING;
         }
+        // ✅ FIXED: Ghosts NEVER move through walls
+        // Movement is handled by World::updateGhostWithCollisions() with proper collision detection
+        // During SPAWNING, they just move in their current direction until timer expires
         return;
     }
 
@@ -31,8 +54,8 @@ void Ghost::update(float deltaTime) {
         }
     }
 
-    // ✅ FIXED: Movement is now handled by World::updateGhostWithCollisions()
-    // Don't move here - World will do collision-aware movement
+    // ✅ All movement is handled by World::updateGhostWithCollisions()
+    // This ensures ghosts NEVER go through walls
 }
 
 void Ghost::updateAI(const PacMan& pacman, float deltaTime) {
@@ -190,7 +213,24 @@ void Ghost::reset(const Position& centerPos) {
     position = centerPos;
     startPosition = centerPos;
     mode = GhostMode::SPAWNING;
-    currentDirection = Direction::RIGHT;
+
+    // ✅ UPDATED: Set initial direction based on ghost type to spread them out
+    switch (type) {
+        case GhostType::RANDOM:
+            currentDirection = Direction::UP;
+            break;
+        case GhostType::CHASER:
+            currentDirection = Direction::RIGHT;
+            break;
+        case GhostType::PREDICTOR:
+            currentDirection = Direction::DOWN;
+            break;
+        default:
+            currentDirection = Direction::LEFT;
+            break;
+    }
+
+    lockedDirection = currentDirection;
 }
 
 void Ghost::respawn(const Position& centerPos) {
@@ -205,20 +245,27 @@ bool Ghost::isAtIntersection() const {
         return true;
     }
 
-    // An intersection is where we can move in at least one perpendicular direction
+    // Not moving yet, so we can change direction anywhere
+    if (currentDirection == Direction::NONE) {
+        return true;
+    }
+
+    float radius = getCollisionRadius();
+
+    // ✅ Check if current direction is blocked (dead end - must turn)
+    if (!world->canMoveInDirection(position, currentDirection, radius)) {
+        return true;  // At a dead end, must choose new direction!
+    }
+
+    // Check if at least one perpendicular direction is open (normal intersection)
     std::vector<Direction> perpendicular;
 
     if (currentDirection == Direction::UP || currentDirection == Direction::DOWN) {
         perpendicular = {Direction::LEFT, Direction::RIGHT};
     } else if (currentDirection == Direction::LEFT || currentDirection == Direction::RIGHT) {
         perpendicular = {Direction::UP, Direction::DOWN};
-    } else {
-        // Not moving yet, so we can change direction anywhere
-        return true;
     }
 
-    // Check if at least one perpendicular direction is open
-    float radius = getCollisionRadius();
     for (Direction dir : perpendicular) {
         if (world->canMoveInDirection(position, dir, radius)) {
             return true;  // At an intersection!
@@ -247,7 +294,7 @@ std::vector<Direction> Ghost::getViableDirections() const {
     float radius = getCollisionRadius();
 
     for (Direction dir : all) {
-        // Don't allow 180° turns (going backwards) unless it's the only option
+        // Don't allow 180° turns yet (we'll add them back if no other option)
         if (isOppositeDirection(dir, currentDirection)) {
             continue;
         }
@@ -258,20 +305,20 @@ std::vector<Direction> Ghost::getViableDirections() const {
         }
     }
 
-    // If no viable directions found (shouldn't happen in well-designed maps),
-    // allow going backwards
+    // ✅ UPDATED: If no viable directions found (dead end), allow 180° turn
     if (viable.empty()) {
         for (Direction dir : all) {
+            // Now allow opposite direction
             if (world->canMoveInDirection(position, dir, radius)) {
                 viable.push_back(dir);
             }
         }
     }
 
-    // Last resort: if still no viable directions, return all
-    // (this means ghost is stuck, but at least it won't crash)
+    // Last resort: if still no viable directions, return current direction
+    // (this means ghost is completely stuck, which shouldn't happen)
     if (viable.empty()) {
-        return all;
+        viable.push_back(currentDirection);
     }
 
     return viable;
