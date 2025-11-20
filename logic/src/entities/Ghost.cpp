@@ -4,6 +4,7 @@
 #include "logic/utils/Random.h"
 #include "logic/utils/Stopwatch.h"
 #include <cmath>
+#include <iostream>
 #include <limits>
 
 namespace pacman {
@@ -238,6 +239,37 @@ void Ghost::respawn(const Position& centerPos) {
     mode = GhostMode::CHASING;
 }
 
+void Ghost::moveTowardsExitTarget(float deltaTime) {
+    // Calculate direction vector towards exit target
+    Position direction = exitTarget - position;
+    float distance = position.distance(exitTarget);
+
+    if (distance < 0.01f) {
+        return;  // Already at target
+    }
+
+    // Normalize direction
+    direction.x /= distance;
+    direction.y /= distance;
+
+    // Move towards target
+    float moveDistance = speed * deltaTime;
+    position.x += direction.x * moveDistance;
+    position.y += direction.y * moveDistance;
+
+    // Update currentDirection for sprite animation
+    if (std::abs(direction.x) > std::abs(direction.y)) {
+        currentDirection = (direction.x > 0) ? Direction::RIGHT : Direction::LEFT;
+    } else {
+        currentDirection = (direction.y > 0) ? Direction::DOWN : Direction::UP;
+    }
+}
+
+bool Ghost::hasReachedExitTarget() const {
+    float distance = position.distance(exitTarget);
+    return distance < 0.15f;  // Within 0.15 units = close enough
+}
+
 // ✅ UPDATED: Now actually checks if at intersection using world pointer
 bool Ghost::isAtIntersection() const {
     // If we don't have world access, fallback to always allowing direction changes
@@ -330,5 +362,40 @@ bool Ghost::isOppositeDirection(Direction dir1, Direction dir2) const {
            (dir1 == Direction::LEFT && dir2 == Direction::RIGHT) ||
            (dir1 == Direction::RIGHT && dir2 == Direction::LEFT);
 }
+
+void Ghost::leaveSpawn(const PacMan& pacman) {
+    if (!world) return;
+
+    Position pacmanPos = pacman.getPosition();
+
+    // Calculate horizontal distance to PacMan
+    float horizontalDist = pacmanPos.x - position.x;
+
+    // ✅ HARDCODED: Force direction towards PacMan (LEFT or RIGHT only)
+    Direction targetDir;
+    if (horizontalDist > 0) {
+        targetDir = Direction::RIGHT;  // PacMan is to the right
+    } else {
+        targetDir = Direction::LEFT;   // PacMan is to the left
+    }
+
+    // Only change direction if different from current
+    if (currentDirection != targetDir) {
+        currentDirection = targetDir;
+        std::cout << "Ghost forcing spawn exit direction: "
+                  << (targetDir == Direction::RIGHT ? "RIGHT" : "LEFT") << std::endl;
+    }
+}
+
+bool Ghost::hasLeftSpawn() const {
+    if (!world) return false;
+
+    Position center = world->getGhostCenterPosition();
+    float distance = position.distance(center);
+
+    // If we're more than 0.3 units away from spawn center, we're out
+    return distance > 1.5f;
+}
+
 
 } // namespace pacman

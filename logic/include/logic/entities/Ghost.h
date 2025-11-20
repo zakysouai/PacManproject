@@ -18,6 +18,21 @@ public:
     void updateAI(const PacMan& pacman, float deltaTime);
     Direction chooseDirection(const PacMan& pacman);
 
+    // Check if ghost has left spawn area
+    bool hasLeftSpawn() const;
+
+    // Force ghost to leave spawn (hardcoded exit logic)
+    void leaveSpawn(const PacMan& pacman);
+
+    void setExitTarget(const Position& target) { exitTarget = target; }
+
+    // ✅ Move towards exit target (ignoring walls)
+    void moveTowardsExitTarget(float deltaTime);
+
+    // ✅ Check if ghost reached exit target
+    bool hasReachedExitTarget() const;
+
+
     // Mode management
     void setMode(GhostMode mode);
     GhostMode getMode() const { return mode; }
@@ -59,6 +74,7 @@ private:
     float fearDuration = 10.0f;
 
     Position startPosition;
+    Position exitTarget;
 
     // ✅ NEW: World pointer for checking viable directions (non-owning)
     World* world = nullptr;

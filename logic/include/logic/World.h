@@ -54,6 +54,8 @@ public:
     // ✅ NOW PUBLIC: Used by Ghost AI to determine viable directions
     bool canMoveInDirection(const Position& pos, Direction dir, float radius) const;
 
+    bool wouldCollideWithWall(const Position& pos, float radius) const;
+
 private:
     AbstractFactory* factory;  // Non-owning pointer
 
@@ -78,6 +80,9 @@ private:
 
     int mapRows = 0;
     int mapCols = 0;
+
+    Position ghostExitLeft = Position(-0.5f, 0.0f);   // Default, will be set during map load
+    Position ghostExitRight = Position(0.5f, 0.0f);
 
     // Collision detection
     void handleCollisions();

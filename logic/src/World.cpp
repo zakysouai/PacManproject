@@ -1,4 +1,6 @@
 #include "logic/World.h"
+
+#include "logic/utils/Random.h"
 #include "logic/utils/Stopwatch.h"
 #include <fstream>
 #include <sstream>
@@ -11,6 +13,9 @@ World::World(AbstractFactory* factory)
     : factory(factory) {
 }
 
+// In logic/src/World.cpp
+// VERVANG de hele World::update() functie:
+
 void World::update(float deltaTime) {
     // Update score timer
     score.updateComboTimer(deltaTime);
@@ -21,19 +26,31 @@ void World::update(float deltaTime) {
     }
 
     // Update ghosts with AI and collision detection
+    // Update ghosts with AI and collision detection
     for (auto& ghost : ghosts) {
         // Update internal state (spawn timer, fear mode timer)
         ghost->update(deltaTime);
 
-        // ✅ UPDATED: AI only for CHASING/FEAR ghosts
-        // SPAWNING ghosts just move in their current direction (no AI decision)
-        if (ghost->getMode() != GhostMode::SPAWNING && pacman) {
-            ghost->updateAI(*pacman, deltaTime);
+        // ✅ SPAWNING MODE: Move directly to exit target (ignore walls)
+        if (ghost->getMode() == GhostMode::SPAWNING) {
+            // Check if spawn delay expired
+            if (ghost->getMode() == GhostMode::SPAWNING) {
+                // Move towards exit target
+                ghost->moveTowardsExitTarget(deltaTime);
+
+                // Check if reached exit
+                if (ghost->hasReachedExitTarget()) {
+                    ghost->setMode(GhostMode::CHASING);
+                    std::cout << "Ghost reached exit target! Switching to CHASING mode." << std::endl;
+                }
+            }
         }
 
-        // ✅ CRITICAL: ALL ghosts use collision detection, including SPAWNING
-        // This ensures ghosts NEVER go through walls
-        updateGhostWithCollisions(ghost.get(), deltaTime);
+        // ✅ CHASING/FEAR MODE: Normal AI + collision detection
+        else if (pacman) {
+            ghost->updateAI(*pacman, deltaTime);
+            updateGhostWithCollisions(ghost.get(), deltaTime);
+        }
     }
 
     // Handle entity collisions (not wall collisions)
@@ -77,6 +94,26 @@ bool World::canMoveInDirection(const Position& pos, Direction dir, float radius)
 
     return true;  // Direction is viable
 }
+
+bool World::wouldCollideWithWall(const Position& pos, float radius) const {
+    // Create bounding box at test position
+    BoundingBox testBox(
+        pos.x - radius,
+        pos.y - radius,
+        radius * 2.0f,
+        radius * 2.0f
+    );
+
+    // Check collision with all walls
+    for (const auto& wall : walls) {
+        if (testBox.intersects(wall->getBoundingBox())) {
+            return true;  // Collision!
+        }
+    }
+
+    return false;  // No collision
+}
+
 
 bool World::isAtIntersection(const Position& pos, Direction currentDir, float radius) const {
     // An intersection is where you can move in a direction perpendicular to your current movement
@@ -320,11 +357,16 @@ void World::applyDifficultyScaling() {
     }
 }
 
-// ✅ UPDATED: Improved ghost collision handling
+// In logic/src/World.cpp
+// VERVANG de hele updateGhostWithCollisions() functie:
+
+// In logic/src/World.cpp
+// VERVANG updateGhostWithCollisions():
+
 void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
+    // ✅ This function is ONLY called for CHASING/FEAR ghosts now
     Direction currentDir = ghost->getCurrentDirection();
 
-    // If ghost isn't moving, no collision detection needed
     if (currentDir == Direction::NONE) {
         return;
     }
@@ -332,115 +374,38 @@ void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
     Position currentPos = ghost->getPosition();
     Position dirVector = getDirectionVector(currentDir);
     float speed = ghost->getSpeed();
-
-    // Calculate full movement for this frame
     Position movement = dirVector * speed * deltaTime;
 
     bool blocked = false;
 
     // Per-axis collision detection with AABB
     if (currentDir == Direction::LEFT || currentDir == Direction::RIGHT) {
-        // ===== HORIZONTAL MOVEMENT =====
         Position testPos = Position(currentPos.x + movement.x, currentPos.y);
-
-        // Temporarily move ghost to test position
         Position originalPos = ghost->getPosition();
         ghost->setPosition(testPos);
 
-        // Check collision with all walls
         for (const auto& wall : walls) {
             if (ghost->intersects(*wall)) {
                 blocked = true;
-                ghost->setPosition(originalPos);  // Restore
+                ghost->setPosition(originalPos);
                 break;
             }
         }
-
     } else if (currentDir == Direction::UP || currentDir == Direction::DOWN) {
-        // ===== VERTICAL MOVEMENT =====
         Position testPos = Position(currentPos.x, currentPos.y + movement.y);
-
         Position originalPos = ghost->getPosition();
         ghost->setPosition(testPos);
 
         for (const auto& wall : walls) {
             if (ghost->intersects(*wall)) {
                 blocked = true;
-                ghost->setPosition(originalPos);  // Restore
+                ghost->setPosition(originalPos);
                 break;
             }
         }
     }
 
-    // ✅ FIXED: Only handle SPAWNING ghosts when blocked
-    // CHASING/FEAR ghosts change direction ONLY at intersections (via updateAI)
-    if (blocked && ghost->getMode() == GhostMode::SPAWNING) {
-        // ✅ SPAWNING ghosts: try to exit spawn center
-        // Strategy: Move towards ghost center position (horizontal), then up
-
-        // Use the actual ghost center position calculated during map loading
-        Position centerPos = ghostCenterPosition;
-
-        // First priority: Move horizontally towards center if not already there
-        float horizontalDist = currentPos.x - centerPos.x;
-
-        std::vector<Direction> exitStrategy;
-
-        if (std::abs(horizontalDist) > 0.05f) {
-            // Not at center horizontally - move towards it first
-            if (horizontalDist > 0) {
-                exitStrategy.push_back(Direction::LEFT);  // Move left towards center
-            } else {
-                exitStrategy.push_back(Direction::RIGHT); // Move right towards center
-            }
-            exitStrategy.push_back(Direction::UP);    // Then try up
-            exitStrategy.push_back(Direction::DOWN);  // Last resort
-        } else {
-            // Already at center horizontally - prioritize going UP (typical exit)
-            exitStrategy.push_back(Direction::UP);
-            exitStrategy.push_back(Direction::RIGHT);
-            exitStrategy.push_back(Direction::LEFT);
-            exitStrategy.push_back(Direction::DOWN);
-        }
-
-        // Try directions in priority order
-        for (Direction dir : exitStrategy) {
-            if (canMoveInDirection(currentPos, dir, ghost->getCollisionRadius())) {
-                ghost->setCurrentDirection(dir);
-
-                // Try to move in this direction
-                Position newDirVector = getDirectionVector(dir);
-                Position newMovement = newDirVector * speed * deltaTime;
-
-                Position newTestPos;
-                if (dir == Direction::LEFT || dir == Direction::RIGHT) {
-                    newTestPos = Position(currentPos.x + newMovement.x, currentPos.y);
-                } else {
-                    newTestPos = Position(currentPos.x, currentPos.y + newMovement.y);
-                }
-
-                ghost->setPosition(newTestPos);
-                bool newBlocked = false;
-                for (const auto& wall : walls) {
-                    if (ghost->intersects(*wall)) {
-                        newBlocked = true;
-                        ghost->setPosition(currentPos);
-                        break;
-                    }
-                }
-
-                if (!newBlocked) {
-                    // Successfully moved in this direction!
-                    return;
-                }
-            }
-        }
-
-        // If no direction works, stay at current position
-        ghost->setPosition(currentPos);
-    }
-    // ✅ For CHASING/FEAR ghosts: Do nothing when blocked
-    // They will change direction naturally at the next intersection via updateAI()
+    // If blocked, AI will choose new direction at next intersection
 }
 
 Position World::gridToWorld(int row, int col, int totalRows, int totalCols) const {
@@ -620,17 +585,35 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
         if (cyanSpawned) { sumPos = sumPos + cyanGhostPos; count++; }
         if (orangeSpawned) { sumPos = sumPos + orangeGhostPos; count++; }
         ghostCenterPosition = Position(sumPos.x / count, sumPos.y / count);
+
+        // ✅ NEW: Calculate exit positions (left and right of spawn, far enough away)
+        ghostExitLeft = Position(ghostCenterPosition.x - 0.8f, ghostCenterPosition.y);
+        ghostExitRight = Position(ghostCenterPosition.x + 0.8f, ghostCenterPosition.y);
+
+        std::cout << "Ghost spawn center: (" << ghostCenterPosition.x << ", " << ghostCenterPosition.y << ")" << std::endl;
+        std::cout << "Ghost exit LEFT: (" << ghostExitLeft.x << ", " << ghostExitLeft.y << ")" << std::endl;
+        std::cout << "Ghost exit RIGHT: (" << ghostExitRight.x << ", " << ghostExitRight.y << ")" << std::endl;
     } else {
         ghostCenterPosition = Position(0, 0);
+        ghostExitLeft = Position(-0.5f, 0.0f);
+        ghostExitRight = Position(0.5f, 0.0f);
     }
 
-    // ✅ UPDATED: Create ghosts and give them access to World
+    // In logic/src/World.cpp
+// In spawnEntities(), bij het aanmaken van ghosts:
+
     int ghostsCreated = 0;
 
     if (redSpawned) {
         auto ghost1 = factory->createGhost(redGhostPos, GhostType::RANDOM);
         ghost1->setSpawnDelay(0.0f);
-        ghost1->setWorld(this);  // ✅ Give ghost access to world for collision checking
+        ghost1->setWorld(this);
+
+        // ✅ Assign random exit target
+        Position exitTarget = Random::getInstance().getBool() ? ghostExitLeft : ghostExitRight;
+        ghost1->setExitTarget(exitTarget);
+        std::cout << "Red ghost exit target: (" << exitTarget.x << ", " << exitTarget.y << ")" << std::endl;
+
         ghosts.push_back(std::move(ghost1));
         ghostsCreated++;
     }
@@ -638,7 +621,12 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     if (pinkSpawned) {
         auto ghost2 = factory->createGhost(pinkGhostPos, GhostType::CHASER);
         ghost2->setSpawnDelay(0.0f);
-        ghost2->setWorld(this);  // ✅ Give ghost access to world
+        ghost2->setWorld(this);
+
+        Position exitTarget = Random::getInstance().getBool() ? ghostExitLeft : ghostExitRight;
+        ghost2->setExitTarget(exitTarget);
+        std::cout << "Pink ghost exit target: (" << exitTarget.x << ", " << exitTarget.y << ")" << std::endl;
+
         ghosts.push_back(std::move(ghost2));
         ghostsCreated++;
     }
@@ -646,7 +634,12 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     if (cyanSpawned) {
         auto ghost3 = factory->createGhost(cyanGhostPos, GhostType::PREDICTOR);
         ghost3->setSpawnDelay(5.0f);
-        ghost3->setWorld(this);  // ✅ Give ghost access to world
+        ghost3->setWorld(this);
+
+        Position exitTarget = Random::getInstance().getBool() ? ghostExitLeft : ghostExitRight;
+        ghost3->setExitTarget(exitTarget);
+        std::cout << "Cyan ghost exit target: (" << exitTarget.x << ", " << exitTarget.y << ")" << std::endl;
+
         ghosts.push_back(std::move(ghost3));
         ghostsCreated++;
     }
@@ -654,7 +647,12 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     if (orangeSpawned) {
         auto ghost4 = factory->createGhost(orangeGhostPos, GhostType::CHASER);
         ghost4->setSpawnDelay(10.0f);
-        ghost4->setWorld(this);  // ✅ Give ghost access to world
+        ghost4->setWorld(this);
+
+        Position exitTarget = Random::getInstance().getBool() ? ghostExitLeft : ghostExitRight;
+        ghost4->setExitTarget(exitTarget);
+        std::cout << "Orange ghost exit target: (" << exitTarget.x << ", " << exitTarget.y << ")" << std::endl;
+
         ghosts.push_back(std::move(ghost4));
         ghostsCreated++;
     }
