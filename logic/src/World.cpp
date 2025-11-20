@@ -12,51 +12,31 @@ namespace pacman {
 World::World(AbstractFactory* factory)
     : factory(factory) {
 }
-
-// In logic/src/World.cpp
-// VERVANG de hele World::update() functie:
-
 void World::update(float deltaTime) {
-    // Update score timer
     score.updateComboTimer(deltaTime);
 
-    // Update PacMan with per-axis collision checking
     if (pacman) {
         updatePacManWithCollisions(deltaTime);
     }
 
-    // Update ghosts with AI and collision detection
-    // Update ghosts with AI and collision detection
+    // ✅ SIMPELE ghost update
     for (auto& ghost : ghosts) {
-        // Update internal state (spawn timer, fear mode timer)
         ghost->update(deltaTime);
 
-        // ✅ SPAWNING MODE: Move directly to exit target (ignore walls)
+        // ✅ In SPAWNING: Geen AI, gewoon bewegen UP met collision
         if (ghost->getMode() == GhostMode::SPAWNING) {
-            // Check if spawn delay expired
-            if (ghost->getMode() == GhostMode::SPAWNING) {
-                // Move towards exit target
-                ghost->moveTowardsExitTarget(deltaTime);
-
-                // Check if reached exit
-                if (ghost->hasReachedExitTarget()) {
-                    ghost->setMode(GhostMode::CHASING);
-                    std::cout << "Ghost reached exit target! Switching to CHASING mode." << std::endl;
-                }
-            }
+            updateGhostWithCollisions(ghost.get(), deltaTime);
         }
 
-        // ✅ CHASING/FEAR MODE: Normal AI + collision detection
+        // ✅ In CHASING/FEAR: AI + beweging
         else if (pacman) {
             ghost->updateAI(*pacman, deltaTime);
             updateGhostWithCollisions(ghost.get(), deltaTime);
         }
     }
 
-    // Handle entity collisions (not wall collisions)
     handleCollisions();
 
-    // Check level complete
     if (isLevelComplete()) {
         Event event;
         event.type = EventType::LEVEL_CLEARED;
@@ -71,7 +51,7 @@ bool World::canMoveInDirection(const Position& pos, Direction dir, float radius)
     Position dirVector = getDirectionVector(dir);
 
     // Test a small step ahead to see if this direction is viable
-    const float TEST_DISTANCE = 0.02f;  // Small test distance
+    const float TEST_DISTANCE = 0.1f;  // Small test distance
     Position testPos = Position(
         pos.x + dirVector.x * TEST_DISTANCE,
         pos.y + dirVector.y * TEST_DISTANCE
@@ -358,13 +338,8 @@ void World::applyDifficultyScaling() {
 }
 
 // In logic/src/World.cpp
-// VERVANG de hele updateGhostWithCollisions() functie:
-
-// In logic/src/World.cpp
-// VERVANG updateGhostWithCollisions():
 
 void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
-    // ✅ This function is ONLY called for CHASING/FEAR ghosts now
     Direction currentDir = ghost->getCurrentDirection();
 
     if (currentDir == Direction::NONE) {
@@ -378,7 +353,7 @@ void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
 
     bool blocked = false;
 
-    // Per-axis collision detection with AABB
+    // Per-axis collision
     if (currentDir == Direction::LEFT || currentDir == Direction::RIGHT) {
         Position testPos = Position(currentPos.x + movement.x, currentPos.y);
         Position originalPos = ghost->getPosition();
@@ -405,7 +380,26 @@ void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
         }
     }
 
-    // If blocked, AI will choose new direction at next intersection
+    // ✅ ALLEEN IN SPAWNING: als blocked, kies random andere richting
+    if (blocked && ghost->getMode() == GhostMode::SPAWNING) {
+        std::vector<Direction> testDirs = {
+            Direction::UP, Direction::DOWN, Direction::LEFT, Direction::RIGHT
+        };
+
+        // Probeer elke richting
+        for (Direction dir : testDirs) {
+            if (dir == currentDir) continue;  // Skip huidige
+
+            if (canMoveInDirection(currentPos, dir, ghost->getCollisionRadius())) {
+                ghost->setCurrentDirection(dir);
+                std::cout << "Ghost spawn collision - trying direction "
+                          << static_cast<int>(dir) << std::endl;
+                break;  // Neem eerste viable richting
+            }
+        }
+    }
+
+    // In CHASING/FEAR: AI regelt direction changes, wij doen niks
 }
 
 Position World::gridToWorld(int row, int col, int totalRows, int totalCols) const {
@@ -599,65 +593,45 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
         ghostExitRight = Position(0.5f, 0.0f);
     }
 
-    // In logic/src/World.cpp
-// In spawnEntities(), bij het aanmaken van ghosts:
-
     int ghostsCreated = 0;
 
     if (redSpawned) {
         auto ghost1 = factory->createGhost(redGhostPos, GhostType::RANDOM);
-        ghost1->setSpawnDelay(0.0f);
+        ghost1->setSpawnDelay(0.0f);  // Verlaat direct
         ghost1->setWorld(this);
-
-        // ✅ Assign random exit target
-        Position exitTarget = Random::getInstance().getBool() ? ghostExitLeft : ghostExitRight;
-        ghost1->setExitTarget(exitTarget);
-        std::cout << "Red ghost exit target: (" << exitTarget.x << ", " << exitTarget.y << ")" << std::endl;
-
+        // ❌ VERWIJDER: ghost1->setExitTarget(...);
         ghosts.push_back(std::move(ghost1));
         ghostsCreated++;
     }
 
     if (pinkSpawned) {
         auto ghost2 = factory->createGhost(pinkGhostPos, GhostType::CHASER);
-        ghost2->setSpawnDelay(0.0f);
+        ghost2->setSpawnDelay(3.0f);  // Wacht 3 sec
         ghost2->setWorld(this);
-
-        Position exitTarget = Random::getInstance().getBool() ? ghostExitLeft : ghostExitRight;
-        ghost2->setExitTarget(exitTarget);
-        std::cout << "Pink ghost exit target: (" << exitTarget.x << ", " << exitTarget.y << ")" << std::endl;
-
+        // ❌ VERWIJDER: ghost2->setExitTarget(...);
         ghosts.push_back(std::move(ghost2));
         ghostsCreated++;
     }
 
     if (cyanSpawned) {
         auto ghost3 = factory->createGhost(cyanGhostPos, GhostType::PREDICTOR);
-        ghost3->setSpawnDelay(5.0f);
+        ghost3->setSpawnDelay(6.0f);  // Wacht 6 sec
         ghost3->setWorld(this);
-
-        Position exitTarget = Random::getInstance().getBool() ? ghostExitLeft : ghostExitRight;
-        ghost3->setExitTarget(exitTarget);
-        std::cout << "Cyan ghost exit target: (" << exitTarget.x << ", " << exitTarget.y << ")" << std::endl;
-
+        // ❌ VERWIJDER: ghost3->setExitTarget(...);
         ghosts.push_back(std::move(ghost3));
         ghostsCreated++;
     }
 
     if (orangeSpawned) {
         auto ghost4 = factory->createGhost(orangeGhostPos, GhostType::CHASER);
-        ghost4->setSpawnDelay(10.0f);
+        ghost4->setSpawnDelay(9.0f);  // Wacht 9 sec
         ghost4->setWorld(this);
-
-        Position exitTarget = Random::getInstance().getBool() ? ghostExitLeft : ghostExitRight;
-        ghost4->setExitTarget(exitTarget);
-        std::cout << "Orange ghost exit target: (" << exitTarget.x << ", " << exitTarget.y << ")" << std::endl;
-
+        // ❌ VERWIJDER: ghost4->setExitTarget(...);
         ghosts.push_back(std::move(ghost4));
         ghostsCreated++;
     }
 
-    std::cout << "Created " << ghostsCreated << " ghosts (with world access)" << std::endl;
+
     std::cout << "Created " << fruits.size() << " fruits from map" << std::endl;
     std::cout << "Map loading complete!" << std::endl;
 }

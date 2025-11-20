@@ -12,60 +12,44 @@ namespace pacman {
 Ghost::Ghost(const Position& pos, GhostType type)
     : EntityModel(pos, 0.3f), type(type), startPosition(pos) {
 
-    // ✅ Set initial direction based on ghost type for exiting spawn center
-    switch (type) {
-        case GhostType::RANDOM:
-            currentDirection = Direction::UP;
-            lockedDirection = Direction::UP;
-            break;
-        case GhostType::CHASER:
-            currentDirection = Direction::RIGHT;
-            lockedDirection = Direction::RIGHT;
-            break;
-        case GhostType::PREDICTOR:
-            currentDirection = Direction::DOWN;
-            lockedDirection = Direction::DOWN;
-            break;
-        default:
-            currentDirection = Direction::LEFT;
-            lockedDirection = Direction::LEFT;
-            break;
-    }
+    // ✅ ALLE ghosts gaan UP uit spawn
+    currentDirection = Direction::UP;
+    lockedDirection = Direction::UP;
 }
 
 void Ghost::update(float deltaTime) {
     // Handle spawning delay
-    if (mode == GhostMode::SPAWNING) {
+    if (mode == GhostMode::SPAWNING && spawnTimer > 0) {
         spawnTimer -= deltaTime;
-        if (spawnTimer <= 0) {
-            mode = GhostMode::CHASING;
-        }
-        // ✅ FIXED: Ghosts NEVER move through walls
-        // Movement is handled by World::updateGhostWithCollisions() with proper collision detection
-        // During SPAWNING, they just move in their current direction until timer expires
         return;
     }
 
-    // Handle fear mode timer
+    // Check if left spawn
+    if (mode == GhostMode::SPAWNING && spawnTimer <= 0) {
+        if (hasLeftSpawn()) {
+            mode = GhostMode::CHASING;
+            std::cout << "Ghost type " << static_cast<int>(type)
+                      << " left spawn!" << std::endl;
+        }
+    }
+
+    // Handle fear mode
     if (mode == GhostMode::FEAR) {
         fearTimer -= deltaTime;
         if (fearTimer <= 0) {
             mode = GhostMode::CHASING;
-            speed /= 0.5f;  // Restore original speed
+            speed /= 0.5f;
         }
     }
-
-    // ✅ All movement is handled by World::updateGhostWithCollisions()
-    // This ensures ghosts NEVER go through walls
 }
 
 void Ghost::updateAI(const PacMan& pacman, float deltaTime) {
-    // Only update AI if not spawning
+    // ✅ ALLEEN AI in CHASING/FEAR mode
     if (mode == GhostMode::SPAWNING) {
-        return;
+        return;  // Geen AI in spawn - beweeg gewoon UP
     }
 
-    // ✅ UPDATED: Choose new direction only at intersections
+    // Normale AI alleen in chasing/fear
     if (isAtIntersection()) {
         Direction newDirection = chooseDirection(pacman);
         if (newDirection != Direction::NONE && newDirection != currentDirection) {
@@ -74,20 +58,21 @@ void Ghost::updateAI(const PacMan& pacman, float deltaTime) {
     }
 }
 
+
 Direction Ghost::chooseDirection(const PacMan& pacman) {
     if (mode == GhostMode::FEAR) {
         return chooseFearDirection(pacman);
     }
 
     switch (type) {
-        case GhostType::RANDOM:
-            return chooseRandomDirection();
-        case GhostType::CHASER:
-            return chooseChasingDirection(pacman);
-        case GhostType::PREDICTOR:
-            return choosePredictorDirection(pacman);
-        default:
-            return currentDirection;
+    case GhostType::RANDOM:
+        return chooseRandomDirection();
+    case GhostType::CHASER:
+        return chooseChasingDirection(pacman);
+    case GhostType::PREDICTOR:
+        return choosePredictorDirection(pacman);
+    default:
+        return currentDirection;
     }
 }
 
@@ -239,72 +224,41 @@ void Ghost::respawn(const Position& centerPos) {
     mode = GhostMode::CHASING;
 }
 
-void Ghost::moveTowardsExitTarget(float deltaTime) {
-    // Calculate direction vector towards exit target
-    Position direction = exitTarget - position;
-    float distance = position.distance(exitTarget);
-
-    if (distance < 0.01f) {
-        return;  // Already at target
-    }
-
-    // Normalize direction
-    direction.x /= distance;
-    direction.y /= distance;
-
-    // Move towards target
-    float moveDistance = speed * deltaTime;
-    position.x += direction.x * moveDistance;
-    position.y += direction.y * moveDistance;
-
-    // Update currentDirection for sprite animation
-    if (std::abs(direction.x) > std::abs(direction.y)) {
-        currentDirection = (direction.x > 0) ? Direction::RIGHT : Direction::LEFT;
-    } else {
-        currentDirection = (direction.y > 0) ? Direction::DOWN : Direction::UP;
-    }
-}
-
-bool Ghost::hasReachedExitTarget() const {
-    float distance = position.distance(exitTarget);
-    return distance < 0.15f;  // Within 0.15 units = close enough
-}
-
-// ✅ UPDATED: Now actually checks if at intersection using world pointer
 bool Ghost::isAtIntersection() const {
-    // If we don't have world access, fallback to always allowing direction changes
     if (!world) {
-        return true;
+        return false;  // ← Verander naar false (geen world = geen intersection check)
     }
 
-    // Not moving yet, so we can change direction anywhere
     if (currentDirection == Direction::NONE) {
         return true;
     }
 
     float radius = getCollisionRadius();
 
-    // ✅ Check if current direction is blocked (dead end - must turn)
+    // ✅ Check of huidige richting geblokkeerd is (dead end - MOET draaien)
     if (!world->canMoveInDirection(position, currentDirection, radius)) {
-        return true;  // At a dead end, must choose new direction!
+        return true;
     }
 
-    // Check if at least one perpendicular direction is open (normal intersection)
+    // ✅ Check perpendicular richtingen
     std::vector<Direction> perpendicular;
 
     if (currentDirection == Direction::UP || currentDirection == Direction::DOWN) {
         perpendicular = {Direction::LEFT, Direction::RIGHT};
-    } else if (currentDirection == Direction::LEFT || currentDirection == Direction::RIGHT) {
+    } else {
         perpendicular = {Direction::UP, Direction::DOWN};
     }
 
+    // ✅ Tel aantal viable perpendicular richtingen
+    int viableCount = 0;
     for (Direction dir : perpendicular) {
         if (world->canMoveInDirection(position, dir, radius)) {
-            return true;  // At an intersection!
+            viableCount++;
         }
     }
 
-    return false;  // Not at intersection, continue in current direction
+    // ✅ Alleen intersection als er minimaal 1 perpendicular optie is
+    return viableCount >= 1;
 }
 
 // ✅ UPDATED: Now filters out blocked directions using world pointer
@@ -363,38 +317,14 @@ bool Ghost::isOppositeDirection(Direction dir1, Direction dir2) const {
            (dir1 == Direction::RIGHT && dir2 == Direction::LEFT);
 }
 
-void Ghost::leaveSpawn(const PacMan& pacman) {
-    if (!world) return;
-
-    Position pacmanPos = pacman.getPosition();
-
-    // Calculate horizontal distance to PacMan
-    float horizontalDist = pacmanPos.x - position.x;
-
-    // ✅ HARDCODED: Force direction towards PacMan (LEFT or RIGHT only)
-    Direction targetDir;
-    if (horizontalDist > 0) {
-        targetDir = Direction::RIGHT;  // PacMan is to the right
-    } else {
-        targetDir = Direction::LEFT;   // PacMan is to the left
-    }
-
-    // Only change direction if different from current
-    if (currentDirection != targetDir) {
-        currentDirection = targetDir;
-        std::cout << "Ghost forcing spawn exit direction: "
-                  << (targetDir == Direction::RIGHT ? "RIGHT" : "LEFT") << std::endl;
-    }
-}
-
 bool Ghost::hasLeftSpawn() const {
-    if (!world) return false;
+    if (!world) return true;
 
     Position center = world->getGhostCenterPosition();
     float distance = position.distance(center);
 
-    // If we're more than 0.3 units away from spawn center, we're out
-    return distance > 1.5f;
+    // ✅ Ver genoeg van center = uit spawn
+    return distance > 0.5f;  // Verhoog als nodig
 }
 
 

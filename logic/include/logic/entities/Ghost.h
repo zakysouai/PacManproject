@@ -7,76 +7,47 @@ namespace pacman {
 class PacMan;  // Forward declaration
 class World;   // Forward declaration
 
+// In logic/include/logic/entities/Ghost.h
+
 class Ghost : public EntityModel {
 public:
-    Ghost(const Position& pos, GhostType type);
+    explicit Ghost(const Position& pos, GhostType type);
     ~Ghost() override = default;
 
     void update(float deltaTime) override;
-
-    // AI behavior
     void updateAI(const PacMan& pacman, float deltaTime);
     Direction chooseDirection(const PacMan& pacman);
 
-    // Check if ghost has left spawn area
     bool hasLeftSpawn() const;
 
-    // Force ghost to leave spawn (hardcoded exit logic)
-    void leaveSpawn(const PacMan& pacman);
-
-    void setExitTarget(const Position& target) { exitTarget = target; }
-
-    // ✅ Move towards exit target (ignoring walls)
-    void moveTowardsExitTarget(float deltaTime);
-
-    // ✅ Check if ghost reached exit target
-    bool hasReachedExitTarget() const;
-
-
-    // Mode management
     void setMode(GhostMode mode);
     GhostMode getMode() const { return mode; }
 
-    // Fear mode
     void enterFearMode(float duration);
     bool isFeared() const { return mode == GhostMode::FEAR; }
 
-    // Type
     GhostType getType() const { return type; }
-
-    // Movement getters (for collision detection and AI)
     Direction getCurrentDirection() const { return currentDirection; }
-
-    // ✅ NEW: Set current direction (for forced direction changes on collision)
     void setCurrentDirection(Direction dir) { currentDirection = dir; }
 
-    // Spawning
     void setSpawnDelay(float delay) { spawnTimer = delay; }
-
-    // Reset
     void reset(const Position& centerPos);
     void respawn(const Position& centerPos);
 
-    // ✅ NEW: Set world pointer for collision checking
     void setWorld(World* worldPtr) { world = worldPtr; }
-
-    // ✅ Smaller radius to fit through narrow spawn exits
     float getCollisionRadius() const override { return 0.09f; }
 
 private:
     GhostType type;
     GhostMode mode = GhostMode::SPAWNING;
-    Direction currentDirection = Direction::RIGHT;
-    Direction lockedDirection = Direction::RIGHT;  // For RANDOM type
+    Direction currentDirection = Direction::UP;  // ✅ Altijd UP voor spawn exit
+    Direction lockedDirection = Direction::RIGHT;
 
     float spawnTimer = 0.0f;
     float fearTimer = 0.0f;
     float fearDuration = 10.0f;
 
     Position startPosition;
-    Position exitTarget;
-
-    // ✅ NEW: World pointer for checking viable directions (non-owning)
     World* world = nullptr;
 
     // AI helpers
@@ -85,13 +56,8 @@ private:
     Direction choosePredictorDirection(const PacMan& pacman);
     Direction chooseFearDirection(const PacMan& pacman);
 
-    // ✅ UPDATED: Now checks if actually at intersection using world
     bool isAtIntersection() const;
-
-    // ✅ UPDATED: Now filters out blocked directions using world
     std::vector<Direction> getViableDirections() const;
-
-    // Helper to check if two directions are opposite
     bool isOppositeDirection(Direction dir1, Direction dir2) const;
 };
 
