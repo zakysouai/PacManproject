@@ -40,7 +40,7 @@ void LevelState::onExit() {
 }
 
 void LevelState::loadFont() {
-    if (!font.loadFromFile("resources/fonts/arial.ttf")) {
+    if (!font.loadFromFile("../resources/fonts/arial.ttf")) {
         std::cerr << "Warning: Could not load font" << std::endl;
     }
 }

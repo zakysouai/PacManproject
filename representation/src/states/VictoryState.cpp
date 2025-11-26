@@ -20,7 +20,7 @@ void VictoryState::onExit() {
 }
 
 void VictoryState::loadFont() {
-    if (!font.loadFromFile("resources/fonts/arial.ttf")) {
+    if (!font.loadFromFile("../resources/fonts/arial.ttf")) {
         std::cerr << "Warning: Could not load font" << std::endl;
     }
 }
