@@ -13,3 +13,5 @@ int main() {
     
     return 0;
 }
+
+// TODO: maak voor elke ghost een aparte klasse en inherit van de super ghost klasse. 1 ghost klasse is te lastig om mee te werken
