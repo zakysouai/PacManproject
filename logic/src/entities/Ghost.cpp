@@ -44,12 +44,18 @@ void Ghost::update(float deltaTime) {
 }
 
 void Ghost::updateAI(const PacMan& pacman, float deltaTime) {
-    // ✅ ALLEEN AI in CHASING/FEAR mode
+    // ✅ SPAWNING ghosts now use AI to find the exit
     if (mode == GhostMode::SPAWNING) {
-        return;  // Geen AI in spawn - beweeg gewoon UP
+        if (isAtIntersection()) {
+            Direction newDirection = chooseSpawnExitDirection();
+            if (newDirection != Direction::NONE && newDirection != currentDirection) {
+                currentDirection = newDirection;
+            }
+        }
+        return;
     }
 
-    // Normale AI alleen in chasing/fear
+    // Rest of existing AI logic for CHASING/FEAR modes
     if (isAtIntersection()) {
         Direction newDirection = chooseDirection(pacman);
         if (newDirection != Direction::NONE && newDirection != currentDirection) {
@@ -173,6 +179,26 @@ Direction Ghost::chooseFearDirection(const PacMan& pacman) {
     }
 
     return bestDirection;
+}
+
+Direction Ghost::chooseSpawnExitDirection() {
+    if (!world) return currentDirection;
+
+    // Get direction towards the exit position
+    Position exitPos = world->getGhostExitPosition();
+    return getDirectionToTarget(exitPos);
+}
+
+Direction Ghost::getDirectionToTarget(const Position& target) const {
+    float dx = target.x - position.x;
+    float dy = target.y - position.y;
+
+    // Prefer horizontal movement if more significant
+    if (std::abs(dx) > std::abs(dy)) {
+        return (dx > 0) ? Direction::RIGHT : Direction::LEFT;
+    } else {
+        return (dy > 0) ? Direction::UP : Direction::DOWN;
+    }
 }
 
 void Ghost::enterFearMode(float duration) {
@@ -320,12 +346,15 @@ bool Ghost::isOppositeDirection(Direction dir1, Direction dir2) const {
 bool Ghost::hasLeftSpawn() const {
     if (!world) return true;
 
-    Position center = world->getGhostCenterPosition();
-    float distance = position.distance(center);
+    Position exit = world->getGhostExitPosition();
+    float distanceToExit = position.distance(exit);
 
-    // ✅ Ver genoeg van center = uit spawn
-    return distance > 0.5f;  // Verhoog als nodig
+    // ✅ Close enough to exit = successfully exited spawn
+    return distanceToExit < 0.3f;
 }
+
+
+
 
 
 } // namespace pacman

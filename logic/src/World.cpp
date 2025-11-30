@@ -337,8 +337,6 @@ void World::applyDifficultyScaling() {
     }
 }
 
-// In logic/src/World.cpp
-
 void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
     Direction currentDir = ghost->getCurrentDirection();
 
@@ -380,26 +378,11 @@ void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
         }
     }
 
-    // ✅ ALLEEN IN SPAWNING: als blocked, kies random andere richting
+    // ✅ IMPROVED: In SPAWNING mode, use exit-seeking AI when blocked
     if (blocked && ghost->getMode() == GhostMode::SPAWNING) {
-        std::vector<Direction> testDirs = {
-            Direction::UP, Direction::DOWN, Direction::LEFT, Direction::RIGHT
-        };
-
-        // Probeer elke richting
-        for (Direction dir : testDirs) {
-            if (dir == currentDir) continue;  // Skip huidige
-
-            if (canMoveInDirection(currentPos, dir, ghost->getCollisionRadius())) {
-                ghost->setCurrentDirection(dir);
-                std::cout << "Ghost spawn collision - trying direction "
-                          << static_cast<int>(dir) << std::endl;
-                break;  // Neem eerste viable richting
-            }
-        }
+        // Let the AI choose a new direction towards exit
+        ghost->updateAI(*pacman, deltaTime); // This will now trigger spawn exit logic
     }
-
-    // In CHASING/FEAR: AI regelt direction changes, wij doen niks
 }
 
 Position World::gridToWorld(int row, int col, int totalRows, int totalCols) const {
@@ -551,6 +534,12 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
                 std::cout << "Found Fruit spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
 
+            case 'E':  // Ghost exit point
+                ghostExitPosition = worldPos;  // Store the exit position
+                std::cout << "Found Ghost Exit at grid(" << row << "," << col << ")" << std::endl;
+                break;
+
+
             default:
                 // Unknown character, ignore
                     break;
@@ -631,9 +620,19 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
         ghostsCreated++;
     }
 
+    for (auto& ghost : ghosts) {
+        ghost->setExitPosition(ghostExitPosition);
+    }
+
 
     std::cout << "Created " << fruits.size() << " fruits from map" << std::endl;
     std::cout << "Map loading complete!" << std::endl;
+}
+
+bool World::isInsideSpawnZone(const Position& pos) const {
+    // Define spawn zone as a rectangle around the ghost center
+    float spawnRadius = 0.5f;
+    return pos.distance(ghostCenterPosition) < spawnRadius;
 }
 
 } // namespace pacman

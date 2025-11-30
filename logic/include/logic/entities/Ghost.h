@@ -18,10 +18,12 @@ public:
     void updateAI(const PacMan& pacman, float deltaTime);
     Direction chooseDirection(const PacMan& pacman);
 
-    bool hasLeftSpawn() const;
-
     void setMode(GhostMode mode);
     GhostMode getMode() const { return mode; }
+
+    // ✅ ADD THESE MISSING METHODS:
+    void setExitPosition(const Position& exitPos) { exitPosition = exitPos; }
+    Position getExitPosition() const { return exitPosition; }
 
     void enterFearMode(float duration);
     bool isFeared() const { return mode == GhostMode::FEAR; }
@@ -35,12 +37,15 @@ public:
     void respawn(const Position& centerPos);
 
     void setWorld(World* worldPtr) { world = worldPtr; }
-    float getCollisionRadius() const override { return 0.09f; }
+    float getCollisionRadius() const override { return 0.085f; }
+
+    // ✅ ADD THIS METHOD:
+    bool hasLeftSpawn() const;
 
 private:
     GhostType type;
     GhostMode mode = GhostMode::SPAWNING;
-    Direction currentDirection = Direction::UP;  // ✅ Altijd UP voor spawn exit
+    Direction currentDirection = Direction::UP;
     Direction lockedDirection = Direction::RIGHT;
 
     float spawnTimer = 0.0f;
@@ -48,9 +53,14 @@ private:
     float fearDuration = 10.0f;
 
     Position startPosition;
+    Position exitPosition;  // This exists but setter was missing
     World* world = nullptr;
 
-    // AI helpers
+    bool hasExitedSpawn = false;
+
+    // ✅ ADD THESE MISSING METHOD DECLARATIONS:
+    Direction getDirectionToTarget(const Position& target) const;
+    Direction chooseSpawnExitDirection();
     Direction chooseRandomDirection();
     Direction chooseChasingDirection(const PacMan& pacman);
     Direction choosePredictorDirection(const PacMan& pacman);
