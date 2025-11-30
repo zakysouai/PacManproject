@@ -184,9 +184,49 @@ Direction Ghost::chooseFearDirection(const PacMan& pacman) {
 Direction Ghost::chooseSpawnExitDirection() {
     if (!world) return currentDirection;
 
-    // Get direction towards the exit position
+    auto viable = getViableDirections();
+    if (viable.empty()) return currentDirection;
+
     Position exitPos = world->getGhostExitPosition();
-    return getDirectionToTarget(exitPos);
+
+    // If we can see the exit in a straight line, go directly toward it
+    for (Direction dir : viable) {
+        if (canSeeExitInDirection(dir, exitPos)) {
+            return dir;
+        }
+    }
+
+    // Otherwise, use Manhattan distance to choose the best direction
+    Direction bestDirection = currentDirection;
+    float bestDistance = std::numeric_limits<float>::max();
+
+    for (Direction dir : viable) {
+        Position testPos = simulateMovement(dir);
+        float distance = testPos.manhattanDistance(exitPos);
+
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            bestDirection = dir;
+        }
+    }
+
+    return bestDirection;
+}
+
+bool Ghost::canSeeExitInDirection(Direction dir, const Position& exitPos) const {
+    // Check if moving in this direction would get us closer to exit without hitting walls
+    Position testPos = simulateMovement(dir);
+
+    // Calculate if we're moving toward the exit
+    float currentDist = position.manhattanDistance(exitPos);
+    float newDist = testPos.manhattanDistance(exitPos);
+
+    return newDist < currentDist && world->canMoveInDirection(position, dir, getCollisionRadius());
+}
+
+Position Ghost::simulateMovement(Direction dir) const {
+    Position dirVector = getDirectionVector(dir);
+    return position + dirVector * 0.3f; // Simulate moving a short distance
 }
 
 Direction Ghost::getDirectionToTarget(const Position& target) const {

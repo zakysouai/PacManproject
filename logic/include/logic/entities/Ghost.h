@@ -61,6 +61,11 @@ private:
     // ✅ ADD THESE MISSING METHOD DECLARATIONS:
     Direction getDirectionToTarget(const Position& target) const;
     Direction chooseSpawnExitDirection();
+
+    bool canSeeExitInDirection(Direction dir, const Position& exitPos) const;
+    Position simulateMovement(Direction dir) const;
+    Direction chooseBestDirectionToExit(const Position& exitPos);
+
     Direction chooseRandomDirection();
     Direction chooseChasingDirection(const PacMan& pacman);
     Direction choosePredictorDirection(const PacMan& pacman);
