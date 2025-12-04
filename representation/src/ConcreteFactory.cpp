@@ -1,6 +1,6 @@
 #include "representation/ConcreteFactory.h"
 #include "representation/views/PacManView.h"
-#include "representation/views/GhostView.h"
+
 #include "representation/views/CoinView.h"
 #include "representation/views/FruitView.h"
 #include "representation/views/WallView.h"
@@ -20,16 +20,6 @@ std::unique_ptr<pacman::PacMan> ConcreteFactory::createPacMan(const pacman::Posi
     views.push_back(std::move(view));
     
     return pacman;
-}
-
-std::unique_ptr<pacman::Ghost> ConcreteFactory::createGhost(const pacman::Position& pos, pacman::GhostType type) {
-    auto ghost = std::make_unique<pacman::Ghost>(pos, type);
-    
-    auto view = std::make_unique<GhostView>(ghost.get(), camera);
-    ghost->attach(view.get());
-    views.push_back(std::move(view));
-    
-    return ghost;
 }
 
 std::unique_ptr<pacman::Coin> ConcreteFactory::createCoin(const pacman::Position& pos) {

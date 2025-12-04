@@ -19,22 +19,6 @@ void World::update(float deltaTime) {
         updatePacManWithCollisions(deltaTime);
     }
 
-    // ✅ SIMPELE ghost update
-    for (auto& ghost : ghosts) {
-        ghost->update(deltaTime);
-
-        // ✅ In SPAWNING: Geen AI, gewoon bewegen UP met collision
-        if (ghost->getMode() == GhostMode::SPAWNING) {
-            updateGhostWithCollisions(ghost.get(), deltaTime);
-        }
-
-        // ✅ In CHASING/FEAR: AI + beweging
-        else if (pacman) {
-            ghost->updateAI(*pacman, deltaTime);
-            updateGhostWithCollisions(ghost.get(), deltaTime);
-        }
-    }
-
     handleCollisions();
 
     if (isLevelComplete()) {
@@ -248,49 +232,7 @@ void World::handleCollisions() {
     for (auto& fruit : fruits) {
         if (!fruit->isCollected() && pacman->intersects(*fruit)) {
             fruit->collect();
-            // Activate fear mode for all ghosts
-            for (auto& ghost : ghosts) {
-                ghost->enterFearMode(10.0f);
-            }
         }
-    }
-
-    // Check ghost collisions
-    // Only check if enough time has passed since last death (invulnerability period)
-    if (timeSinceLastDeath >= DEATH_COOLDOWN) {
-        for (auto& ghost : ghosts) {
-            if (pacman->intersects(*ghost)) {
-                if (ghost->isFeared()) {
-                    // Eat the ghost
-                    Event event;
-                    event.type = EventType::GHOST_EATEN;
-                    event.value = 200;
-                    score.onNotify(event);
-                    ghost->respawn(Position(0, 0));  // Respawn at center
-                } else if (ghost->getMode() == GhostMode::CHASING) {
-                    // PacMan dies
-                    std::cout << "PacMan hit by ghost! Lives before: " << pacman->getLives() << std::endl;
-
-                    pacman->loseLife();
-
-                    std::cout << "Lives after: " << pacman->getLives() << std::endl;
-
-                    // Reset death timer for invulnerability period
-                    timeSinceLastDeath = 0.0f;
-
-                    std::cout << "Starting " << DEATH_COOLDOWN << "s invulnerability period" << std::endl;
-
-                    // Reset positions
-                    reset();
-
-                    // Break to prevent multiple deaths in one frame
-                    break;
-                }
-            }
-        }
-    } else {
-        // Still in invulnerability period, increment timer
-        timeSinceLastDeath += Stopwatch::getInstance().getDeltaTime();
     }
 }
 
@@ -323,66 +265,9 @@ void World::reset() {
                   << pacmanSpawnPosition.x << ", "
                   << pacmanSpawnPosition.y << ")" << std::endl;
     }
-
-    // Reset ghosts to their center position
-    for (auto& ghost : ghosts) {
-        ghost->reset(ghostCenterPosition);
-    }
 }
 
 void World::applyDifficultyScaling() {
-    // Increase ghost speed
-    for (auto& ghost : ghosts) {
-        ghost->setSpeed(ghost->getSpeed() * 1.1f);
-    }
-}
-
-void World::updateGhostWithCollisions(Ghost* ghost, float deltaTime) {
-    Direction currentDir = ghost->getCurrentDirection();
-
-    if (currentDir == Direction::NONE) {
-        return;
-    }
-
-    Position currentPos = ghost->getPosition();
-    Position dirVector = getDirectionVector(currentDir);
-    float speed = ghost->getSpeed();
-    Position movement = dirVector * speed * deltaTime;
-
-    bool blocked = false;
-
-    // Per-axis collision
-    if (currentDir == Direction::LEFT || currentDir == Direction::RIGHT) {
-        Position testPos = Position(currentPos.x + movement.x, currentPos.y);
-        Position originalPos = ghost->getPosition();
-        ghost->setPosition(testPos);
-
-        for (const auto& wall : walls) {
-            if (ghost->intersects(*wall)) {
-                blocked = true;
-                ghost->setPosition(originalPos);
-                break;
-            }
-        }
-    } else if (currentDir == Direction::UP || currentDir == Direction::DOWN) {
-        Position testPos = Position(currentPos.x, currentPos.y + movement.y);
-        Position originalPos = ghost->getPosition();
-        ghost->setPosition(testPos);
-
-        for (const auto& wall : walls) {
-            if (ghost->intersects(*wall)) {
-                blocked = true;
-                ghost->setPosition(originalPos);
-                break;
-            }
-        }
-    }
-
-    // ✅ IMPROVED: In SPAWNING mode, use exit-seeking AI when blocked
-    if (blocked && ghost->getMode() == GhostMode::SPAWNING) {
-        // Let the AI choose a new direction towards exit
-        ghost->updateAI(*pacman, deltaTime); // This will now trigger spawn exit logic
-    }
 }
 
 Position World::gridToWorld(int row, int col, int totalRows, int totalCols) const {
@@ -456,7 +341,6 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     walls.clear();
     coins.clear();
     fruits.clear();
-    ghosts.clear();
 
     Position pacmanSpawnPos(0, 0);
     bool pacmanSpawned = false;
@@ -500,46 +384,11 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
                 std::cout << "Found PacMan spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
 
-            case 'r':  // Red ghost spawn
-            case 'R':
-                redGhostPos = worldPos;
-                redSpawned = true;
-                std::cout << "Found Red ghost spawn at grid(" << row << "," << col << ")" << std::endl;
-                break;
-
-            case 'o':  // Orange ghost spawn
-            case 'O':
-                orangeGhostPos = worldPos;
-                orangeSpawned = true;
-                std::cout << "Found Orange ghost spawn at grid(" << row << "," << col << ")" << std::endl;
-                break;
-
-            case 'g':  // Green/Cyan ghost spawn
-            case 'G':
-                cyanGhostPos = worldPos;
-                cyanSpawned = true;
-                std::cout << "Found Cyan ghost spawn at grid(" << row << "," << col << ")" << std::endl;
-                break;
-
-            case 'i':  // pInk ghost spawn
-            case 'I':
-                pinkGhostPos = worldPos;
-                pinkSpawned = true;
-                std::cout << "Found Pink ghost spawn at grid(" << row << "," << col << ")" << std::endl;
-                break;
-
             case 'c':  // Coin/Fruit (power pellet)
             case 'C':
                 fruits.push_back(factory->createFruit(worldPos));
                 std::cout << "Found Fruit spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
-
-            case 'E':  // Ghost exit point
-                ghostExitPosition = worldPos;  // Store the exit position
-                std::cout << "Found Ghost Exit at grid(" << row << "," << col << ")" << std::endl;
-                break;
-
-
             default:
                 // Unknown character, ignore
                     break;
@@ -559,80 +408,10 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
         std::cout << "WARNING: No PacMan ('p' or 'P') found in map - no PacMan spawned!" << std::endl;
     }
 
-    // Calculate ghost center (for respawn after death)
-    if (redSpawned || pinkSpawned || cyanSpawned || orangeSpawned) {
-        Position sumPos(0, 0);
-        int count = 0;
-        if (redSpawned) { sumPos = sumPos + redGhostPos; count++; }
-        if (pinkSpawned) { sumPos = sumPos + pinkGhostPos; count++; }
-        if (cyanSpawned) { sumPos = sumPos + cyanGhostPos; count++; }
-        if (orangeSpawned) { sumPos = sumPos + orangeGhostPos; count++; }
-        ghostCenterPosition = Position(sumPos.x / count, sumPos.y / count);
-
-        // ✅ NEW: Calculate exit positions (left and right of spawn, far enough away)
-        ghostExitLeft = Position(ghostCenterPosition.x - 0.8f, ghostCenterPosition.y);
-        ghostExitRight = Position(ghostCenterPosition.x + 0.8f, ghostCenterPosition.y);
-
-        std::cout << "Ghost spawn center: (" << ghostCenterPosition.x << ", " << ghostCenterPosition.y << ")" << std::endl;
-        std::cout << "Ghost exit LEFT: (" << ghostExitLeft.x << ", " << ghostExitLeft.y << ")" << std::endl;
-        std::cout << "Ghost exit RIGHT: (" << ghostExitRight.x << ", " << ghostExitRight.y << ")" << std::endl;
-    } else {
-        ghostCenterPosition = Position(0, 0);
-        ghostExitLeft = Position(-0.5f, 0.0f);
-        ghostExitRight = Position(0.5f, 0.0f);
-    }
-
-    int ghostsCreated = 0;
-
-    if (redSpawned) {
-        auto ghost1 = factory->createGhost(redGhostPos, GhostType::RANDOM);
-        ghost1->setSpawnDelay(0.0f);  // Verlaat direct
-        ghost1->setWorld(this);
-        // ❌ VERWIJDER: ghost1->setExitTarget(...);
-        ghosts.push_back(std::move(ghost1));
-        ghostsCreated++;
-    }
-
-    if (pinkSpawned) {
-        auto ghost2 = factory->createGhost(pinkGhostPos, GhostType::CHASER);
-        ghost2->setSpawnDelay(3.0f);  // Wacht 3 sec
-        ghost2->setWorld(this);
-        // ❌ VERWIJDER: ghost2->setExitTarget(...);
-        ghosts.push_back(std::move(ghost2));
-        ghostsCreated++;
-    }
-
-    if (cyanSpawned) {
-        auto ghost3 = factory->createGhost(cyanGhostPos, GhostType::PREDICTOR);
-        ghost3->setSpawnDelay(6.0f);  // Wacht 6 sec
-        ghost3->setWorld(this);
-        // ❌ VERWIJDER: ghost3->setExitTarget(...);
-        ghosts.push_back(std::move(ghost3));
-        ghostsCreated++;
-    }
-
-    if (orangeSpawned) {
-        auto ghost4 = factory->createGhost(orangeGhostPos, GhostType::CHASER);
-        ghost4->setSpawnDelay(9.0f);  // Wacht 9 sec
-        ghost4->setWorld(this);
-        // ❌ VERWIJDER: ghost4->setExitTarget(...);
-        ghosts.push_back(std::move(ghost4));
-        ghostsCreated++;
-    }
-
-    for (auto& ghost : ghosts) {
-        ghost->setExitPosition(ghostExitPosition);
-    }
-
 
     std::cout << "Created " << fruits.size() << " fruits from map" << std::endl;
     std::cout << "Map loading complete!" << std::endl;
 }
 
-bool World::isInsideSpawnZone(const Position& pos) const {
-    // Define spawn zone as a rectangle around the ghost center
-    float spawnRadius = 0.5f;
-    return pos.distance(ghostCenterPosition) < spawnRadius;
-}
 
 } // namespace pacman

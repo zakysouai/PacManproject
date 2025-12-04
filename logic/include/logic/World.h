@@ -1,7 +1,6 @@
 #pragma once
 #include "logic/EntityModel.h"
 #include "logic/entities/PacMan.h"
-#include "logic/entities/Ghost.h"
 #include "logic/entities/Coin.h"
 #include "logic/entities/Fruit.h"
 #include "logic/entities/Wall.h"
@@ -30,7 +29,6 @@ public:
     void reset();
 
     PacMan* getPacMan() const { return pacman.get(); }
-    const std::vector<std::unique_ptr<Ghost>>& getGhosts() const { return ghosts; }
     const std::vector<std::unique_ptr<Coin>>& getCoins() const { return coins; }
     const std::vector<std::unique_ptr<Fruit>>& getFruits() const { return fruits; }
     const std::vector<std::unique_ptr<Wall>>& getWalls() const { return walls; }
@@ -43,11 +41,6 @@ public:
 
     MapDimensions getMapDimensions() const { return {mapRows, mapCols}; }
 
-    Position getGhostCenterPosition() const { return ghostCenterPosition; }
-    Position getGhostExitPosition() const { return ghostExitPosition; } // ✅ ADD THIS
-
-    // ✅ ADD THESE MISSING METHODS:
-    bool isInsideSpawnZone(const Position& pos) const;
     bool canMoveInDirection(const Position& pos, Direction dir, float radius) const;
     bool wouldCollideWithWall(const Position& pos, float radius) const;
 
@@ -55,7 +48,6 @@ private:
     AbstractFactory* factory;
 
     std::unique_ptr<PacMan> pacman;
-    std::vector<std::unique_ptr<Ghost>> ghosts;
     std::vector<std::unique_ptr<Coin>> coins;
     std::vector<std::unique_ptr<Fruit>> fruits;
     std::vector<std::unique_ptr<Wall>> walls;
@@ -64,12 +56,6 @@ private:
     Score score;
 
     Position pacmanSpawnPosition = Position(0, 0);
-    Position ghostCenterPosition = Position(0, 0);
-    Position ghostExitPosition = Position(0, 0);  // ✅ ADD THIS
-
-    // ✅ ADD THESE MISSING MEMBER VARIABLES:
-    Position ghostExitLeft = Position(0, 0);
-    Position ghostExitRight = Position(0, 0);
 
     float timeSinceLastDeath = 999.0f;
     const float DEATH_COOLDOWN = 2.0f;
@@ -86,7 +72,6 @@ private:
     Position gridToWorld(int row, int col, int totalRows, int totalCols) const;
     void updatePacManWithCollisions(float deltaTime);
     bool checkWallCollision(const Position& pos, float radius) const;
-    void updateGhostWithCollisions(Ghost* ghost, float deltaTime);
     void applyDifficultyScaling();
 };
 

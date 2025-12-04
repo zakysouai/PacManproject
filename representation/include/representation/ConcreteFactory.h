@@ -15,7 +15,6 @@ public:
     
     // Factory methods (create model + attach view)
     std::unique_ptr<pacman::PacMan> createPacMan(const pacman::Position& pos) override;
-    std::unique_ptr<pacman::Ghost> createGhost(const pacman::Position& pos, pacman::GhostType type) override;
     std::unique_ptr<pacman::Coin> createCoin(const pacman::Position& pos) override;
     std::unique_ptr<pacman::Fruit> createFruit(const pacman::Position& pos) override;
     std::unique_ptr<pacman::Wall> createWall(const pacman::Position& pos) override;

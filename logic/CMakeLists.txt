@@ -7,7 +7,6 @@ set(LOGIC_SOURCES
         src/Score.cpp
         src/Camera.cpp
         src/entities/PacMan.cpp
-        src/entities/Ghost.cpp
         src/entities/Coin.cpp
         src/entities/Fruit.cpp
         src/entities/Wall.cpp

@@ -25,7 +25,6 @@ set(REPRESENTATION_SOURCES
         # Views
         src/views/EntityView.cpp
         src/views/PacManView.cpp
-        src/views/GhostView.cpp
         src/views/CoinView.cpp
         src/views/FruitView.cpp
         src/views/WallView.cpp

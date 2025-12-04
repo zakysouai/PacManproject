@@ -18,7 +18,6 @@ public:
     
     // Factory methods for creating entities
     virtual std::unique_ptr<PacMan> createPacMan(const Position& pos) = 0;
-    virtual std::unique_ptr<Ghost> createGhost(const Position& pos, GhostType type) = 0;
     virtual std::unique_ptr<Coin> createCoin(const Position& pos) = 0;
     virtual std::unique_ptr<Fruit> createFruit(const Position& pos) = 0;
     virtual std::unique_ptr<Wall> createWall(const Position& pos) = 0;
