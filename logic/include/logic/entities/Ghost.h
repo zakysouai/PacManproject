@@ -10,6 +10,11 @@ enum class GhostColor {
     ORANGE
 };
 
+enum class GhostState {
+    IN_SPAWN,
+    ON_MAP
+};
+
 class Ghost : public EntityModel {
 public:
     explicit Ghost(const Position& pos, GhostColor color);
@@ -18,6 +23,7 @@ public:
     void update(float deltaTime) override;
 
     GhostColor getColor() const { return color; }
+    GhostState getState() const { return state; }
     Direction getCurrentDirection() const { return currentDirection; }
 
     void setWorld(class World* world) { this->world = world; }
@@ -25,14 +31,22 @@ public:
 
 private:
     GhostColor color;
+    GhostState state = GhostState::IN_SPAWN;
     Direction currentDirection = Direction::RIGHT;
+    Position spawnPosition;
     World* world = nullptr;
+
+    float spawnTimer = 0.0f;
 
     void move(float deltaTime);
     bool isAtIntersection() const;
     Direction chooseDirectionAtIntersection();
     void handleWallCollision();
     bool isOpposite(Direction dir1, Direction dir2) const;
+
+    // Red ghost AI
+    Direction chooseRedGhostDirection();
+    float calculateManhattanDistance(const Position& from, const Position& to) const;
 };
 
 } // namespace pacman
