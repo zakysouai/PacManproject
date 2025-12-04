@@ -2,6 +2,7 @@
 #include "logic/AbstractFactory.h"
 #include "logic/Camera.h"
 #include "representation/views/EntityView.h"
+#include "logic/entities/Ghost.h"
 #include <SFML/Graphics.hpp>
 #include <memory>
 #include <vector>
@@ -18,6 +19,7 @@ public:
     std::unique_ptr<pacman::Coin> createCoin(const pacman::Position& pos) override;
     std::unique_ptr<pacman::Fruit> createFruit(const pacman::Position& pos) override;
     std::unique_ptr<pacman::Wall> createWall(const pacman::Position& pos) override;
+    std::unique_ptr<pacman::Ghost> createGhost(const pacman::Position& pos, pacman::GhostColor color) override;
     
     // View management
     const std::vector<std::unique_ptr<EntityView>>& getViews() const { return views; }

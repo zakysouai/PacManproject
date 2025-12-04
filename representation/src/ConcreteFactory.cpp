@@ -4,6 +4,7 @@
 #include "representation/views/CoinView.h"
 #include "representation/views/FruitView.h"
 #include "representation/views/WallView.h"
+#include "representation/views/GhostView.h"
 
 namespace pacman::representation {
 
@@ -50,6 +51,16 @@ std::unique_ptr<pacman::Wall> ConcreteFactory::createWall(const pacman::Position
     views.push_back(std::move(view));
     
     return wall;
+}
+
+std::unique_ptr<pacman::Ghost> ConcreteFactory::createGhost(const pacman::Position& pos, pacman::GhostColor color) {
+    auto ghost = std::make_unique<pacman::Ghost>(pos, color);
+
+    auto view = std::make_unique<GhostView>(ghost.get(), camera, color);
+    ghost->attach(view.get());
+    views.push_back(std::move(view));
+
+    return ghost;
 }
 
 } // namespace pacman::representation

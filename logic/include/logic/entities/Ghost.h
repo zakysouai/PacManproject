@@ -1,64 +1,38 @@
 #pragma once
 #include "logic/EntityModel.h"
-#include "logic/entities/PacMan.h"
-#include <memory>
 
 namespace pacman {
 
-enum class GhostState {
-    SPAWNING,
-    CHASING,
-    FEAR
+enum class GhostColor {
+    RED,
+    PINK,
+    BLUE,
+    ORANGE
 };
 
 class Ghost : public EntityModel {
 public:
-    explicit Ghost(const Position& pos, float spawnDelay);
+    explicit Ghost(const Position& pos, GhostColor color);
     ~Ghost() override = default;
 
     void update(float deltaTime) override;
 
-    // State management
-    GhostState getState() const { return state; }
-    void setState(GhostState newState);
-    void enterFearMode(float duration);
-    void respawn();
-
-    // AI
-    virtual Direction chooseDirection(const Position& pacmanPos, Direction pacmanDir) = 0;
-
-    // Getters
-    float getCollisionRadius() const override { return 0.08f; }
+    GhostColor getColor() const { return color; }
     Direction getCurrentDirection() const { return currentDirection; }
-    bool isInFearMode() const { return state == GhostState::FEAR; }
 
-    // Setters
     void setWorld(class World* world) { this->world = world; }
-
-protected:
-    GhostState state = GhostState::SPAWNING;
-    Direction currentDirection = Direction::NONE;
-
-    Position spawnPosition;
-    float spawnTimer;
-    float spawnDelay;
-
-    float fearTimer = 0.0f;
-    float baseSpeed = 0.4f;
-    float fearSpeed = 0.2f;
-
-    World* world = nullptr;  // Non-owning pointer
-
-    // Helper methods
-    bool isAtIntersection() const;
-    std::vector<Direction> getViableDirections() const;
-    Direction getBestDirection(const Position& target, bool maximize = false) const;
+    float getCollisionRadius() const override { return 0.08f; }
 
 private:
-    void updateSpawning(float deltaTime);
-    void updateChasing(float deltaTime);
-    void updateFear(float deltaTime);
+    GhostColor color;
+    Direction currentDirection = Direction::RIGHT;
+    World* world = nullptr;
+
     void move(float deltaTime);
+    bool isAtIntersection() const;
+    Direction chooseDirectionAtIntersection();
+    void handleWallCollision();
+    bool isOpposite(Direction dir1, Direction dir2) const;
 };
 
 } // namespace pacman

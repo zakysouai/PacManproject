@@ -32,6 +32,7 @@ public:
     const std::vector<std::unique_ptr<Coin>>& getCoins() const { return coins; }
     const std::vector<std::unique_ptr<Fruit>>& getFruits() const { return fruits; }
     const std::vector<std::unique_ptr<Wall>>& getWalls() const { return walls; }
+    const std::vector<std::unique_ptr<Ghost>>& getGhosts() const { return ghosts; }
 
     int getCurrentLevel() const { return currentLevel; }
     bool isLevelComplete() const;
@@ -44,6 +45,10 @@ public:
     bool canMoveInDirection(const Position& pos, Direction dir, float radius) const;
     bool wouldCollideWithWall(const Position& pos, float radius) const;
 
+    Position getDoorPosition() const { return doorPosition; }
+    bool isDoorOpen() const { return doorOpen; }
+    bool isInsideSpawn(const Position& pos) const;
+
 private:
     AbstractFactory* factory;
 
@@ -51,6 +56,7 @@ private:
     std::vector<std::unique_ptr<Coin>> coins;
     std::vector<std::unique_ptr<Fruit>> fruits;
     std::vector<std::unique_ptr<Wall>> walls;
+    std::vector<std::unique_ptr<Ghost>> ghosts;
 
     int currentLevel = 1;
     Score score;
@@ -63,6 +69,15 @@ private:
     int mapRows = 0;
     int mapCols = 0;
 
+    Position doorPosition;
+    bool doorOpen = true;
+
+    // Spawn area bounds
+    float spawnLeft = -0.2f;
+    float spawnRight = 0.2f;
+    float spawnTop = -0.1f;
+    float spawnBottom = 0.1f;
+
     void handleCollisions();
     bool checkWallCollision(const Position& pos, Direction dir) const;
     bool isPositionBlocked(const Position& pos, float radius) const;
@@ -73,6 +88,8 @@ private:
     void updatePacManWithCollisions(float deltaTime);
     bool checkWallCollision(const Position& pos, float radius) const;
     void applyDifficultyScaling();
+
+
 };
 
 } // namespace pacman

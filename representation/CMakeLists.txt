@@ -28,6 +28,7 @@ set(REPRESENTATION_SOURCES
         src/views/CoinView.cpp
         src/views/FruitView.cpp
         src/views/WallView.cpp
+        src/views/GhostView.cpp
 )
 
 # Create executable

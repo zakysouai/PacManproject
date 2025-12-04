@@ -2,6 +2,7 @@
 
 #include "logic/utils/Random.h"
 #include "logic/utils/Stopwatch.h"
+#include "logic/entities/Ghost.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -17,6 +18,11 @@ void World::update(float deltaTime) {
 
     if (pacman) {
         updatePacManWithCollisions(deltaTime);
+    }
+
+    // Update ghosts
+    for (auto& ghost : ghosts) {
+        ghost->update(deltaTime);
     }
 
     handleCollisions();
@@ -341,21 +347,22 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     walls.clear();
     coins.clear();
     fruits.clear();
+    ghosts.clear();
 
     Position pacmanSpawnPos(0, 0);
     bool pacmanSpawned = false;
     int wallCount = 0;
     int coinCount = 0;
 
-    // Track ghost spawn positions by color
-    Position redGhostPos(0, 0);
-    Position pinkGhostPos(0, 0);
-    Position cyanGhostPos(0, 0);
-    Position orangeGhostPos(0, 0);
+    // Ghost spawn tracking
     bool redSpawned = false;
     bool pinkSpawned = false;
     bool cyanSpawned = false;
     bool orangeSpawned = false;
+    Position redPos(0, 0);
+    Position pinkPos(0, 0);
+    Position cyanPos(0, 0);
+    Position orangePos(0, 0);
 
     // Parse the map and create entities
     for (int row = 0; row < totalRows; ++row) {
@@ -389,9 +396,38 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
                 fruits.push_back(factory->createFruit(worldPos));
                 std::cout << "Found Fruit spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
+
+            case 'r':  // Red ghost
+            case 'R':
+                redPos = worldPos;
+                redSpawned = true;
+                std::cout << "Found Red ghost spawn at grid(" << row << "," << col << ")" << std::endl;
+                break;
+
+            case 'i':  // Pink ghost (i for pInk)
+            case 'I':
+                pinkPos = worldPos;
+                pinkSpawned = true;
+                std::cout << "Found Pink ghost spawn at grid(" << row << "," << col << ")" << std::endl;
+                break;
+
+            case 'b':  // Blue/Cyan ghost
+            case 'B':
+                cyanPos = worldPos;
+                cyanSpawned = true;
+                std::cout << "Found Cyan ghost spawn at grid(" << row << "," << col << ")" << std::endl;
+                break;
+
+            case 'o':  // Orange ghost
+            case 'O':
+                orangePos = worldPos;
+                orangeSpawned = true;
+                std::cout << "Found Orange ghost spawn at grid(" << row << "," << col << ")" << std::endl;
+                break;
+
             default:
                 // Unknown character, ignore
-                    break;
+                break;
             }
         }
     }
@@ -408,10 +444,40 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
         std::cout << "WARNING: No PacMan ('p' or 'P') found in map - no PacMan spawned!" << std::endl;
     }
 
+    // Create ghosts via FACTORY
+    if (redSpawned) {
+        auto ghost = factory->createGhost(redPos, GhostColor::RED);
+        ghost->setWorld(this);
+        ghosts.push_back(std::move(ghost));
+        std::cout << "Created RED ghost at (" << redPos.x << ", " << redPos.y << ")" << std::endl;
+    }
+
+    if (pinkSpawned) {
+        auto ghost = factory->createGhost(pinkPos, GhostColor::PINK);
+        ghost->setWorld(this);
+        ghosts.push_back(std::move(ghost));
+        std::cout << "Created PINK ghost at (" << pinkPos.x << ", " << pinkPos.y << ")" << std::endl;
+    }
+
+    if (cyanSpawned) {
+        auto ghost = factory->createGhost(cyanPos, GhostColor::BLUE);
+        ghost->setWorld(this);
+        ghosts.push_back(std::move(ghost));
+        std::cout << "Created CYAN ghost at (" << cyanPos.x << ", " << cyanPos.y << ")" << std::endl;
+    }
+
+    if (orangeSpawned) {
+        auto ghost = factory->createGhost(orangePos, GhostColor::ORANGE);
+        ghost->setWorld(this);
+        ghosts.push_back(std::move(ghost));
+        std::cout << "Created ORANGE ghost at (" << orangePos.x << ", " << orangePos.y << ")" << std::endl;
+    }
 
     std::cout << "Created " << fruits.size() << " fruits from map" << std::endl;
+    std::cout << "Created " << ghosts.size() << " ghosts from map" << std::endl;
     std::cout << "Map loading complete!" << std::endl;
 }
+
 
 
 } // namespace pacman
