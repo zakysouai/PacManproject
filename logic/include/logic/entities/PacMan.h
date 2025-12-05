@@ -54,7 +54,7 @@ public:
      *
      * @return Collision radius = 0.091 (exactly half a tile)
      */
-    float getCollisionRadius() const override { return 0.08f; }
+    // float getCollisionRadius() const override { return 0.08f; }
 
 private:
     Direction currentDirection = Direction::NONE;

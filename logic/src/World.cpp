@@ -349,6 +349,10 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     mapRows = totalRows;
     mapCols = totalCols;
 
+    if (camera) {
+        camera->setMapDimensions(mapRows, mapCols);
+    }
+
     std::cout << "Map size: " << totalRows << "x" << totalCols << std::endl;
 
     // Clear existing entities
@@ -487,6 +491,30 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
         ghost->setWorld(this);
         ghosts.push_back(std::move(ghost));
         std::cout << "Created ORANGE ghost at (" << orangePos.x << ", " << orangePos.y << ")" << std::endl;
+    }
+
+    float tileSize = 2.0f / mapRows;
+    std::cout << "Tile size: " << tileSize << std::endl;
+
+    // ✅ UPDATE COLLISION RADII
+    if (pacman) {
+        pacman->setCollisionRadius(tileSize * 0.45f);
+    }
+
+    for (auto& ghost : ghosts) {
+        ghost->setCollisionRadius(tileSize * 0.40f);
+    }
+
+    for (auto& wall : walls) {
+        wall->setCollisionRadius(tileSize * 0.50f);
+    }
+
+    for (auto& coin : coins) {
+        coin->setCollisionRadius(tileSize * 0.15f);
+    }
+
+    for (auto& fruit : fruits) {
+        fruit->setCollisionRadius(tileSize * 0.30f);
     }
 
     std::cout << "Created " << fruits.size() << " fruits from map" << std::endl;

@@ -1,4 +1,5 @@
 #pragma once
+#include "Camera.h"
 #include "logic/EntityModel.h"
 #include "logic/entities/PacMan.h"
 #include "logic/entities/Coin.h"
@@ -46,6 +47,7 @@ public:
     Score* getScore() { return &score; }
 
     MapDimensions getMapDimensions() const { return {mapRows, mapCols}; }
+    void setCamera(Camera* cam) { camera = cam; }
 
     bool canMoveInDirection(const Position& pos, Direction dir, float radius, const Ghost* ghost = nullptr) const;
     bool wouldCollideWithWall(const Position& pos, float radius, const Ghost* ghost = nullptr) const;
@@ -62,6 +64,7 @@ public:
 
 private:
     AbstractFactory* factory;
+    Camera* camera = nullptr;
 
     std::unique_ptr<PacMan> pacman;
     std::vector<std::unique_ptr<Coin>> coins;

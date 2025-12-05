@@ -20,7 +20,7 @@ public:
      *
      * @return Collision radius = 0.091 (exactly half a tile)
      */
-    float getCollisionRadius() const override { return 0.091f; }
+    // float getCollisionRadius() const override { return 0.091f; }
 };
 
 } // namespace pacman

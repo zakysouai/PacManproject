@@ -25,17 +25,13 @@ void LevelState::onEnter() {
     world = std::make_unique<pacman::World>(factory.get());
     
     // Load level - now loads FULL map with all entities
-    world->loadLevel("../resources/maps/map.txt");
+    world->setCamera(camera.get());
+    world->loadLevel("../resources/maps/map_big.txt");
 
     if (world->hasDoorInMap()) {
         auto doorView = std::make_unique<DoorView>(*camera, world->getDoorPosition());
         factory->addView(std::move(doorView));
     }
-
-    // ✅ NIEUW: Update camera met werkelijke map dimensies
-    auto dims = world->getMapDimensions();
-    camera->setMapDimensions(dims.rows, dims.cols);
-    std::cout << "Camera updated for " << dims.rows << "x" << dims.cols << " map" << std::endl;
 
     // Setup UI
     loadFont();
@@ -139,6 +135,32 @@ void LevelState::checkGameState() {
 void LevelState::render(sf::RenderWindow& window) {
     window.clear(sf::Color::Black);
     
+    // ✅ OPTIONEEL: teken letterbox borders (visueel)
+    auto cam = camera.get();
+    if (cam->getViewportOffsetX() > 0) {
+        // Verticale borders
+        sf::RectangleShape border;
+        border.setFillColor(sf::Color(20, 20, 20));
+        border.setSize(sf::Vector2f(cam->getViewportOffsetX(), cam->getWindowHeight()));
+        border.setPosition(0, 0);
+        window.draw(border);
+
+        border.setPosition(cam->getViewportOffsetX() + cam->getViewportWidth(), 0);
+        window.draw(border);
+    }
+
+    if (cam->getViewportOffsetY() > 0) {
+        // Horizontale borders
+        sf::RectangleShape border;
+        border.setFillColor(sf::Color(20, 20, 20));
+        border.setSize(sf::Vector2f(cam->getWindowWidth(), cam->getViewportOffsetY()));
+        border.setPosition(0, 0);
+        window.draw(border);
+
+        border.setPosition(0, cam->getViewportOffsetY() + cam->getViewportHeight());
+        window.draw(border);
+    }
+
     // Draw all entities through their views
     for (const auto& view : factory->getViews()) {
         view->draw(window);

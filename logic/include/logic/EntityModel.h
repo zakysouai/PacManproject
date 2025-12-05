@@ -58,17 +58,18 @@ public:
         );
     }
 
+    virtual float getCollisionRadius() const { return collisionRadius; }
+    void setCollisionRadius(float radius) { collisionRadius = radius; }
+
     // ✅ Check intersection with another entity
     virtual bool intersects(const EntityModel& other) const {
         return getBoundingBox().intersects(other.getBoundingBox());
     }
-
-    // Keep radius for backward compatibility, but prefer bounding box
-    virtual float getCollisionRadius() const { return 0.05f; }
     
 protected:
     Position position;
     float speed;
+    float collisionRadius = 0.05f; // default
 };
 
 } // namespace pacman

@@ -28,7 +28,7 @@ public:
     Direction getCurrentDirection() const { return currentDirection; }
 
     void setWorld(class World* world) { this->world = world; }
-    float getCollisionRadius() const override { return 0.08f; }
+    // float getCollisionRadius() const override { return 0.08f; }
 
     bool hasPassedThroughDoor() const { return hasPassedDoor; }
     void markPassedDoor() { hasPassedDoor = true; }

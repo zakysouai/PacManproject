@@ -13,12 +13,10 @@ void Camera::setMapDimensions(int rows, int cols) {
     mapRows = rows;
     mapCols = cols;
 
-    // ✅ Bereken world bounds op basis van aspect ratio
     float mapAspectRatio = static_cast<float>(cols) / static_cast<float>(rows);
     worldWidth = mapAspectRatio;
     worldHeight = 1.0f;
 
-    // Herbereken scale
     calculateScale();
 
     std::cout << "Camera: Map " << rows << "x" << cols
@@ -27,36 +25,51 @@ void Camera::setMapDimensions(int rows, int cols) {
 }
 
 void Camera::calculateScale() {
-    // ✅ World bounds zijn nu [-worldWidth, worldWidth] x [-worldHeight, worldHeight]
-    // Totale world grootte: 2*worldWidth x 2*worldHeight
+    // World size
+    float worldPixelWidth = 2.0f * worldWidth;
+    float worldPixelHeight = 2.0f * worldHeight;
 
-    float scaleX = windowWidth / (2.0f * worldWidth);   // Pixels per world unit in X
-    float scaleY = windowHeight / (2.0f * worldHeight); // Pixels per world unit in Y
+    // Aspect ratios
+    float windowAspect = static_cast<float>(windowWidth) / windowHeight;
+    float worldAspect = worldPixelWidth / worldPixelHeight;
 
-    // Use the smaller scale to ensure everything fits
-    scale = std::min(scaleX, scaleY);
+    // ✅ MAXIMALE SCHAAL ZONDER VERVORMING
+    if (windowAspect > worldAspect) {
+        // Window is breder → letterbox links/rechts
+        scale = windowHeight / worldPixelHeight;
+        viewportWidth = worldPixelWidth * scale;
+        viewportHeight = windowHeight;
+        viewportOffsetX = (windowWidth - viewportWidth) / 2.0f;
+        viewportOffsetY = 0.0f;
+    } else {
+        // Window is hoger → letterbox boven/onder
+        scale = windowWidth / worldPixelWidth;
+        viewportWidth = windowWidth;
+        viewportHeight = worldPixelHeight * scale;
+        viewportOffsetX = 0.0f;
+        viewportOffsetY = (windowHeight - viewportHeight) / 2.0f;
+    }
 
     std::cout << "Camera: Scale = " << scale << " pixels/unit" << std::endl;
+    std::cout << "Viewport: offset(" << viewportOffsetX << ", " << viewportOffsetY
+              << ") size(" << viewportWidth << "x" << viewportHeight << ")" << std::endl;
 }
 
 Position Camera::worldToScreen(const Position& worldPos) const {
-    // ✅ Transform from [-worldWidth, worldWidth] x [-worldHeight, worldHeight]
-    //    to screen coordinates
-
-    float screenX = windowWidth / 2.0f + worldPos.x * scale;
-    float screenY = windowHeight / 2.0f + worldPos.y * scale;
+    // ✅ MAP NAAR VIEWPORT + OFFSET
+    float screenX = viewportOffsetX + (viewportWidth / 2.0f) + worldPos.x * scale;
+    float screenY = viewportOffsetY + (viewportHeight / 2.0f) + worldPos.y * scale;
 
     return Position(screenX, screenY);
 }
 
 Position Camera::screenToWorld(int screenX, int screenY) const {
-    float worldX = (screenX - windowWidth / 2.0f) / scale;
-    float worldY = (screenY - windowHeight / 2.0f) / scale;
+    float worldX = (screenX - viewportOffsetX - viewportWidth / 2.0f) / scale;
+    float worldY = (screenY - viewportOffsetY - viewportHeight / 2.0f) / scale;
     return Position(worldX, worldY);
 }
 
 float Camera::getSpriteSize() const {
-    // ✅ Gebruik mapRows voor tile grootte
     const float approximateTileSize = 2.0f * worldHeight / mapRows;
     return scale * approximateTileSize * 0.9f;
 }

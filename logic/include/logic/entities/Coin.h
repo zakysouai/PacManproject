@@ -15,7 +15,7 @@ public:
     
     int getPointValue() const { return pointValue; }
     
-    float getCollisionRadius() const override { return 0.02f; }
+    // float getCollisionRadius() const override { return 0.02f; }
     
 private:
     bool collected = false;
