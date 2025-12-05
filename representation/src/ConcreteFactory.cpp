@@ -6,9 +6,11 @@
 #include "representation/views/WallView.h"
 #include "representation/views/GhostView.h"
 
-// ✅ Include concrete ghost types
 #include "logic/entities/RedGhost.h"
-// TODO: include andere ghost types wanneer ze gemaakt zijn
+#include "logic/entities/PinkGhost.h"
+#include "logic/entities/BlueGhost.h"
+#include "logic/entities/OrangeGhost.h"
+
 
 namespace pacman::representation {
 
@@ -65,17 +67,13 @@ std::unique_ptr<pacman::Ghost> ConcreteFactory::createGhost(const pacman::Positi
         ghost = std::make_unique<pacman::RedGhost>(pos);
         break;
     case pacman::GhostColor::PINK:
-        // TODO: ghost = std::make_unique<pacman::PinkGhost>(pos);
-        // Tijdelijk: maak red ghost
-        ghost = std::make_unique<pacman::RedGhost>(pos);
+        ghost = std::make_unique<pacman::PinkGhost>(pos);
         break;
     case pacman::GhostColor::BLUE:
-        // TODO: ghost = std::make_unique<pacman::BlueGhost>(pos);
-        ghost = std::make_unique<pacman::RedGhost>(pos);
+        ghost = std::make_unique<pacman::BlueGhost>(pos);
         break;
     case pacman::GhostColor::ORANGE:
-        // TODO: ghost = std::make_unique<pacman::OrangeGhost>(pos);
-        ghost = std::make_unique<pacman::RedGhost>(pos);
+        ghost = std::make_unique<pacman::OrangeGhost>(pos);
         break;
     }
 

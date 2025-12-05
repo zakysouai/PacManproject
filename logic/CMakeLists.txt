@@ -16,6 +16,9 @@ set(LOGIC_SOURCES
         src/utils/Random.cpp
         src/entities/Ghost.cpp
         src/entities/RedGhost.cpp
+        src/entities/PinkGhost.cpp
+        src/entities/BlueGhost.cpp
+        src/entities/OrangeGhost.cpp
 )
 
 # Create static library (NO SFML DEPENDENCY!)
