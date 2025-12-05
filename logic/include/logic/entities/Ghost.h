@@ -1,3 +1,4 @@
+// logic/include/logic/entities/Ghost.h
 #pragma once
 #include "logic/EntityModel.h"
 
@@ -17,8 +18,8 @@ enum class GhostState {
 
 class Ghost : public EntityModel {
 public:
-    explicit Ghost(const Position& pos, GhostColor color);
-    ~Ghost() override = default;
+    explicit Ghost(const Position& pos, GhostColor color, float spawnDelay);
+    virtual ~Ghost() = default;
 
     void update(float deltaTime) override;
 
@@ -32,26 +33,31 @@ public:
     bool hasPassedThroughDoor() const { return hasPassedDoor; }
     void markPassedDoor() { hasPassedDoor = true; }
 
+protected:
+    // ✅ NIEUW: Virtual AI method - subclasses implementeren dit
+    virtual Direction chooseDirection() = 0;
+
+    // Helper methods beschikbaar voor subclasses
+    bool isAtIntersection() const;
+    std::vector<Direction> getViableDirections() const;
+    Direction getBestDirectionToTarget(const Position& target, bool maximize = false) const;
+
+    World* world = nullptr;
+    Direction currentDirection = Direction::RIGHT;
+
 private:
     GhostColor color;
     GhostState state = GhostState::IN_SPAWN;
-    Direction currentDirection = Direction::RIGHT;
     Position spawnPosition;
-    World* world = nullptr;
 
     float spawnTimer = 0.0f;
-
-    void move(float deltaTime);
-    bool isAtIntersection() const;
-    Direction chooseDirectionAtIntersection();
-    void handleWallCollision();
-    bool isOpposite(Direction dir1, Direction dir2) const;
-
     bool hasPassedDoor = false;
 
-    // Red ghost AI
-    Direction chooseRedGhostDirection();
+    void move(float deltaTime);
+    void handleWallCollision();
+    bool isOpposite(Direction dir1, Direction dir2) const;
     float calculateManhattanDistance(const Position& from, const Position& to) const;
+    Direction chooseDirectionAtIntersection();
 };
 
 } // namespace pacman

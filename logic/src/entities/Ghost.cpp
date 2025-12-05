@@ -5,24 +5,9 @@
 
 namespace pacman {
 
-Ghost::Ghost(const Position& pos, GhostColor color)
-    : EntityModel(pos, 0.3f), color(color), spawnPosition(pos) {
-
-    // Set spawn delays
-    switch (color) {
-    case GhostColor::RED:
-        spawnTimer = 0.0f;  // Immediate
-        break;
-    case GhostColor::PINK:
-        spawnTimer = 0.0f;  // Immediate
-        break;
-    case GhostColor::BLUE:
-        spawnTimer = 5.0f;  // 5 seconds
-        break;
-    case GhostColor::ORANGE:
-        spawnTimer = 10.0f;  // 10 seconds
-        break;
-    }
+Ghost::Ghost(const Position& pos, GhostColor color, float spawnDelay)
+    : EntityModel(pos, 0.3f), color(color), spawnPosition(pos), spawnTimer(spawnDelay) {
+    // ✅ spawnDelay komt nu van subclass, niet meer via switch
 }
 
 void Ghost::update(float deltaTime) {
@@ -33,10 +18,9 @@ void Ghost::update(float deltaTime) {
             state = GhostState::ON_MAP;
             std::cout << "Ghost color " << static_cast<int>(color) << " left spawn!" << std::endl;
         }
-        return;  // Don't move while in spawn
+        return;
     }
 
-    // Now on map - normal AI
     move(deltaTime);
 }
 
@@ -105,78 +89,8 @@ bool Ghost::isAtIntersection() const {
 }
 
 Direction Ghost::chooseDirectionAtIntersection() {
-    if (!world) return Direction::NONE;
-
-    if (color == GhostColor::RED) {
-        return chooseRedGhostDirection();
-    }
-
-    std::vector<Direction> viable;
-    std::vector<Direction> allDirections = {
-        Direction::UP, Direction::DOWN, Direction::LEFT, Direction::RIGHT
-    };
-
-    for (Direction dir : allDirections) {
-        if (isOpposite(dir, currentDirection)) continue;
-        // ✅ PASS THIS POINTER
-        if (world->canMoveInDirection(position, dir, getCollisionRadius(), this)) {
-            viable.push_back(dir);
-        }
-    }
-
-    if (viable.empty()) return currentDirection;
-
-    int index = Random::getInstance().getInt(0, viable.size() - 1);
-    return viable[index];
-}
-
-Direction Ghost::chooseRedGhostDirection() {
-    std::vector<Direction> viable;
-    std::vector<Direction> allDirections = {
-        Direction::UP, Direction::DOWN, Direction::LEFT, Direction::RIGHT
-    };
-
-    for (Direction dir : allDirections) {
-        if (isOpposite(dir, currentDirection)) continue;
-        // ✅ PASS THIS POINTER
-        if (world->canMoveInDirection(position, dir, getCollisionRadius(), this)) {
-            viable.push_back(dir);
-        }
-    }
-
-    if (viable.empty()) return currentDirection;
-
-    if (Random::getInstance().getBool(0.5f)) {
-        int index = Random::getInstance().getInt(0, viable.size() - 1);
-        return viable[index];
-    }
-
-    auto* pacman = world->getPacMan();
-    if (!pacman) {
-        int index = Random::getInstance().getInt(0, viable.size() - 1);
-        return viable[index];
-    }
-
-    Position pacmanPos = pacman->getPosition();
-    Direction bestDir = viable[0];
-    float bestDistance = 999999.0f;
-
-    for (Direction dir : viable) {
-        Position dirVec = getDirectionVector(dir);
-        Position testPos = position + dirVec * 0.1f;
-        float dist = calculateManhattanDistance(testPos, pacmanPos);
-
-        if (dist < bestDistance) {
-            bestDistance = dist;
-            bestDir = dir;
-        } else if (std::abs(dist - bestDistance) < 0.001f) {
-            if (Random::getInstance().getBool(0.5f)) {
-                bestDir = dir;
-            }
-        }
-    }
-
-    return bestDir;
+    // ✅ Roep virtual method aan
+    return chooseDirection();
 }
 
 float Ghost::calculateManhattanDistance(const Position& from, const Position& to) const {
@@ -213,12 +127,57 @@ void Ghost::handleWallCollision() {
     }
 }
 
-
 bool Ghost::isOpposite(Direction dir1, Direction dir2) const {
     return (dir1 == Direction::UP && dir2 == Direction::DOWN) ||
            (dir1 == Direction::DOWN && dir2 == Direction::UP) ||
            (dir1 == Direction::LEFT && dir2 == Direction::RIGHT) ||
            (dir1 == Direction::RIGHT && dir2 == Direction::LEFT);
+}
+
+std::vector<Direction> Ghost::getViableDirections() const {
+    if (!world) return {};
+
+    std::vector<Direction> viable;
+    std::vector<Direction> allDirections = {
+        Direction::UP, Direction::DOWN, Direction::LEFT, Direction::RIGHT
+    };
+
+    for (Direction dir : allDirections) {
+        if (isOpposite(dir, currentDirection)) continue;
+        if (world->canMoveInDirection(position, dir, getCollisionRadius(), this)) {
+            viable.push_back(dir);
+        }
+    }
+
+    return viable;
+}
+
+Direction Ghost::getBestDirectionToTarget(const Position& target, bool maximize) const {
+    auto viable = getViableDirections();
+    if (viable.empty()) return currentDirection;
+
+    Direction bestDir = viable[0];
+    float bestDistance = maximize ? -999999.0f : 999999.0f;
+
+    for (Direction dir : viable) {
+        Position dirVec = getDirectionVector(dir);
+        Position testPos = position + dirVec * 0.1f;
+        float dist = calculateManhattanDistance(testPos, target);
+
+        if (maximize) {
+            if (dist > bestDistance) {
+                bestDistance = dist;
+                bestDir = dir;
+            }
+        } else {
+            if (dist < bestDistance) {
+                bestDistance = dist;
+                bestDir = dir;
+            }
+        }
+    }
+
+    return bestDir;
 }
 
 } // namespace pacman

@@ -1,26 +1,26 @@
+// logic/src/entities/RedGhost.cpp
 #include "logic/entities/RedGhost.h"
-#include "logic/utils/Random.h"
+#include "logic/World.h"
 
 namespace pacman {
 
 RedGhost::RedGhost(const Position& pos)
-    : Ghost(pos, 0.0f) {  // Leaves immediately
+    : Ghost(pos, GhostColor::RED, 0.0f) {  // Leaves immediately
 }
 
-Direction RedGhost::chooseDirection(const Position& pacmanPos, [[maybe_unused]] Direction pacmanDir) {
+Direction RedGhost::chooseDirection() {
+    if (!world) return currentDirection;
     if (!isAtIntersection()) return currentDirection;
 
-    auto viable = getViableDirections();
-    if (viable.empty()) return currentDirection;
-
-    // Random lock behavior: p=0.5 choose random direction
-    if (Random::getInstance().getBool(0.5f)) {
-        int index = Random::getInstance().getInt(0, viable.size() - 1);
-        return viable[index];
+    auto* pacman = world->getPacMan();
+    if (!pacman) {
+        // No PacMan? Keep current direction
+        return currentDirection;
     }
 
-    // Otherwise chase PacMan
-    return getBestDirection(pacmanPos, false);
+    // ✅ PURE CHASER: minimize distance to PacMan's actual position
+    Position pacmanPos = pacman->getPosition();
+    return getBestDirectionToTarget(pacmanPos, false);  // false = minimize
 }
 
 } // namespace pacman

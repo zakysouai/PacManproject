@@ -15,6 +15,7 @@ set(LOGIC_SOURCES
         src/utils/Stopwatch.cpp
         src/utils/Random.cpp
         src/entities/Ghost.cpp
+        src/entities/RedGhost.cpp
 )
 
 # Create static library (NO SFML DEPENDENCY!)
