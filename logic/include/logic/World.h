@@ -104,7 +104,7 @@ private:
     bool checkWallCollision(const Position& pos, float radius) const;
     void applyDifficultyScaling();
     bool isDoorBlockedFor(const Position& pos, const Ghost* ghost) const;
-
+    void checkWraparound(EntityModel* entity);
 };
 
 } // namespace pacman

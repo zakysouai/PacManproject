@@ -25,11 +25,19 @@ private:
     std::unique_ptr<pacman::Camera> camera;
     
     int currentLevel;
-    
+    float elapsedTime = 0.0f;
+
     sf::Font font;
+
+    // Left sidebar
     sf::Text scoreText;
     sf::Text livesText;
     sf::Text levelText;
+
+    // Right sidebar
+    sf::Text timerText;
+    sf::Text controlsTitle;
+    sf::Text controlsText;
     
     void loadFont();
     void setupUI();

@@ -13,16 +13,18 @@ namespace pacman {
 World::World(AbstractFactory* factory)
     : factory(factory) {
 }
+
 void World::update(float deltaTime) {
     score.updateComboTimer(deltaTime);
 
     if (pacman) {
         updatePacManWithCollisions(deltaTime);
+        checkWraparound(pacman.get());  // ✅
     }
 
-    // Update ghosts
     for (auto& ghost : ghosts) {
         ghost->update(deltaTime);
+        checkWraparound(ghost.get());  // ✅
     }
 
     handleCollisions();
@@ -32,6 +34,29 @@ void World::update(float deltaTime) {
         event.type = EventType::LEVEL_CLEARED;
         event.value = 500 * currentLevel;
         score.onNotify(event);
+    }
+}
+
+void World::checkWraparound(EntityModel* entity) {
+    if (!entity) return;
+
+    // ✅ BEREKEN WORLD BOUNDS
+    float mapAspectRatio = static_cast<float>(mapCols) / static_cast<float>(mapRows);
+    float worldWidth = mapAspectRatio;
+
+    const float THRESHOLD = 0.05f;
+
+    Position pos = entity->getPosition();
+
+    // ✅ RECHTS NAAR LINKS
+    if (pos.x > worldWidth - THRESHOLD) {
+        pos.x = -worldWidth + THRESHOLD;
+        entity->setPosition(pos);
+    }
+    // ✅ LINKS NAAR RECHTS
+    else if (pos.x < -worldWidth + THRESHOLD) {
+        pos.x = worldWidth - THRESHOLD;
+        entity->setPosition(pos);
     }
 }
 
