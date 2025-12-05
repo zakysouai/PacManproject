@@ -24,6 +24,10 @@ public:
     // View management
     const std::vector<std::unique_ptr<EntityView>>& getViews() const { return views; }
     void clearViews() { views.clear(); }
+
+    void addView(std::unique_ptr<EntityView> view) {
+        views.push_back(std::move(view));
+    }
     
 private:
     const pacman::Camera& camera;

@@ -21,6 +21,11 @@ class World {
 public:
     explicit World(AbstractFactory* factory);
     ~World() = default;
+
+    struct GridPosition {
+        int row;
+        int col;
+    };
     
     void update(float deltaTime);
 
@@ -42,12 +47,18 @@ public:
 
     MapDimensions getMapDimensions() const { return {mapRows, mapCols}; }
 
-    bool canMoveInDirection(const Position& pos, Direction dir, float radius) const;
-    bool wouldCollideWithWall(const Position& pos, float radius) const;
+    bool canMoveInDirection(const Position& pos, Direction dir, float radius, const Ghost* ghost = nullptr) const;
+    bool wouldCollideWithWall(const Position& pos, float radius, const Ghost* ghost = nullptr) const;
 
     Position getDoorPosition() const { return doorPosition; }
-    bool isDoorOpen() const { return doorOpen; }
     bool isInsideSpawn(const Position& pos) const;
+
+    bool isDoorPosition(const Position& pos) const;
+    bool isDoorBlockingEntity(const Ghost* ghost, const Position& testPos) const;
+    bool hasDoorInMap() const{ return hasDoor; }
+
+    GridPosition worldToGrid(const Position& worldPos) const;
+    GridPosition getDoorGridPosition() const { return doorGridPos; }
 
 private:
     AbstractFactory* factory;
@@ -70,7 +81,8 @@ private:
     int mapCols = 0;
 
     Position doorPosition;
-    bool doorOpen = true;
+    bool hasDoor = false;  // Was er een 'D' in de map?
+    GridPosition doorGridPos;
 
     // Spawn area bounds
     float spawnLeft = -0.2f;
@@ -88,7 +100,7 @@ private:
     void updatePacManWithCollisions(float deltaTime);
     bool checkWallCollision(const Position& pos, float radius) const;
     void applyDifficultyScaling();
-
+    bool isDoorBlockedFor(const Position& pos, const Ghost* ghost) const;
 
 };
 

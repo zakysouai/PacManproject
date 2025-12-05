@@ -29,6 +29,8 @@ set(REPRESENTATION_SOURCES
         src/views/FruitView.cpp
         src/views/WallView.cpp
         src/views/GhostView.cpp
+        src/views/DoorView.cpp
+        include/representation/views/DoorView.h
 )
 
 # Create executable

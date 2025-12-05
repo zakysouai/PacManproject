@@ -54,23 +54,34 @@ void Ghost::move(float deltaTime) {
     Position dirVec = getDirectionVector(currentDirection);
     Position movement = dirVec * speed * deltaTime;
 
-    // Try horizontal
+    // Try horizontal movement
     if (currentDirection == Direction::LEFT || currentDirection == Direction::RIGHT) {
         Position testPos = Position(position.x + movement.x, position.y);
-        if (!world->wouldCollideWithWall(testPos, getCollisionRadius())) {
+        if (!world->wouldCollideWithWall(testPos, getCollisionRadius(), this)) {
             position = testPos;
         } else {
             handleWallCollision();
         }
     }
 
-    // Try vertical
+    // Try vertical movement
     if (currentDirection == Direction::UP || currentDirection == Direction::DOWN) {
         Position testPos = Position(position.x, position.y + movement.y);
-        if (!world->wouldCollideWithWall(testPos, getCollisionRadius())) {
+        if (!world->wouldCollideWithWall(testPos, getCollisionRadius(), this)) {
             position = testPos;
         } else {
             handleWallCollision();
+        }
+    }
+
+    // ✅ SIMPEL: check of ghost tile boven deur bereikt
+    if (!hasPassedDoor && world->hasDoorInMap()) {
+        auto ghostGrid = world->worldToGrid(position);
+        auto doorGrid = world->getDoorGridPosition();
+
+        if (ghostGrid.row == doorGrid.row - 1 && ghostGrid.col == doorGrid.col) {
+            markPassedDoor();
+            std::cout << "Ghost " << static_cast<int>(color) << " PASSED door!" << std::endl;
         }
     }
 }
@@ -79,16 +90,13 @@ bool Ghost::isAtIntersection() const {
     if (!world) return false;
 
     int viableCount = 0;
-
     std::vector<Direction> allDirections = {
-        Direction::UP,
-        Direction::DOWN,
-        Direction::LEFT,
-        Direction::RIGHT
+        Direction::UP, Direction::DOWN, Direction::LEFT, Direction::RIGHT
     };
 
     for (Direction dir : allDirections) {
-        if (world->canMoveInDirection(position, dir, getCollisionRadius())) {
+        // ✅ PASS THIS POINTER
+        if (world->canMoveInDirection(position, dir, getCollisionRadius(), this)) {
             viableCount++;
         }
     }
@@ -99,12 +107,10 @@ bool Ghost::isAtIntersection() const {
 Direction Ghost::chooseDirectionAtIntersection() {
     if (!world) return Direction::NONE;
 
-    // Red ghost specific AI
     if (color == GhostColor::RED) {
         return chooseRedGhostDirection();
     }
 
-    // Other ghosts: simple random for now
     std::vector<Direction> viable;
     std::vector<Direction> allDirections = {
         Direction::UP, Direction::DOWN, Direction::LEFT, Direction::RIGHT
@@ -112,7 +118,8 @@ Direction Ghost::chooseDirectionAtIntersection() {
 
     for (Direction dir : allDirections) {
         if (isOpposite(dir, currentDirection)) continue;
-        if (world->canMoveInDirection(position, dir, getCollisionRadius())) {
+        // ✅ PASS THIS POINTER
+        if (world->canMoveInDirection(position, dir, getCollisionRadius(), this)) {
             viable.push_back(dir);
         }
     }
@@ -124,7 +131,6 @@ Direction Ghost::chooseDirectionAtIntersection() {
 }
 
 Direction Ghost::chooseRedGhostDirection() {
-    // Get viable directions (no 180°)
     std::vector<Direction> viable;
     std::vector<Direction> allDirections = {
         Direction::UP, Direction::DOWN, Direction::LEFT, Direction::RIGHT
@@ -132,53 +138,44 @@ Direction Ghost::chooseRedGhostDirection() {
 
     for (Direction dir : allDirections) {
         if (isOpposite(dir, currentDirection)) continue;
-        if (world->canMoveInDirection(position, dir, getCollisionRadius())) {
+        // ✅ PASS THIS POINTER
+        if (world->canMoveInDirection(position, dir, getCollisionRadius(), this)) {
             viable.push_back(dir);
         }
     }
 
     if (viable.empty()) return currentDirection;
 
-    // RED GHOST LOGIC: p=0.5 random, p=0.5 chase
     if (Random::getInstance().getBool(0.5f)) {
-        // Random choice
         int index = Random::getInstance().getInt(0, viable.size() - 1);
-        std::cout << "Red ghost: RANDOM choice" << std::endl;
         return viable[index];
     }
 
-    // Chase PacMan - minimize Manhattan distance
     auto* pacman = world->getPacMan();
     if (!pacman) {
-        // No PacMan, choose random
         int index = Random::getInstance().getInt(0, viable.size() - 1);
         return viable[index];
     }
 
     Position pacmanPos = pacman->getPosition();
-
     Direction bestDir = viable[0];
     float bestDistance = 999999.0f;
 
     for (Direction dir : viable) {
-        // Calculate position after taking this direction
         Position dirVec = getDirectionVector(dir);
         Position testPos = position + dirVec * 0.1f;
-
         float dist = calculateManhattanDistance(testPos, pacmanPos);
 
         if (dist < bestDistance) {
             bestDistance = dist;
             bestDir = dir;
         } else if (std::abs(dist - bestDistance) < 0.001f) {
-            // Tie - random
             if (Random::getInstance().getBool(0.5f)) {
                 bestDir = dir;
             }
         }
     }
 
-    std::cout << "Red ghost: CHASE PacMan (distance: " << bestDistance << ")" << std::endl;
     return bestDir;
 }
 
@@ -196,7 +193,8 @@ void Ghost::handleWallCollision() {
 
     for (Direction dir : allDirections) {
         if (isOpposite(dir, currentDirection)) continue;
-        if (world->canMoveInDirection(position, dir, getCollisionRadius())) {
+        // ✅ PASS THIS POINTER
+        if (world->canMoveInDirection(position, dir, getCollisionRadius(), this)) {
             viable.push_back(dir);
         }
     }
@@ -205,7 +203,6 @@ void Ghost::handleWallCollision() {
         int index = Random::getInstance().getInt(0, viable.size() - 1);
         currentDirection = viable[index];
     } else {
-        // Dead end - 180° allowed
         switch (currentDirection) {
         case Direction::UP: currentDirection = Direction::DOWN; break;
         case Direction::DOWN: currentDirection = Direction::UP; break;
@@ -215,6 +212,7 @@ void Ghost::handleWallCollision() {
         }
     }
 }
+
 
 bool Ghost::isOpposite(Direction dir1, Direction dir2) const {
     return (dir1 == Direction::UP && dir2 == Direction::DOWN) ||

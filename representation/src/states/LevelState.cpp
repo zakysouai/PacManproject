@@ -2,6 +2,8 @@
 #include "representation/states/PausedState.h"
 #include "representation/states/VictoryState.h"
 #include "logic/utils/Stopwatch.h"
+#include "representation/views/DoorView.h"
+
 #include <iostream>
 
 namespace pacman::representation {
@@ -24,6 +26,11 @@ void LevelState::onEnter() {
     
     // Load level - now loads FULL map with all entities
     world->loadLevel("../resources/maps/map.txt");
+
+    if (world->hasDoorInMap()) {
+        auto doorView = std::make_unique<DoorView>(*camera, world->getDoorPosition());
+        factory->addView(std::move(doorView));
+    }
 
     // ✅ NIEUW: Update camera met werkelijke map dimensies
     auto dims = world->getMapDimensions();

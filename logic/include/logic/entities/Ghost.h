@@ -29,6 +29,9 @@ public:
     void setWorld(class World* world) { this->world = world; }
     float getCollisionRadius() const override { return 0.08f; }
 
+    bool hasPassedThroughDoor() const { return hasPassedDoor; }
+    void markPassedDoor() { hasPassedDoor = true; }
+
 private:
     GhostColor color;
     GhostState state = GhostState::IN_SPAWN;
@@ -43,6 +46,8 @@ private:
     Direction chooseDirectionAtIntersection();
     void handleWallCollision();
     bool isOpposite(Direction dir1, Direction dir2) const;
+
+    bool hasPassedDoor = false;
 
     // Red ghost AI
     Direction chooseRedGhostDirection();

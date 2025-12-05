@@ -35,38 +35,7 @@ void World::update(float deltaTime) {
     }
 }
 
-// ✅ NOW PUBLIC: Moved from private to public for Ghost access
-bool World::canMoveInDirection(const Position& pos, Direction dir, float radius) const {
-    // Calculate where entity would be if moving in this direction
-    Position dirVector = getDirectionVector(dir);
-
-    // Test a small step ahead to see if this direction is viable
-    const float TEST_DISTANCE = 0.1f;  // Small test distance
-    Position testPos = Position(
-        pos.x + dirVector.x * TEST_DISTANCE,
-        pos.y + dirVector.y * TEST_DISTANCE
-    );
-
-    // Create a temporary bounding box at the test position
-    BoundingBox testBox(
-        testPos.x - radius,
-        testPos.y - radius,
-        radius * 2.0f,
-        radius * 2.0f
-    );
-
-    // Check if this test position would collide with any wall
-    for (const auto& wall : walls) {
-        if (testBox.intersects(wall->getBoundingBox())) {
-            return false;  // Can't move in this direction
-        }
-    }
-
-    return true;  // Direction is viable
-}
-
-bool World::wouldCollideWithWall(const Position& pos, float radius) const {
-    // Create bounding box at test position
+bool World::wouldCollideWithWall(const Position& pos, float radius, const Ghost* ghost) const {
     BoundingBox testBox(
         pos.x - radius,
         pos.y - radius,
@@ -74,17 +43,56 @@ bool World::wouldCollideWithWall(const Position& pos, float radius) const {
         radius * 2.0f
     );
 
-    // Check collision with all walls
+    // Check normale muren
     for (const auto& wall : walls) {
         if (testBox.intersects(wall->getBoundingBox())) {
-            return true;  // Collision!
+            return true;
         }
     }
 
-    return false;  // No collision
+    // ✅ SIMPEL: als ghost door deur is → deur = wall
+    if (ghost && ghost->hasPassedThroughDoor() && hasDoor) {
+        auto ghostGrid = worldToGrid(pos);
+        if (ghostGrid.row == doorGridPos.row && ghostGrid.col == doorGridPos.col) {
+            return true;  // Deur is wall voor deze ghost
+        }
+    }
+
+    return false;
 }
 
+bool World::canMoveInDirection(const Position& pos, Direction dir, float radius, const Ghost* ghost) const {
+    Position dirVector = getDirectionVector(dir);
+    const float TEST_DISTANCE = 0.1f;
+    Position testPos = Position(
+        pos.x + dirVector.x * TEST_DISTANCE,
+        pos.y + dirVector.y * TEST_DISTANCE
+    );
 
+    BoundingBox testBox(
+        testPos.x - radius,
+        testPos.y - radius,
+        radius * 2.0f,
+        radius * 2.0f
+    );
+
+    // Check normale muren
+    for (const auto& wall : walls) {
+        if (testBox.intersects(wall->getBoundingBox())) {
+            return false;
+        }
+    }
+
+    // ✅ SIMPEL: als ghost door deur is → deur = wall
+    if (ghost && ghost->hasPassedThroughDoor() && hasDoor) {
+        auto testGrid = worldToGrid(testPos);
+        if (testGrid.row == doorGridPos.row && testGrid.col == doorGridPos.col) {
+            return false;  // Deur blokkeert deze ghost
+        }
+    }
+
+    return true;
+}
 bool World::isAtIntersection(const Position& pos, Direction currentDir, float radius) const {
     // An intersection is where you can move in a direction perpendicular to your current movement
 
@@ -425,6 +433,14 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
                 std::cout << "Found Orange ghost spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
 
+            case 'd':  // Door
+            case 'D':
+                doorPosition = worldPos;
+                doorGridPos = {row, col};
+                hasDoor = true;
+                std::cout << "Found Door at grid(" << row << "," << col << ")" << std::endl;
+                break;
+
             default:
                 // Unknown character, ignore
                 break;
@@ -478,6 +494,43 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     std::cout << "Map loading complete!" << std::endl;
 }
 
+bool World::isDoorPosition(const Position& pos) const {
+    if (!hasDoor) return false;
+    return pos.distance(doorPosition) < 0.05f;  // Small threshold
+}
+
+bool World::isDoorBlockingEntity(const Ghost* ghost, const Position& testPos) const {
+    if (!isDoorPosition(testPos)) return false;
+
+    // Door blocks ghost if it already passed through
+    return ghost && ghost->hasPassedThroughDoor();
+}
+
+bool World::isDoorBlockedFor(const Position& pos, const Ghost* ghost) const {
+    if (!hasDoor) return false;
+    if (!ghost) return false;  // Deur blokkeert PacMan niet
+
+    // ✅ Deur is ALLEEN geblokkeerd als:
+    // 1. Deze ghost er AL door is gegaan
+    // 2. EN we checken of ghost TERUG door de deur wil
+    if (!ghost->hasPassedThroughDoor()) {
+        return false;  // Ghost mag er nog door
+    }
+
+    // Ghost is er al door - check of hij bij de deur is
+    return pos.distance(doorPosition) < 0.15f;
+}
+
+World::GridPosition World::worldToGrid(const Position& worldPos) const {
+    float worldWidth = static_cast<float>(mapCols) / static_cast<float>(mapRows);
+    float worldHeight = 1.0f;
+
+    // Inverse van gridToWorld
+    int col = static_cast<int>((worldPos.x + worldWidth) / (2.0f * worldWidth) * mapCols);
+    int row = static_cast<int>((worldPos.y + worldHeight) / (2.0f * worldHeight) * mapRows);
+
+    return {row, col};
+}
 
 
 } // namespace pacman
