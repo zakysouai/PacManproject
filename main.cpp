@@ -14,4 +14,9 @@ int main() {
     return 0;
 }
 
-// TODO: maak voor elke ghost een aparte klasse en inherit van de super ghost klasse. 1 ghost klasse is te lastig om mee te werken
+// TODO: UI regelen en mooier maken
+// TODO: de normale map.txt gebruiken als soort 'tutorial' en dan naar map_big switchen als 2de level?
+// TODO: victory screens etc... fixen
+// TODO: checken of we wel correct werken met observers etc...
+// TODO: checken voor memleaks (valgrind)
+// TODO: checken voor correcte use of smart pointers
