@@ -65,7 +65,8 @@ void Ghost::enterScaredMode(float duration) {
 
 void Ghost::respawn() {
     position = spawnPosition;
-    state = GhostState::ON_MAP;  // ✅ Direct terug op map
+    currentDirection = Direction::RIGHT;  // ✅ Reset direction
+    state = GhostState::ON_MAP;
     speed = normalSpeed;
     hasPassedDoor = false;
     scaredTimer = 0.0f;

@@ -5,8 +5,8 @@
 
 namespace pacman::representation {
 
-VictoryState::VictoryState(bool won, int finalScore)
-    : playerWon(won), score(finalScore) {
+VictoryState::VictoryState(bool won, int finalScore, int currentLevel)
+    : playerWon(won), score(finalScore), level(currentLevel) {
     loadFont();
     setupTexts();
 }
@@ -61,14 +61,13 @@ void VictoryState::handleInput(const sf::Event& event) {
     if (event.type == sf::Event::KeyPressed) {
         if (event.key.code == sf::Keyboard::Space) {
             if (playerWon) {
-                // Go to next level
-                finish(StateAction::SWITCH, std::make_unique<LevelState>(2));  // TODO: Pass actual next level
+                // Next level
+                finish(StateAction::SWITCH, std::make_unique<LevelState>(level + 1));
             } else {
-                // Restart from level 1
+                // Game Over: restart from level 1
                 finish(StateAction::SWITCH, std::make_unique<LevelState>(1));
             }
         } else if (event.key.code == sf::Keyboard::M) {
-            // Go to menu
             finish(StateAction::SWITCH, std::make_unique<MenuState>());
         }
     }

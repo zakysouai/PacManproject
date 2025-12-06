@@ -267,30 +267,40 @@ void World::handleCollisions() {
         }
     }
 
-    // ✅ Check fruit collisions
+    // Check fruit collisions
     for (auto& fruit : fruits) {
         if (!fruit->isCollected() && pacman->intersects(*fruit)) {
             fruit->collect();
-            activateFearMode();  // ✅ NIEUW
+            activateFearMode();
         }
     }
 
-    // ✅ NIEUW: Ghost collisions
+    // ❌ REMOVED: if (pacman->isInvulnerable()) return;
+
+    // Ghost collisions
     for (auto& ghost : ghosts) {
         if (ghost->getState() == GhostState::IN_SPAWN) continue;
 
         if (pacman->intersects(*ghost)) {
             if (ghost->isScared()) {
-                // Eat ghost
                 ghost->respawn();
 
                 Event event;
                 event.type = EventType::GHOST_EATEN;
-                event.value = 200;  // Bonus points
+                event.value = 200;
                 score.onNotify(event);
             } else {
                 // PacMan dies
                 pacman->loseLife();
+
+                if (pacman->isAlive()) {
+                    pacman->reset(pacmanSpawnPosition);
+                    for (auto& g : ghosts) {
+                        g->respawn();
+                    }
+                }
+
+                break;
             }
         }
     }

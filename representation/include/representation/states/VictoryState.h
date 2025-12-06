@@ -14,10 +14,13 @@ public:
     void handleInput(const sf::Event& event) override;
     void update(float deltaTime) override;
     void render(sf::RenderWindow& window) override;
+
+    VictoryState(bool won, int finalScore, int currentLevel = 1);
     
 private:
     bool playerWon;
     int score;
+    int level;
     
     sf::Font font;
     sf::Text resultText;

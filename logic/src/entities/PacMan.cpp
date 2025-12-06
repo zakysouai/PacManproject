@@ -8,14 +8,6 @@ PacMan::PacMan(const Position& pos)
 }
 
 void PacMan::update(float deltaTime) {
-    // Update invulnerability timer
-    if (invulnerabilityTimer > 0.0f) {
-        invulnerabilityTimer -= deltaTime;
-        if (invulnerabilityTimer < 0.0f) {
-            invulnerabilityTimer = 0.0f;
-        }
-    }
-
     // Movement is now handled by World::updatePacManWithCollisions
     // to properly support direction changes at intersections
 }
@@ -40,16 +32,8 @@ void PacMan::tryChangeDirection(Direction newDir) {
 }
 
 void PacMan::loseLife() {
-    // Don't lose a life if already invulnerable (prevents multiple rapid deaths)
-    if (invulnerabilityTimer > 0.0f) {
-        return;
-    }
-
     if (lives > 0) {
         lives--;
-
-        // Activate invulnerability period
-        invulnerabilityTimer = INVULNERABILITY_DURATION;
 
         Event event;
         event.type = EventType::PACMAN_DIED;
