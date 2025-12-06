@@ -456,6 +456,7 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
 
             case ' ':  // Empty space with coin
                 coins.push_back(factory->createCoin(worldPos));
+                coins.back()->attach(&score);
                 coinCount++;
                 break;
 
@@ -469,6 +470,7 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
             case 'c':  // Coin/Fruit (power pellet)
             case 'C':
                 fruits.push_back(factory->createFruit(worldPos));
+                fruits.back()->attach(&score);
                 std::cout << "Found Fruit spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
 

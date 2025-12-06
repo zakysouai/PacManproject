@@ -205,10 +205,14 @@ void LevelState::updateUI() {
 void LevelState::checkGameState() {
     if (world->isGameOver()) {
         int finalScore = world->getScore()->getCurrentScore();
-        finish(StateAction::SWITCH, std::make_unique<VictoryState>(false, finalScore, currentLevel));
+        // ✅ ALLEEN INT SCORE MEEGEVEN
+        finish(StateAction::SWITCH,
+               std::make_unique<VictoryState>(false, finalScore, currentLevel));
     } else if (world->isLevelComplete()) {
         int finalScore = world->getScore()->getCurrentScore();
-        finish(StateAction::SWITCH, std::make_unique<VictoryState>(true, finalScore, currentLevel));
+        // ✅ ALLEEN INT SCORE MEEGEVEN
+        finish(StateAction::SWITCH,
+               std::make_unique<VictoryState>(true, finalScore, currentLevel));
     }
 }
 

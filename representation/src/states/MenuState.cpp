@@ -68,22 +68,26 @@ void MenuState::setupTexts() {
 
 
 void MenuState::loadHighScores() {
-    // TODO: Load from Score class
-    std::vector<int> scores = {5000, 4000, 3000, 2000, 1000};
+    pacman::Score tempScore;  // ✅ Temporary om te laden
+    auto scores = tempScore.getHighScores();
 
     float centerX = 500.0f;
     float yPos = 420;
 
     highScoreTexts.clear();
 
-    for (size_t i = 0; i < scores.size(); ++i) {
+    for (size_t i = 0; i < scores.size() && i < 5; ++i) {
         sf::Text text;
         text.setFont(font);
-        text.setString(std::to_string(i + 1) + ".  " + std::to_string(scores[i]));
+
+        std::string displayText = std::to_string(i + 1) + ".  " +
+                                  scores[i].name + "  " +
+                                  std::to_string(scores[i].score);
+
+        text.setString(displayText);
         text.setCharacterSize(24);
         text.setFillColor(sf::Color::White);
 
-        // ✅ CENTREER ELKE SCORE
         sf::FloatRect bounds = text.getLocalBounds();
         text.setOrigin(bounds.width / 2.0f, 0);
         text.setPosition(centerX, yPos);
