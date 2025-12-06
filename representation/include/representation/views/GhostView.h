@@ -1,4 +1,3 @@
-// representation/include/representation/views/GhostView.h
 #pragma once
 #include "EntityView.h"
 #include "logic/entities/Ghost.h"
@@ -13,18 +12,20 @@ public:
 
     void draw(sf::RenderWindow& window) override;
     void update(float deltaTime) override;
+    void onNotify(const pacman::Event& event) override;
 
 private:
     pacman::Ghost* ghostModel;
     pacman::GhostColor ghostColor;
 
-    // Animation system
     AnimationController animationController;
-    pacman::Direction lastDirection = pacman::Direction::NONE;
 
-    void switchAnimation(pacman::Direction direction);
+    // ✅ Track changes
+    pacman::Direction lastDirection = pacman::Direction::NONE;
+    pacman::GhostState lastState = pacman::GhostState::IN_SPAWN;
+
+    void updateAnimation();
     void updateSpriteFromAnimation();
-    std::string getColorPrefix() const;
 };
 
 } // namespace pacman::representation

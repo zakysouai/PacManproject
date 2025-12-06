@@ -13,7 +13,8 @@ enum class GhostColor {
 
 enum class GhostState {
     IN_SPAWN,
-    ON_MAP
+    ON_MAP,
+    SCARED  // ✅ NIEUW
 };
 
 class Ghost : public EntityModel {
@@ -28,16 +29,18 @@ public:
     Direction getCurrentDirection() const { return currentDirection; }
 
     void setWorld(class World* world) { this->world = world; }
-    // float getCollisionRadius() const override { return 0.08f; }
 
     bool hasPassedThroughDoor() const { return hasPassedDoor; }
     void markPassedDoor() { hasPassedDoor = true; }
 
+    // ✅ NIEUW: Scared mode
+    void enterScaredMode(float duration);
+    bool isScared() const { return state == GhostState::SCARED; }
+    void respawn();
+
 protected:
-    // ✅ NIEUW: Virtual AI method - subclasses implementeren dit
     virtual Direction chooseDirection() = 0;
 
-    // Helper methods beschikbaar voor subclasses
     bool isAtIntersection() const;
     std::vector<Direction> getViableDirections() const;
     Direction getBestDirectionToTarget(const Position& target, bool maximize = false) const;
@@ -53,11 +56,17 @@ private:
     float spawnTimer = 0.0f;
     bool hasPassedDoor = false;
 
+    // ✅ NIEUW: Scared mode
+    float scaredTimer = 0.0f;
+    float normalSpeed = 0.3f;  // Original speed
+    GhostState previousState = GhostState::ON_MAP;  // State voor scared mode
+
     void move(float deltaTime);
     void handleWallCollision();
     bool isOpposite(Direction dir1, Direction dir2) const;
     float calculateManhattanDistance(const Position& from, const Position& to) const;
     Direction chooseDirectionAtIntersection();
+    Direction getOppositeDirection(Direction dir) const;
 };
 
 } // namespace pacman

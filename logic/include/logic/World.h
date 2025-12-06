@@ -62,6 +62,9 @@ public:
     GridPosition worldToGrid(const Position& worldPos) const;
     GridPosition getDoorGridPosition() const { return doorGridPos; }
 
+    void activateFearMode();
+    float getFearModeDuration() const { return fearModeDuration; }
+
 private:
     AbstractFactory* factory;
     Camera* camera = nullptr;
@@ -92,6 +95,8 @@ private:
     float spawnRight = 0.2f;
     float spawnTop = -0.1f;
     float spawnBottom = 0.1f;
+
+    float fearModeDuration = 5.0f;  // Base duration, scaled per level
 
     void handleCollisions();
     bool checkWallCollision(const Position& pos, Direction dir) const;

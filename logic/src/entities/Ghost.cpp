@@ -7,7 +7,7 @@ namespace pacman {
 
 Ghost::Ghost(const Position& pos, GhostColor color, float spawnDelay)
     : EntityModel(pos, 0.3f), color(color), spawnPosition(pos), spawnTimer(spawnDelay) {
-    // ✅ spawnDelay komt nu van subclass, niet meer via switch
+    normalSpeed = 0.3f;
 }
 
 void Ghost::update(float deltaTime) {
@@ -17,17 +17,69 @@ void Ghost::update(float deltaTime) {
         if (spawnTimer <= 0.0f) {
             state = GhostState::ON_MAP;
             std::cout << "Ghost color " << static_cast<int>(color) << " left spawn!" << std::endl;
+
+            Event event;
+            event.type = EventType::GHOST_STATE_CHANGED;
+            notify(event);
         }
         return;
+    }
+
+    // ✅ NIEUW: Handle scared timer
+    if (state == GhostState::SCARED) {
+        scaredTimer -= deltaTime;
+        if (scaredTimer <= 0.0f) {
+            // Exit scared mode
+            state = previousState;
+            speed = normalSpeed;
+            std::cout << "Ghost color " << static_cast<int>(color) << " exits scared mode!" << std::endl;
+
+            Event event;
+            event.type = EventType::GHOST_STATE_CHANGED;
+            notify(event);
+        }
     }
 
     move(deltaTime);
 }
 
+void Ghost::enterScaredMode(float duration) {
+    if (state == GhostState::IN_SPAWN) {
+        return;  // Ghosts in spawn don't get scared
+    }
+
+    previousState = state;
+    state = GhostState::SCARED;
+    scaredTimer = duration;
+    speed = normalSpeed * 0.5f;  // ✅ Slower when scared
+
+    // ✅ REVERSE direction immediately
+    currentDirection = getOppositeDirection(currentDirection);
+
+    std::cout << "Ghost color " << static_cast<int>(color) << " enters scared mode!" << std::endl;
+
+    Event event;
+    event.type = EventType::GHOST_STATE_CHANGED;
+    notify(event);
+}
+
+void Ghost::respawn() {
+    position = spawnPosition;
+    state = GhostState::ON_MAP;  // ✅ Direct terug op map
+    speed = normalSpeed;
+    hasPassedDoor = false;
+    scaredTimer = 0.0f;
+
+    std::cout << "Ghost color " << static_cast<int>(color) << " respawned!" << std::endl;
+
+    Event event;
+    event.type = EventType::GHOST_STATE_CHANGED;
+    notify(event);
+}
+
 void Ghost::move(float deltaTime) {
     if (!world) return;
 
-    // Check if at intersection BEFORE moving
     if (isAtIntersection()) {
         Direction newDir = chooseDirectionAtIntersection();
         if (newDir != Direction::NONE && newDir != currentDirection) {
@@ -38,7 +90,6 @@ void Ghost::move(float deltaTime) {
     Position dirVec = getDirectionVector(currentDirection);
     Position movement = dirVec * speed * deltaTime;
 
-    // Try horizontal movement
     if (currentDirection == Direction::LEFT || currentDirection == Direction::RIGHT) {
         Position testPos = Position(position.x + movement.x, position.y);
         if (!world->wouldCollideWithWall(testPos, getCollisionRadius(), this)) {
@@ -48,7 +99,6 @@ void Ghost::move(float deltaTime) {
         }
     }
 
-    // Try vertical movement
     if (currentDirection == Direction::UP || currentDirection == Direction::DOWN) {
         Position testPos = Position(position.x, position.y + movement.y);
         if (!world->wouldCollideWithWall(testPos, getCollisionRadius(), this)) {
@@ -58,7 +108,6 @@ void Ghost::move(float deltaTime) {
         }
     }
 
-    // ✅ SIMPEL: check of ghost tile boven deur bereikt
     if (!hasPassedDoor && world->hasDoorInMap()) {
         auto ghostGrid = world->worldToGrid(position);
         auto doorGrid = world->getDoorGridPosition();
@@ -79,7 +128,6 @@ bool Ghost::isAtIntersection() const {
     };
 
     for (Direction dir : allDirections) {
-        // ✅ PASS THIS POINTER
         if (world->canMoveInDirection(position, dir, getCollisionRadius(), this)) {
             viableCount++;
         }
@@ -89,8 +137,24 @@ bool Ghost::isAtIntersection() const {
 }
 
 Direction Ghost::chooseDirectionAtIntersection() {
-    // ✅ Roep virtual method aan
+    // ✅ SCARED MODE: maximize distance
+    if (state == GhostState::SCARED && world && world->getPacMan()) {
+        Position pacmanPos = world->getPacMan()->getPosition();
+        return getBestDirectionToTarget(pacmanPos, true);  // true = MAXIMIZE
+    }
+
+    // Normal mode: use subclass AI
     return chooseDirection();
+}
+
+Direction Ghost::getOppositeDirection(Direction dir) const {
+    switch (dir) {
+        case Direction::UP:    return Direction::DOWN;
+        case Direction::DOWN:  return Direction::UP;
+        case Direction::LEFT:  return Direction::RIGHT;
+        case Direction::RIGHT: return Direction::LEFT;
+        default:               return Direction::NONE;
+    }
 }
 
 float Ghost::calculateManhattanDistance(const Position& from, const Position& to) const {
@@ -107,7 +171,6 @@ void Ghost::handleWallCollision() {
 
     for (Direction dir : allDirections) {
         if (isOpposite(dir, currentDirection)) continue;
-        // ✅ PASS THIS POINTER
         if (world->canMoveInDirection(position, dir, getCollisionRadius(), this)) {
             viable.push_back(dir);
         }
@@ -117,13 +180,7 @@ void Ghost::handleWallCollision() {
         int index = Random::getInstance().getInt(0, viable.size() - 1);
         currentDirection = viable[index];
     } else {
-        switch (currentDirection) {
-        case Direction::UP: currentDirection = Direction::DOWN; break;
-        case Direction::DOWN: currentDirection = Direction::UP; break;
-        case Direction::LEFT: currentDirection = Direction::RIGHT; break;
-        case Direction::RIGHT: currentDirection = Direction::LEFT; break;
-        default: break;
-        }
+        currentDirection = getOppositeDirection(currentDirection);
     }
 }
 

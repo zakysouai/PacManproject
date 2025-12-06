@@ -16,7 +16,8 @@ enum class EventType {
     GHOST_EATEN,
     PACMAN_DIED,
     LEVEL_CLEARED,
-    DIRECTION_CHANGED
+    DIRECTION_CHANGED,
+    GHOST_STATE_CHANGED  // ✅ NIEUW
 };
 
 struct Event {

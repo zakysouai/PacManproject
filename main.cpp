@@ -20,3 +20,5 @@ int main() {
 // TODO: checken of we wel correct werken met observers etc...
 // TODO: checken voor memleaks (valgrind)
 // TODO: checken voor correcte use of smart pointers
+// TODO: we moeten er ook voor zorgen dat als een fruit word gegeten, de ghosts in scared mode gaan.
+// TODO: checken of respawn van de ghosts in orde is

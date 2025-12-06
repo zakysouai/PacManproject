@@ -267,10 +267,31 @@ void World::handleCollisions() {
         }
     }
 
-    // Check fruit collisions
+    // ✅ Check fruit collisions
     for (auto& fruit : fruits) {
         if (!fruit->isCollected() && pacman->intersects(*fruit)) {
             fruit->collect();
+            activateFearMode();  // ✅ NIEUW
+        }
+    }
+
+    // ✅ NIEUW: Ghost collisions
+    for (auto& ghost : ghosts) {
+        if (ghost->getState() == GhostState::IN_SPAWN) continue;
+
+        if (pacman->intersects(*ghost)) {
+            if (ghost->isScared()) {
+                // Eat ghost
+                ghost->respawn();
+
+                Event event;
+                event.type = EventType::GHOST_EATEN;
+                event.value = 200;  // Bonus points
+                score.onNotify(event);
+            } else {
+                // PacMan dies
+                pacman->loseLife();
+            }
         }
     }
 }
@@ -307,6 +328,10 @@ void World::reset() {
 }
 
 void World::applyDifficultyScaling() {
+    // ✅ Scale fear duration per level
+    fearModeDuration = std::max(2.0f, 5.0f - (currentLevel - 1) * 0.5f);
+
+    std::cout << "Level " << currentLevel << " - Fear duration: " << fearModeDuration << "s" << std::endl;
 }
 
 Position World::gridToWorld(int row, int col, int totalRows, int totalCols) const {
@@ -583,6 +608,14 @@ World::GridPosition World::worldToGrid(const Position& worldPos) const {
     int row = static_cast<int>((worldPos.y + worldHeight) / (2.0f * worldHeight) * mapRows);
 
     return {row, col};
+}
+
+void World::activateFearMode() {
+    std::cout << "FEAR MODE ACTIVATED! Duration: " << fearModeDuration << "s" << std::endl;
+
+    for (auto& ghost : ghosts) {
+        ghost->enterScaredMode(fearModeDuration);
+    }
 }
 
 
