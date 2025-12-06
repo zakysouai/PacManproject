@@ -75,11 +75,12 @@ bool World::wouldCollideWithWall(const Position& pos, float radius, const Ghost*
         }
     }
 
-    // ✅ SIMPEL: als ghost door deur is → deur = wall
-    if (ghost && ghost->hasPassedThroughDoor() && hasDoor) {
-        auto ghostGrid = worldToGrid(pos);
-        if (ghostGrid.row == doorGridPos.row && ghostGrid.col == doorGridPos.col) {
-            return true;  // Deur is wall voor deze ghost
+    // ✅ DEUR: PacMan altijd blokkeren
+    if (hasDoor) {
+        auto testGrid = worldToGrid(pos);
+        if (testGrid.row == doorGridPos.row && testGrid.col == doorGridPos.col) {
+            if (!ghost) return true;  // PacMan → blocked
+            return ghost->hasPassedThroughDoor();  // Ghost → blocked na passage
         }
     }
 
@@ -108,16 +109,18 @@ bool World::canMoveInDirection(const Position& pos, Direction dir, float radius,
         }
     }
 
-    // ✅ SIMPEL: als ghost door deur is → deur = wall
-    if (ghost && ghost->hasPassedThroughDoor() && hasDoor) {
+    // ✅ DEUR: PacMan altijd blokkeren
+    if (hasDoor) {
         auto testGrid = worldToGrid(testPos);
         if (testGrid.row == doorGridPos.row && testGrid.col == doorGridPos.col) {
-            return false;  // Deur blokkeert deze ghost
+            if (!ghost) return false;  // PacMan → blocked
+            return !ghost->hasPassedThroughDoor();  // Ghost → OK tot passage
         }
     }
 
     return true;
 }
+
 bool World::isAtIntersection(const Position& pos, Direction currentDir, float radius) const {
     // An intersection is where you can move in a direction perpendicular to your current movement
 
