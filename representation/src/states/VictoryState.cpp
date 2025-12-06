@@ -1,3 +1,4 @@
+// representation/src/states/VictoryState.cpp
 #include "representation/states/VictoryState.h"
 #include "representation/states/MenuState.h"
 #include "representation/states/LevelState.h"
@@ -20,13 +21,17 @@ void VictoryState::onExit() {
 }
 
 void VictoryState::loadFont() {
-    if (!font.loadFromFile("../resources/fonts/arial.ttf")) {
+    if (!font.loadFromFile("../resources/fonts/Retro.ttf")) {
         std::cerr << "Warning: Could not load font" << std::endl;
     }
 }
 
 void VictoryState::setupTexts() {
-    // Result text (Win or Lose)
+    float windowWidth = 1000.0f;
+    float windowHeight = 600.0f;
+    float centerX = windowWidth / 2.0f;
+
+    // ✅ RESULT TEXT - GECENTREERD
     resultText.setFont(font);
     if (playerWon) {
         resultText.setString("LEVEL COMPLETE!");
@@ -35,17 +40,23 @@ void VictoryState::setupTexts() {
         resultText.setString("GAME OVER!");
         resultText.setFillColor(sf::Color::Red);
     }
-    resultText.setCharacterSize(64);
-    resultText.setPosition(200, 150);
-    
-    // Score text
+    resultText.setCharacterSize(72);
+
+    sf::FloatRect resultBounds = resultText.getLocalBounds();
+    resultText.setOrigin(resultBounds.width / 2.0f, resultBounds.height / 2.0f);
+    resultText.setPosition(centerX, 150);
+
+    // ✅ SCORE TEXT - GECENTREERD
     scoreText.setFont(font);
     scoreText.setString("Final Score: " + std::to_string(score));
-    scoreText.setCharacterSize(36);
-    scoreText.setFillColor(sf::Color::White);
-    scoreText.setPosition(250, 280);
-    
-    // Instructions text
+    scoreText.setCharacterSize(40);
+    scoreText.setFillColor(sf::Color::Yellow);
+
+    sf::FloatRect scoreBounds = scoreText.getLocalBounds();
+    scoreText.setOrigin(scoreBounds.width / 2.0f, scoreBounds.height / 2.0f);
+    scoreText.setPosition(centerX, 280);
+
+    // ✅ INSTRUCTIONS TEXT - GECENTREERD
     instructionsText.setFont(font);
     if (playerWon) {
         instructionsText.setString("Press SPACE for next level\nPress M for Menu");
@@ -54,17 +65,18 @@ void VictoryState::setupTexts() {
     }
     instructionsText.setCharacterSize(24);
     instructionsText.setFillColor(sf::Color::White);
-    instructionsText.setPosition(220, 400);
+
+    sf::FloatRect instrBounds = instructionsText.getLocalBounds();
+    instructionsText.setOrigin(instrBounds.width / 2.0f, 0);
+    instructionsText.setPosition(centerX, 400);
 }
 
 void VictoryState::handleInput(const sf::Event& event) {
     if (event.type == sf::Event::KeyPressed) {
         if (event.key.code == sf::Keyboard::Space) {
             if (playerWon) {
-                // Next level
                 finish(StateAction::SWITCH, std::make_unique<LevelState>(level + 1));
             } else {
-                // Game Over: restart from level 1
                 finish(StateAction::SWITCH, std::make_unique<LevelState>(1));
             }
         } else if (event.key.code == sf::Keyboard::M) {

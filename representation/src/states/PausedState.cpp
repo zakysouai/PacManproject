@@ -1,3 +1,4 @@
+// representation/src/states/PausedState.cpp
 #include "representation/states/PausedState.h"
 #include "representation/states/MenuState.h"
 #include <iostream>
@@ -18,47 +19,59 @@ void PausedState::onExit() {
 }
 
 void PausedState::loadFont() {
-    if (!font.loadFromFile("../resources/fonts/arial.ttf")) {
+    if (!font.loadFromFile("../resources/fonts/Retro.ttf")) {
         std::cerr << "Warning: Could not load font" << std::endl;
     }
 }
 
 void PausedState::setupTexts() {
-    // Semi-transparent overlay
-    overlay.setSize(sf::Vector2f(800, 600));
-    overlay.setFillColor(sf::Color(0, 0, 0, 180));
-    
+    float windowWidth = 1000.0f;
+    float windowHeight = 600.0f;
+    float centerX = windowWidth / 2.0f;
+    float centerY = windowHeight / 2.0f;
+
+    // ✅ OVERLAY - VOLLEDIG SCHERM
+    overlay.setSize(sf::Vector2f(windowWidth, windowHeight));
+    overlay.setFillColor(sf::Color(0, 0, 0, 200));  // Semi-transparant zwart
+    overlay.setPosition(0, 0);
+
+    // ✅ PAUSED TEXT - GECENTREERD
     pausedText.setFont(font);
     pausedText.setString("PAUSED");
-    pausedText.setCharacterSize(72);
+    pausedText.setCharacterSize(80);
     pausedText.setFillColor(sf::Color::Yellow);
-    pausedText.setPosition(270, 200);
-    
+
+    sf::FloatRect pausedBounds = pausedText.getLocalBounds();
+    pausedText.setOrigin(pausedBounds.width / 2.0f, pausedBounds.height / 2.0f);
+    pausedText.setPosition(centerX, centerY - 80);
+
+    // ✅ INSTRUCTIONS TEXT - GECENTREERD
     instructionsText.setFont(font);
     instructionsText.setString("Press ESC to Resume\nPress M for Menu");
-    instructionsText.setCharacterSize(24);
+    instructionsText.setCharacterSize(28);
     instructionsText.setFillColor(sf::Color::White);
-    instructionsText.setPosition(260, 350);
+
+    sf::FloatRect instrBounds = instructionsText.getLocalBounds();
+    instructionsText.setOrigin(instrBounds.width / 2.0f, 0);
+    instructionsText.setPosition(centerX, centerY + 40);
 }
 
 void PausedState::handleInput(const sf::Event& event) {
     if (event.type == sf::Event::KeyPressed) {
         if (event.key.code == sf::Keyboard::Escape) {
-            // Resume (pop paused state)
             finish(StateAction::POP);
         } else if (event.key.code == sf::Keyboard::M) {
-            // Go to menu (switch to menu, clearing state stack)
             finish(StateAction::SWITCH, std::make_unique<MenuState>());
         }
     }
 }
 
 void PausedState::update(float deltaTime) {
-    // Nothing to update while paused
+    // Nothing to update
 }
 
 void PausedState::render(sf::RenderWindow& window) {
-    // Don't clear - we want to see the game underneath
+    // Niet clearen - we willen het spel eronder zien
     window.draw(overlay);
     window.draw(pausedText);
     window.draw(instructionsText);

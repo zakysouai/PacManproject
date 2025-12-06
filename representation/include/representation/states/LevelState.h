@@ -30,14 +30,22 @@ private:
     sf::Font font;
 
     // Left sidebar
+    sf::Text scoreTitle;
     sf::Text scoreText;
+    sf::Text livesTitle;
     sf::Text livesText;
+    sf::Text levelTitle;
     sf::Text levelText;
 
     // Right sidebar
+    sf::Text timerTitle;
     sf::Text timerText;
     sf::Text controlsTitle;
-    sf::Text controlsText;
+    sf::Text controlKeysText;
+    sf::Text controlActionsText;
+    sf::Text pointsTitle;
+    sf::Text pointsLabelsText;
+    sf::Text pointsValuesText;
     
     void loadFont();
     void setupUI();

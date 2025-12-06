@@ -23,3 +23,4 @@ int main() {
 // TODO: we moeten er ook voor zorgen dat als een fruit word gegeten, de ghosts in scared mode gaan.
 // TODO: checken of respawn van de ghosts in orde is
 // TODO: Pacman kan niet in spawn van de ghosts
+// TODO: highscores implementeren

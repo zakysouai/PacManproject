@@ -20,51 +20,74 @@ void MenuState::onExit() {
 
 void MenuState::loadFont() {
     // Try to load a font (you'll need to add a font file to resources/)
-    if (!font.loadFromFile("../resources/fonts/arial.ttf")) {
+    if (!font.loadFromFile("../resources/fonts/Retro.ttf")) {
         std::cerr << "Warning: Could not load font, using default" << std::endl;
     }
 }
 
 void MenuState::setupTexts() {
-    // Title
+    float windowWidth = 1000.0f;  // Van Game.h WINDOW_WIDTH
+    float windowHeight = 600.0f;  // Van Game.h WINDOW_HEIGHT
+    float centerX = windowWidth / 2.0f;
+
+    // ✅ TITLE - GECENTREERD
     titleText.setFont(font);
     titleText.setString("PAC-MAN");
-    titleText.setCharacterSize(72);
+    titleText.setCharacterSize(80);
     titleText.setFillColor(sf::Color::Yellow);
-    titleText.setPosition(250, 50);
-    
-    // Play button
-    playButton.setSize(sf::Vector2f(200, 60));
-    playButton.setPosition(300, 250);
-    playButton.setFillColor(sf::Color(0, 100, 200));
 
-    // TODO: zorg er voor dat de positie van de play button niet hardcoded is SO naar eray
+    sf::FloatRect titleBounds = titleText.getLocalBounds();
+    titleText.setOrigin(titleBounds.width / 2.0f, titleBounds.height / 2.0f);
+    titleText.setPosition(centerX, 100);
+
+    // ✅ PLAY BUTTON - GECENTREERD
+    playButton.setSize(sf::Vector2f(250, 70));
+    playButton.setFillColor(sf::Color(30, 30, 200));
+    playButton.setOrigin(125, 35);  // Width/2, Height/2
+    playButton.setPosition(centerX, 250);
+
     playButtonText.setFont(font);
     playButtonText.setString("PLAY");
-    playButtonText.setCharacterSize(36);
+    playButtonText.setCharacterSize(40);
     playButtonText.setFillColor(sf::Color::White);
-    playButtonText.setPosition(350, 260);
-    
-    // High scores title
+
+    sf::FloatRect playBounds = playButtonText.getLocalBounds();
+    playButtonText.setOrigin(playBounds.width / 2.0f, playBounds.height / 2.0f);
+    playButtonText.setPosition(centerX, 250);
+
+    // ✅ HIGH SCORES TITLE - GECENTREERD
     highScoresTitle.setFont(font);
     highScoresTitle.setString("HIGH SCORES");
     highScoresTitle.setCharacterSize(32);
-    highScoresTitle.setFillColor(sf::Color::White);
-    highScoresTitle.setPosition(280, 350);
+    highScoresTitle.setFillColor(sf::Color(255, 215, 0));  // Goud
+
+    sf::FloatRect scoreTitleBounds = highScoresTitle.getLocalBounds();
+    highScoresTitle.setOrigin(scoreTitleBounds.width / 2.0f, 0);
+    highScoresTitle.setPosition(centerX, 370);
 }
+
 
 void MenuState::loadHighScores() {
     // TODO: Load from Score class
     std::vector<int> scores = {5000, 4000, 3000, 2000, 1000};
-    
-    float yPos = 400;
+
+    float centerX = 500.0f;
+    float yPos = 420;
+
+    highScoreTexts.clear();
+
     for (size_t i = 0; i < scores.size(); ++i) {
         sf::Text text;
         text.setFont(font);
         text.setString(std::to_string(i + 1) + ".  " + std::to_string(scores[i]));
         text.setCharacterSize(24);
         text.setFillColor(sf::Color::White);
-        text.setPosition(320, yPos);
+
+        // ✅ CENTREER ELKE SCORE
+        sf::FloatRect bounds = text.getLocalBounds();
+        text.setOrigin(bounds.width / 2.0f, 0);
+        text.setPosition(centerX, yPos);
+
         yPos += 30;
         highScoreTexts.push_back(text);
     }
@@ -80,7 +103,7 @@ void MenuState::handleInput(const sf::Event& event) {
             }
         }
     }
-    
+
     if (event.type == sf::Event::MouseMoved) {
         sf::Vector2f mousePos(event.mouseMove.x, event.mouseMove.y);
         playButtonHovered = isMouseOverButton(mousePos);
@@ -88,13 +111,24 @@ void MenuState::handleInput(const sf::Event& event) {
 }
 
 void MenuState::update(float deltaTime) {
-    // Update button color based on hover
     if (playButtonHovered) {
-        playButton.setFillColor(sf::Color(0, 150, 250));
+        playButton.setFillColor(sf::Color(60, 60, 255));
+
+        // ✅ SCALE EFFECT
+        float centerX = playButton.getPosition().x;
+        float centerY = playButton.getPosition().y;
+        playButton.setOrigin(125, 35);
+        playButton.setScale(1.05f, 1.05f);
+        playButton.setPosition(centerX, centerY);
+
+        playButtonText.setScale(1.05f, 1.05f);
     } else {
-        playButton.setFillColor(sf::Color(0, 100, 200));
+        playButton.setFillColor(sf::Color(30, 30, 200));
+        playButton.setScale(1.0f, 1.0f);
+        playButtonText.setScale(1.0f, 1.0f);
     }
 }
+
 
 void MenuState::render(sf::RenderWindow& window) {
     window.clear(sf::Color::Black);
