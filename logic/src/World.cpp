@@ -15,6 +15,27 @@ World::World(AbstractFactory* factory)
 }
 
 void World::update(float deltaTime) {
+    if (deathAnimationPlaying) {
+        deathAnimationTimer += deltaTime;
+
+        // Only update PacMan for animation
+        if (pacman) {
+            pacman->update(deltaTime);
+        }
+
+        if (deathAnimationTimer >= DEATH_ANIMATION_DURATION) {
+            deathAnimationPlaying = false;
+            deathAnimationTimer = 0.0f;
+
+            // Reset
+            pacman->reset(pacmanSpawnPosition);
+            for (auto& g : ghosts) {
+                g->respawn();
+            }
+        }
+        return;
+    }
+
     score.updateComboTimer(deltaTime);
 
     if (pacman) {
@@ -310,15 +331,13 @@ void World::handleCollisions() {
 
         if (pacman->intersects(*ghost)) {
             if (ghost->isScared()) {
-                ghost->die();  // ✅ Ghost stuurt zelf event via Observer
+                ghost->die();
             } else {
                 pacman->loseLife();
 
                 if (pacman->isAlive()) {
-                    pacman->reset(pacmanSpawnPosition);
-                    for (auto& g : ghosts) {
-                        g->respawn();
-                    }
+                    deathAnimationPlaying = true;
+                    deathAnimationTimer = 0.0f;
                 }
 
                 break;

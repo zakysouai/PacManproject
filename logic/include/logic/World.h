@@ -85,6 +85,9 @@ private:
 
     int mapRows = 0;
     int mapCols = 0;
+    bool deathAnimationPlaying = false;
+    float deathAnimationTimer = 0.0f;
+    const float DEATH_ANIMATION_DURATION = 1.2f;
 
     Position doorPosition;
     bool hasDoor = false;  // Was er een 'D' in de map?
