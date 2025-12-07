@@ -14,12 +14,11 @@ int main() {
     return 0;
 }
 
-// TODO: UI regelen en mooier maken (hardcoded coordinaten)
+// TODO: UI regelen en mooier maken (hardcoded coordinaten fixen voor fullscreen)
 // TODO: de normale map.txt gebruiken als soort 'tutorial' en dan naar map_big switchen als 2de level?
 // TODO: checken of we wel correct werken met observers etc...
 // TODO: checken voor memleaks (valgrind)
 // TODO: checken voor correcte use of smart pointers
-// TODO: highscores implementeren
 // TODO: bug in 1 van de hoeken waar pacman vast zit
 // TODO: deftige death animation
-// TODO: ghosts gaan te snel uit spawn na 1 death van pacman
+// TODO: eerst een bevroren beeld van de map. met READY in het midden voor 2 seconden ofzo
