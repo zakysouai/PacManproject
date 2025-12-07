@@ -88,6 +88,16 @@ void Ghost::respawn() {
     notify(event);
 }
 
+void Ghost::die() {
+    // ✅ NOTIFY observers (Score krijgt event)
+    Event event;
+    event.type = EventType::GHOST_EATEN;
+    event.value = 200;
+    notify(event);
+
+    respawn();
+}
+
 void Ghost::move(float deltaTime) {
     if (!world) return;
 

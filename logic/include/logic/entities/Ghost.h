@@ -37,6 +37,7 @@ public:
     void enterScaredMode(float duration);
     bool isScared() const { return state == GhostState::SCARED; }
     void respawn();
+    void die();
 
 protected:
     virtual Direction chooseDirection() = 0;

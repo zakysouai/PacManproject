@@ -48,6 +48,7 @@ void World::update(float deltaTime) {
         event.type = EventType::LEVEL_CLEARED;
         event.value = 500 * currentLevel;
         score.onNotify(event);
+        pacman->notifyLevelComplete(500 * currentLevel);
     }
 }
 
@@ -292,22 +293,14 @@ void World::handleCollisions() {
         }
     }
 
-    // ❌ REMOVED: if (pacman->isInvulnerable()) return;
-
     // Ghost collisions
     for (auto& ghost : ghosts) {
         if (ghost->getState() == GhostState::IN_SPAWN) continue;
 
         if (pacman->intersects(*ghost)) {
             if (ghost->isScared()) {
-                ghost->respawn();
-
-                Event event;
-                event.type = EventType::GHOST_EATEN;
-                event.value = 200;
-                score.onNotify(event);
+                ghost->die();  // ✅ Ghost stuurt zelf event via Observer
             } else {
-                // PacMan dies
                 pacman->loseLife();
 
                 if (pacman->isAlive()) {

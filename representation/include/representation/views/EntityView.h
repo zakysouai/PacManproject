@@ -15,7 +15,6 @@ public:
     void onNotify(const pacman::Event& event) override;
     virtual void draw(sf::RenderWindow& window) = 0;
 
-    // ❌ DEPRECATED - wordt niet meer gebruikt
     virtual void update(float deltaTime);
 
 protected:
@@ -23,7 +22,6 @@ protected:
     const pacman::Camera& camera;
 
     sf::Sprite sprite;
-    sf::Texture texture;
 
     void updateSpritePosition();
 };

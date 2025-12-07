@@ -50,4 +50,11 @@ void PacMan::reset(const Position& startPos) {
     nextDirection = Direction::NONE;
 }
 
+void PacMan::notifyLevelComplete(int levelBonus) {
+    Event event;
+    event.type = EventType::LEVEL_CLEARED;
+    event.value = levelBonus;
+    notify(event);
+}
+
 } // namespace pacman

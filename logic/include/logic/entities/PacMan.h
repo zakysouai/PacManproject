@@ -20,6 +20,7 @@ public:
     void reset(const Position& startPos);
 
     bool isAlive() const { return lives > 0; }
+    void notifyLevelComplete(int levelBonus);
 
 private:
     Direction currentDirection = Direction::NONE;
