@@ -21,6 +21,7 @@ set(REPRESENTATION_SOURCES
         src/states/LevelState.cpp
         src/states/PausedState.cpp
         src/states/VictoryState.cpp
+        src/states/TutorialIntroState.cpp
 
         # Views
         src/views/EntityView.cpp

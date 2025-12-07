@@ -145,6 +145,25 @@ void VictoryState::handleInput(const sf::Event& event) {
             }
         }
     }
+
+    if (event.type == sf::Event::KeyPressed) {
+        if (event.key.code == sf::Keyboard::Space) {
+            if (playerWon) {
+                // ✅ Check of het tutorial was (level 0)
+                if (level == 0) {
+                    // Tutorial complete → terug naar menu
+                    finish(StateAction::SWITCH, std::make_unique<MenuState>());
+                } else {
+                    // Normale level → volgende level
+                    finish(StateAction::SWITCH, std::make_unique<LevelState>(level + 1));
+                }
+            } else {
+                finish(StateAction::SWITCH, std::make_unique<LevelState>(1));
+            }
+        } else if (event.key.code == sf::Keyboard::M) {
+            finish(StateAction::SWITCH, std::make_unique<MenuState>());
+        }
+    }
 }
 
 void VictoryState::saveHighScore() {

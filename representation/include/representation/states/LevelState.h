@@ -10,7 +10,7 @@ namespace pacman::representation {
 
 class LevelState : public State {
 public:
-    LevelState(int level = 1);
+    LevelState(int level = 1, bool isTutorial = false);
     ~LevelState() override = default;
     
     void onEnter() override;
@@ -26,6 +26,7 @@ private:
     
     int currentLevel;
     float elapsedTime = 0.0f;
+    bool hasLetterboxing = false;
 
     sf::Font font;
 
@@ -46,6 +47,9 @@ private:
     sf::Text pointsTitle;
     sf::Text pointsLabelsText;
     sf::Text pointsValuesText;
+
+    bool tutorialMode;
+    std::string getTutorialMapPath() const;
     
     void loadFont();
     void setupUI();

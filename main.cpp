@@ -20,5 +20,4 @@ int main() {
 // TODO: checken voor memleaks (valgrind)
 // TODO: checken voor correcte use of smart pointers
 // TODO: bug in 1 van de hoeken waar pacman vast zit
-// TODO: deftige death animation
 // TODO: eerst een bevroren beeld van de map. met READY in het midden voor 2 seconden ofzo

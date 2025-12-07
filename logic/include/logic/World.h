@@ -113,6 +113,7 @@ private:
     void applyDifficultyScaling();
     bool isDoorBlockedFor(const Position& pos, const Ghost* ghost) const;
     void checkWraparound(EntityModel* entity);
+    std::string getMapFileForLevel(int level) const;
 };
 
 } // namespace pacman

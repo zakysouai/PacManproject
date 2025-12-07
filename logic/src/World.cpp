@@ -672,5 +672,12 @@ void World::activateFearMode() {
     }
 }
 
+std::string World::getMapFileForLevel(int level) const {
+    if (level == 1) {
+        return "../resources/maps/map.txt";
+    }
+    return "../resources/maps/map_big.txt";
+}
+
 
 } // namespace pacman

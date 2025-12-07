@@ -2,6 +2,7 @@
 #include "State.h"
 #include <SFML/Graphics.hpp>
 #include <vector>
+#include "representation/states/TutorialIntroState.h"
 
 namespace pacman::representation {
 
@@ -22,6 +23,10 @@ private:
     sf::Text playButtonText;
     sf::Text highScoresTitle;
     std::vector<sf::Text> highScoreTexts;
+
+    sf::RectangleShape tutorialButton;
+    sf::Text tutorialButtonText;
+    bool tutorialButtonHovered = false;
 
     sf::RectangleShape playButton;
     bool playButtonHovered = false;

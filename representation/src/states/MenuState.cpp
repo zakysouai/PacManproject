@@ -26,53 +26,61 @@ void MenuState::loadFont() {
 }
 
 void MenuState::setupTexts() {
-    float windowWidth = 1000.0f;  // Van Game.h WINDOW_WIDTH
-    float windowHeight = 600.0f;  // Van Game.h WINDOW_HEIGHT
-    float centerX = windowWidth / 2.0f;
+    float centerX = 500.0f;
 
-    // ✅ TITLE - GECENTREERD
+    // Title (blijft hetzelfde)
     titleText.setFont(font);
     titleText.setString("PAC-MAN");
     titleText.setCharacterSize(80);
     titleText.setFillColor(sf::Color::Yellow);
-
     sf::FloatRect titleBounds = titleText.getLocalBounds();
     titleText.setOrigin(titleBounds.width / 2.0f, titleBounds.height / 2.0f);
     titleText.setPosition(centerX, 100);
 
-    // ✅ PLAY BUTTON - GECENTREERD
+    // ✅ PLAY BUTTON (verschuif omhoog)
     playButton.setSize(sf::Vector2f(250, 70));
     playButton.setFillColor(sf::Color(30, 30, 200));
-    playButton.setOrigin(125, 35);  // Width/2, Height/2
-    playButton.setPosition(centerX, 250);
+    playButton.setOrigin(125, 35);
+    playButton.setPosition(centerX, 220);  // Was 250
 
     playButtonText.setFont(font);
     playButtonText.setString("PLAY");
     playButtonText.setCharacterSize(40);
     playButtonText.setFillColor(sf::Color::White);
-
     sf::FloatRect playBounds = playButtonText.getLocalBounds();
     playButtonText.setOrigin(playBounds.width / 2.0f, playBounds.height / 2.0f);
-    playButtonText.setPosition(centerX, 250);
+    playButtonText.setPosition(centerX, 220);
 
-    // ✅ HIGH SCORES TITLE - GECENTREERD
+    // ✅ TUTORIAL BUTTON (nieuw)
+    tutorialButton.setSize(sf::Vector2f(250, 70));
+    tutorialButton.setFillColor(sf::Color(30, 30, 200));
+    tutorialButton.setOrigin(125, 35);
+    tutorialButton.setPosition(centerX, 310);
+
+    tutorialButtonText.setFont(font);
+    tutorialButtonText.setString("TUTORIAL");
+    tutorialButtonText.setCharacterSize(40);
+    tutorialButtonText.setFillColor(sf::Color::White);
+    sf::FloatRect tutBounds = tutorialButtonText.getLocalBounds();
+    tutorialButtonText.setOrigin(tutBounds.width / 2.0f, tutBounds.height / 2.0f);
+    tutorialButtonText.setPosition(centerX, 310);
+
+    // High scores title (verschuif omlaag)
     highScoresTitle.setFont(font);
     highScoresTitle.setString("HIGH SCORES");
     highScoresTitle.setCharacterSize(32);
-    highScoresTitle.setFillColor(sf::Color(255, 215, 0));  // Goud
-
+    highScoresTitle.setFillColor(sf::Color(255, 215, 0));
     sf::FloatRect scoreTitleBounds = highScoresTitle.getLocalBounds();
     highScoresTitle.setOrigin(scoreTitleBounds.width / 2.0f, 0);
-    highScoresTitle.setPosition(centerX, 370);
+    highScoresTitle.setPosition(centerX, 400);  // Was 370
 }
 
-
 void MenuState::loadHighScores() {
-    pacman::Score tempScore;  // ✅ Temporary om te laden
+    pacman::Score tempScore;
     auto scores = tempScore.getHighScores();
 
     float centerX = 500.0f;
-    float yPos = 420;
+    float yPos = 450;  // Was 420
 
     highScoreTexts.clear();
 
@@ -80,19 +88,26 @@ void MenuState::loadHighScores() {
         sf::Text text;
         text.setFont(font);
 
-        std::string displayText = std::to_string(i + 1) + ".  " +
-                                  scores[i].name + "  " +
-                                  std::to_string(scores[i].score);
+        // ✅ PADDING VOOR UITLIJNING
+        std::string rank = std::to_string(i + 1) + ".";
+        std::string name = scores[i].name;
+        std::string score = std::to_string(scores[i].score);
+
+        // Pad name to 12 chars, score to 6 chars
+        while (name.length() < 12) name += " ";
+        while (score.length() < 6) score = " " + score;
+
+        std::string displayText = rank + "  " + name + "  " + score;
 
         text.setString(displayText);
-        text.setCharacterSize(24);
+        text.setCharacterSize(22);
         text.setFillColor(sf::Color::White);
 
         sf::FloatRect bounds = text.getLocalBounds();
         text.setOrigin(bounds.width / 2.0f, 0);
         text.setPosition(centerX, yPos);
 
-        yPos += 30;
+        yPos += 28;
         highScoreTexts.push_back(text);
     }
 }
@@ -101,38 +116,45 @@ void MenuState::handleInput(const sf::Event& event) {
     if (event.type == sf::Event::MouseButtonPressed) {
         if (event.mouseButton.button == sf::Mouse::Left) {
             sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y);
-            if (isMouseOverButton(mousePos)) {
-                // Transition to LevelState
+
+            if (playButton.getGlobalBounds().contains(mousePos)) {
                 finish(StateAction::PUSH, std::make_unique<LevelState>(1));
+            } else if (tutorialButton.getGlobalBounds().contains(mousePos)) {
+                finish(StateAction::PUSH, std::make_unique<TutorialIntroState>());
             }
         }
     }
 
     if (event.type == sf::Event::MouseMoved) {
         sf::Vector2f mousePos(event.mouseMove.x, event.mouseMove.y);
-        playButtonHovered = isMouseOverButton(mousePos);
+        playButtonHovered = playButton.getGlobalBounds().contains(mousePos);
+        tutorialButtonHovered = tutorialButton.getGlobalBounds().contains(mousePos);
     }
 }
 
 void MenuState::update(float deltaTime) {
+    // Play button hover
     if (playButtonHovered) {
         playButton.setFillColor(sf::Color(60, 60, 255));
-
-        // ✅ SCALE EFFECT
-        float centerX = playButton.getPosition().x;
-        float centerY = playButton.getPosition().y;
-        playButton.setOrigin(125, 35);
         playButton.setScale(1.05f, 1.05f);
-        playButton.setPosition(centerX, centerY);
-
         playButtonText.setScale(1.05f, 1.05f);
     } else {
         playButton.setFillColor(sf::Color(30, 30, 200));
         playButton.setScale(1.0f, 1.0f);
         playButtonText.setScale(1.0f, 1.0f);
     }
-}
 
+    // Tutorial button hover
+    if (tutorialButtonHovered) {
+        tutorialButton.setFillColor(sf::Color(60, 60, 255));
+        tutorialButton.setScale(1.05f, 1.05f);
+        tutorialButtonText.setScale(1.05f, 1.05f);
+    } else {
+        tutorialButton.setFillColor(sf::Color(30, 30, 200));
+        tutorialButton.setScale(1.0f, 1.0f);
+        tutorialButtonText.setScale(1.0f, 1.0f);
+    }
+}
 
 void MenuState::render(sf::RenderWindow& window) {
     window.clear(sf::Color::Black);
@@ -140,6 +162,8 @@ void MenuState::render(sf::RenderWindow& window) {
     window.draw(titleText);
     window.draw(playButton);
     window.draw(playButtonText);
+    window.draw(tutorialButton);
+    window.draw(tutorialButtonText);
     window.draw(highScoresTitle);
     
     for (auto& text : highScoreTexts) {
