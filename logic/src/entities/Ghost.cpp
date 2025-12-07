@@ -89,7 +89,7 @@ void Ghost::respawn() {
 }
 
 void Ghost::die() {
-    // ✅ NOTIFY observers (Score krijgt event)
+    // ✅ NOTIFY observers (Score krijgt GHOST_EATEN)
     Event event;
     event.type = EventType::GHOST_EATEN;
     event.value = 200;

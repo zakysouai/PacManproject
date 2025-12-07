@@ -18,7 +18,7 @@ struct MapDimensions {
     int cols;
 };
 
-class World {
+class World : public Subject {
 public:
     explicit World(AbstractFactory* factory);
     ~World() = default;

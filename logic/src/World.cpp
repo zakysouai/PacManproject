@@ -20,7 +20,7 @@ void World::update(float deltaTime) {
     if (pacman) {
         updatePacManWithCollisions(deltaTime);
         checkWraparound(pacman.get());
-        pacman->update(deltaTime);  // ✅ TOEVOEGEN
+        pacman->update(deltaTime);  // ✅ TOEVOEGEN - stuurt ENTITY_UPDATED
     }
 
     for (auto& ghost : ghosts) {
@@ -28,7 +28,7 @@ void World::update(float deltaTime) {
         checkWraparound(ghost.get());
     }
 
-    // ✅ COINS EN FRUITS ook updaten voor consistentie
+    // ✅ TOEVOEGEN - sturen ENTITY_UPDATED events
     for (auto& coin : coins) {
         coin->update(deltaTime);
     }
@@ -48,7 +48,6 @@ void World::update(float deltaTime) {
         event.type = EventType::LEVEL_CLEARED;
         event.value = 500 * currentLevel;
         score.onNotify(event);
-        pacman->notifyLevelComplete(500 * currentLevel);
     }
 }
 
@@ -376,6 +375,7 @@ Position World::gridToWorld(int row, int col, int totalRows, int totalCols) cons
 
 void World::loadLevel(const std::string& mapFile) {
     parseMap(mapFile);
+    this->attach(&score);
 }
 
 void World::parseMap(const std::string& mapFile) {
