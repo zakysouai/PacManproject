@@ -22,14 +22,18 @@ void Ghost::update(float deltaTime) {
             event.type = EventType::GHOST_STATE_CHANGED;
             notify(event);
         }
+        // ✅ NOTIFY zelfs in spawn
+        Event updateEvent;
+        updateEvent.type = EventType::ENTITY_UPDATED;
+        updateEvent.deltaTime = deltaTime;
+        notify(updateEvent);
         return;
     }
 
-    // ✅ NIEUW: Handle scared timer
+    // Handle scared timer
     if (state == GhostState::SCARED) {
         scaredTimer -= deltaTime;
         if (scaredTimer <= 0.0f) {
-            // Exit scared mode
             state = previousState;
             speed = normalSpeed;
             std::cout << "Ghost color " << static_cast<int>(color) << " exits scared mode!" << std::endl;
@@ -41,6 +45,12 @@ void Ghost::update(float deltaTime) {
     }
 
     move(deltaTime);
+
+    // ✅ NOTIFY observers
+    Event event;
+    event.type = EventType::ENTITY_UPDATED;
+    event.deltaTime = deltaTime;
+    notify(event);
 }
 
 void Ghost::enterScaredMode(float duration) {

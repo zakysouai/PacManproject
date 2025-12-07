@@ -8,6 +8,12 @@ Fruit::Fruit(const Position& pos)
 
 void Fruit::update(float deltaTime) {
     // Fruits don't move
+
+    // ✅ NOTIFY
+    Event event;
+    event.type = EventType::ENTITY_UPDATED;
+    event.deltaTime = deltaTime;
+    notify(event);
 }
 
 void Fruit::collect() {

@@ -8,6 +8,12 @@ Coin::Coin(const Position& pos)
 
 void Coin::update(float deltaTime) {
     // Coins don't move
+
+    // ✅ NOTIFY (hoewel statisch, voor consistentie)
+    Event event;
+    event.type = EventType::ENTITY_UPDATED;
+    event.deltaTime = deltaTime;
+    notify(event);
 }
 
 void Coin::collect() {

@@ -7,7 +7,13 @@ Wall::Wall(const Position& pos)
 }
 
 void Wall::update(float deltaTime) {
-    // Walls don't move or do anything
+    // Walls don't move
+
+    // ✅ NOTIFY (voor consistentie)
+    Event event;
+    event.type = EventType::ENTITY_UPDATED;
+    event.deltaTime = deltaTime;
+    notify(event);
 }
 
 } // namespace pacman

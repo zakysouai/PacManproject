@@ -19,12 +19,26 @@ void World::update(float deltaTime) {
 
     if (pacman) {
         updatePacManWithCollisions(deltaTime);
-        checkWraparound(pacman.get());  // ✅
+        checkWraparound(pacman.get());
+        pacman->update(deltaTime);  // ✅ TOEVOEGEN
     }
 
     for (auto& ghost : ghosts) {
         ghost->update(deltaTime);
-        checkWraparound(ghost.get());  // ✅
+        checkWraparound(ghost.get());
+    }
+
+    // ✅ COINS EN FRUITS ook updaten voor consistentie
+    for (auto& coin : coins) {
+        coin->update(deltaTime);
+    }
+
+    for (auto& fruit : fruits) {
+        fruit->update(deltaTime);
+    }
+
+    for (auto& wall : walls) {
+        wall->update(deltaTime);
     }
 
     handleCollisions();
@@ -533,29 +547,29 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     if (redSpawned) {
         auto ghost = factory->createGhost(redPos, GhostColor::RED);
         ghost->setWorld(this);
+        ghost->attach(&score);  // ✅ TOEVOEGEN
         ghosts.push_back(std::move(ghost));
-        std::cout << "Created RED ghost at (" << redPos.x << ", " << redPos.y << ")" << std::endl;
     }
 
     if (pinkSpawned) {
         auto ghost = factory->createGhost(pinkPos, GhostColor::PINK);
         ghost->setWorld(this);
+        ghost->attach(&score);  // ✅ TOEVOEGEN
         ghosts.push_back(std::move(ghost));
-        std::cout << "Created PINK ghost at (" << pinkPos.x << ", " << pinkPos.y << ")" << std::endl;
     }
 
     if (cyanSpawned) {
         auto ghost = factory->createGhost(cyanPos, GhostColor::BLUE);
         ghost->setWorld(this);
+        ghost->attach(&score);  // ✅ TOEVOEGEN
         ghosts.push_back(std::move(ghost));
-        std::cout << "Created CYAN ghost at (" << cyanPos.x << ", " << cyanPos.y << ")" << std::endl;
     }
 
     if (orangeSpawned) {
         auto ghost = factory->createGhost(orangePos, GhostColor::ORANGE);
         ghost->setWorld(this);
+        ghost->attach(&score);  // ✅ TOEVOEGEN
         ghosts.push_back(std::move(ghost));
-        std::cout << "Created ORANGE ghost at (" << orangePos.x << ", " << orangePos.y << ")" << std::endl;
     }
 
     float tileSize = 2.0f / mapRows;

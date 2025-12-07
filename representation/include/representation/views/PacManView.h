@@ -11,28 +11,15 @@ public:
     ~PacManView() override = default;
 
     void draw(sf::RenderWindow& window) override;
-    void update(float deltaTime) override;
     void onNotify(const pacman::Event& event) override;
 
 private:
     pacman::PacMan* pacmanModel;
-
-    // Animation system
     AnimationController animationController;
     pacman::Direction lastDirection = pacman::Direction::NONE;
-
     bool playingDeathAnimation = false;
 
-    /**
-     * @brief Switch to the appropriate animation based on PacMan's direction
-     *
-     * @param direction The direction PacMan is moving
-     */
     void switchAnimation(pacman::Direction direction);
-
-    /**
-     * @brief Update the sprite's texture rectangle based on current animation frame
-     */
     void updateSpriteFromAnimation();
 };
 

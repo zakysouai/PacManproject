@@ -11,16 +11,12 @@ public:
     ~GhostView() override = default;
 
     void draw(sf::RenderWindow& window) override;
-    void update(float deltaTime) override;
     void onNotify(const pacman::Event& event) override;
 
 private:
     pacman::Ghost* ghostModel;
     pacman::GhostColor ghostColor;
-
     AnimationController animationController;
-
-    // ✅ Track changes
     pacman::Direction lastDirection = pacman::Direction::NONE;
     pacman::GhostState lastState = pacman::GhostState::IN_SPAWN;
 

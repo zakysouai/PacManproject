@@ -7,11 +7,15 @@ EntityView::EntityView(pacman::EntityModel* model, const pacman::Camera& camera)
 }
 
 void EntityView::onNotify(const pacman::Event& event) {
-    // Base implementation - can be overridden
+    // ✅ BASE IMPLEMENTATION - update sprite position
+    if (event.type == pacman::EventType::ENTITY_UPDATED) {
+        updateSpritePosition();
+    }
 }
 
 void EntityView::update(float deltaTime) {
-    updateSpritePosition();
+    // ❌ DEPRECATED - wordt niet meer aangeroepen
+    // Views worden nu via Observer pattern geüpdate
 }
 
 void EntityView::updateSpritePosition() {

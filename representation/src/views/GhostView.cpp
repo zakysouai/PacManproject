@@ -10,39 +10,47 @@ GhostView::GhostView(pacman::Ghost* model, const pacman::Camera& camera, pacman:
     auto& spriteManager = SpriteManager::getInstance();
     sprite.setTexture(spriteManager.getTexture());
 
-    // ✅ Initialize tracking
     lastDirection = ghostModel->getCurrentDirection();
     lastState = ghostModel->getState();
 
     updateAnimation();
 }
 
-void GhostView::update(float deltaTime) {
-    updateSpritePosition();
+void GhostView::onNotify(const pacman::Event& event) {
+    switch (event.type) {
+    case pacman::EventType::ENTITY_UPDATED: {  // ✅ BRACES
+        updateSpritePosition();
 
-    // ✅ Check if direction or state changed
-    pacman::Direction currentDir = ghostModel->getCurrentDirection();
-    pacman::GhostState currentState = ghostModel->getState();
+        pacman::Direction currentDir = ghostModel->getCurrentDirection();
+        pacman::GhostState currentState = ghostModel->getState();
 
-    if (currentDir != lastDirection || currentState != lastState) {
+        if (currentDir != lastDirection || currentState != lastState) {
+            updateAnimation();
+            lastDirection = currentDir;
+            lastState = currentState;
+        }
+
+        animationController.update(event.deltaTime);
+        updateSpriteFromAnimation();
+        break;
+    }  // ✅ BRACES
+
+    case pacman::EventType::GHOST_STATE_CHANGED:
         updateAnimation();
-        lastDirection = currentDir;
-        lastState = currentState;
-    }
+        break;
 
-    animationController.update(deltaTime);
-    updateSpriteFromAnimation();
+    default:
+        break;
+    }
 }
 
 void GhostView::updateAnimation() {
     auto& spriteManager = SpriteManager::getInstance();
     std::string animationName;
 
-    // ✅ Check if scared
     if (ghostModel->isScared()) {
         animationName = "ghost_scared";
     } else {
-        // Normal color-based animation
         std::string colorPrefix;
         switch (ghostColor) {
             case pacman::GhostColor::RED:    colorPrefix = "ghost_red"; break;
@@ -51,7 +59,6 @@ void GhostView::updateAnimation() {
             case pacman::GhostColor::ORANGE: colorPrefix = "ghost_orange"; break;
         }
 
-        // Direction-based
         pacman::Direction dir = ghostModel->getCurrentDirection();
         std::string dirSuffix;
         switch (dir) {
@@ -93,12 +100,6 @@ void GhostView::updateSpriteFromAnimation() {
         }
     } catch (const std::exception& e) {
         std::cerr << "GhostView: Error updating sprite: " << e.what() << std::endl;
-    }
-}
-
-void GhostView::onNotify(const pacman::Event& event) {
-    if (event.type == pacman::EventType::GHOST_STATE_CHANGED) {
-        updateAnimation();
     }
 }
 
