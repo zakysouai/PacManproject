@@ -6,7 +6,8 @@
 namespace pacman {
 
 Ghost::Ghost(const Position& pos, GhostColor color, float spawnDelay)
-    : EntityModel(pos, 0.3f), color(color), spawnPosition(pos), spawnTimer(spawnDelay) {
+    : EntityModel(pos, 0.3f), color(color), spawnPosition(pos),
+      spawnTimer(spawnDelay), initialSpawnDelay(spawnDelay) {  // ✅ Bewaar
     normalSpeed = 0.3f;
 }
 
@@ -75,11 +76,12 @@ void Ghost::enterScaredMode(float duration) {
 
 void Ghost::respawn() {
     position = spawnPosition;
-    currentDirection = Direction::RIGHT;  // ✅ Reset direction
-    state = GhostState::ON_MAP;
+    currentDirection = Direction::RIGHT;
+    state = GhostState::IN_SPAWN;  // ✅ Terug naar spawn
     speed = normalSpeed;
     hasPassedDoor = false;
     scaredTimer = 0.0f;
+    spawnTimer = initialSpawnDelay;  // ✅ Reset timer
 
     std::cout << "Ghost color " << static_cast<int>(color) << " respawned!" << std::endl;
 

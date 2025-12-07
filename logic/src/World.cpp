@@ -164,9 +164,8 @@ void World::updatePacManWithCollisions(float deltaTime) {
     Direction currentDir = pacman->getDirection();
     Direction nextDir = pacman->getNextDirection();
 
-    // If nextDirection is different from currentDirection, try to switch at intersection
+    // Try direction change at intersections/opposite
     if (nextDir != Direction::NONE && nextDir != currentDir) {
-        // Check if we're at an intersection or if the next direction is opposite to current
         bool isOpposite = (
             (currentDir == Direction::UP && nextDir == Direction::DOWN) ||
             (currentDir == Direction::DOWN && nextDir == Direction::UP) ||
@@ -174,77 +173,90 @@ void World::updatePacManWithCollisions(float deltaTime) {
             (currentDir == Direction::RIGHT && nextDir == Direction::LEFT)
         );
 
-        // Allow direction change if:
-        // 1. At an intersection (can turn perpendicular)
-        // 2. Opposite direction (instant 180° turn)
-        // 3. Not moving yet (just started)
-        Position currentPos = pacman->getPosition();
-        float radius = pacman->getCollisionRadius();
-
         if (isOpposite || currentDir == Direction::NONE ||
-            isAtIntersection(currentPos, currentDir, radius)) {
+            isAtIntersection(pacman->getPosition(), currentDir, pacman->getCollisionRadius())) {
 
-            // Try to move in the next direction
-            if (canMoveInDirection(currentPos, nextDir, radius)) {
-                // Direction change is possible!
+            if (canMoveInDirection(pacman->getPosition(), nextDir, pacman->getCollisionRadius())) {
                 pacman->tryChangeDirection(nextDir);
-                currentDir = nextDir;  // Update for the movement below
+                currentDir = nextDir;
             }
         }
     }
 
-    // Now move in the current direction (which may have just been updated)
-    if (currentDir == Direction::NONE) {
-        return;  // Not moving
-    }
+    if (currentDir == Direction::NONE) return;
 
-    Position currentPos = pacman->getPosition();
+    // Calculate movement
     Position dirVector = getDirectionVector(currentDir);
     float speed = pacman->getSpeed();
-
-    // Calculate full movement
     Position movement = dirVector * speed * deltaTime;
 
-    // Per-axis collision detection with AABB
-    if (currentDir == Direction::LEFT || currentDir == Direction::RIGHT) {
-        // Horizontal movement - try X-axis first
-        Position testPos = Position(currentPos.x + movement.x, currentPos.y);
+    // ✅ NIEUWE AANPAK: Test collision ZONDER position te wijzigen
+    Position currentPos = pacman->getPosition();
+    Position testPos = currentPos + movement;
 
-        // Temporarily set position to test collision
-        Position originalPos = pacman->getPosition();
+    // Check collision at target position
+    BoundingBox testBox(
+        testPos.x - pacman->getCollisionRadius(),
+        testPos.y - pacman->getCollisionRadius(),
+        pacman->getCollisionRadius() * 2.0f,
+        pacman->getCollisionRadius() * 2.0f
+    );
+
+    bool collision = false;
+    for (const auto& wall : walls) {
+        if (testBox.intersects(wall->getBoundingBox())) {
+            collision = true;
+            break;
+        }
+    }
+
+    if (!collision) {
+        // No collision - move freely
         pacman->setPosition(testPos);
+    } else {
+        // ✅ SLIDING: Try per-axis movement
+        if (currentDir == Direction::LEFT || currentDir == Direction::RIGHT) {
+            // Try X-only movement
+            Position xOnlyPos = Position(currentPos.x + movement.x, currentPos.y);
+            BoundingBox xBox(
+                xOnlyPos.x - pacman->getCollisionRadius(),
+                xOnlyPos.y - pacman->getCollisionRadius(),
+                pacman->getCollisionRadius() * 2.0f,
+                pacman->getCollisionRadius() * 2.0f
+            );
 
-        bool collisionX = false;
-        for (const auto& wall : walls) {
-            if (pacman->intersects(*wall)) {
-                collisionX = true;
-                break;
+            bool xCollision = false;
+            for (const auto& wall : walls) {
+                if (xBox.intersects(wall->getBoundingBox())) {
+                    xCollision = true;
+                    break;
+                }
             }
-        }
 
-        if (collisionX) {
-            // Restore original position - can't move in X
-            pacman->setPosition(originalPos);
-        }
-
-    } else if (currentDir == Direction::UP || currentDir == Direction::DOWN) {
-        // Vertical movement - try Y-axis first
-        Position testPos = Position(currentPos.x, currentPos.y + movement.y);
-
-        Position originalPos = pacman->getPosition();
-        pacman->setPosition(testPos);
-
-        bool collisionY = false;
-        for (const auto& wall : walls) {
-            if (pacman->intersects(*wall)) {
-                collisionY = true;
-                break;
+            if (!xCollision) {
+                pacman->setPosition(xOnlyPos);
             }
-        }
+        } else {
+            // Try Y-only movement
+            Position yOnlyPos = Position(currentPos.x, currentPos.y + movement.y);
+            BoundingBox yBox(
+                yOnlyPos.x - pacman->getCollisionRadius(),
+                yOnlyPos.y - pacman->getCollisionRadius(),
+                pacman->getCollisionRadius() * 2.0f,
+                pacman->getCollisionRadius() * 2.0f
+            );
 
-        if (collisionY) {
-            // Restore original position - can't move in Y
-            pacman->setPosition(originalPos);
+            bool yCollision = false;
+            for (const auto& wall : walls) {
+                if (yBox.intersects(wall->getBoundingBox())) {
+                    yCollision = true;
+                    break;
+                }
+            }
+
+            if (!yCollision) {
+                pacman->setPosition(yOnlyPos);
+            }
         }
     }
 }
@@ -462,6 +474,7 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
                 break;
 
             case ' ':  // Empty space with coin
+            case '.':
                 coins.push_back(factory->createCoin(worldPos));
                 coins.back()->attach(&score);
                 coinCount++;
@@ -574,7 +587,7 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     }
 
     for (auto& ghost : ghosts) {
-        ghost->setCollisionRadius(tileSize * 0.40f);
+        ghost->setCollisionRadius(tileSize * 0.45f);
     }
 
     for (auto& wall : walls) {

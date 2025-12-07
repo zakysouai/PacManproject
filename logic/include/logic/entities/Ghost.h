@@ -61,6 +61,7 @@ private:
     float scaredTimer = 0.0f;
     float normalSpeed = 0.3f;  // Original speed
     GhostState previousState = GhostState::ON_MAP;  // State voor scared mode
+    float initialSpawnDelay = 0.0f;
 
     void move(float deltaTime);
     void handleWallCollision();
