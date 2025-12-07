@@ -48,6 +48,13 @@ private:
     sf::Text pointsLabelsText;
     sf::Text pointsValuesText;
 
+    bool showingReady = true;
+    float readyTimer = 0.0f;
+    const float READY_DURATION = 2.0f;
+    sf::Text readyText;
+
+    bool wasPlayingDeathAnimation = false;
+
     bool tutorialMode;
     std::string getTutorialMapPath() const;
     

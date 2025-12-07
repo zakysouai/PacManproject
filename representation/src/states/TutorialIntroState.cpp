@@ -79,11 +79,10 @@ void TutorialIntroState::setupTexts() {
 void TutorialIntroState::handleInput(const sf::Event& event) {
     if (event.type == sf::Event::KeyPressed) {
         if (event.key.code == sf::Keyboard::Enter || event.key.code == sf::Keyboard::Return) {
-            // ✅ Start tutorial level met map.txt
-            auto tutorialLevel = std::make_unique<LevelState>(0, true);  // level 0 = tutorial
+            // ✅ Start tutorial level met map.txt (level 0, tutorial mode)
+            auto tutorialLevel = std::make_unique<LevelState>(0, true);
             finish(StateAction::SWITCH, std::move(tutorialLevel));
         } else if (event.key.code == sf::Keyboard::Escape) {
-            // Terug naar menu
             finish(StateAction::POP);
         }
     }

@@ -49,7 +49,12 @@ void VictoryState::setupTexts() {
         resultText.setString("NEW HIGH SCORE!");
         resultText.setFillColor(sf::Color::Yellow);
     } else if (playerWon) {
-        resultText.setString("LEVEL COMPLETE!");
+        // ✅ ONDERSCHEID TUTORIAL VS NORMALE LEVEL
+        if (level == 0) {
+            resultText.setString("TUTORIAL COMPLETE!");
+        } else {
+            resultText.setString("LEVEL COMPLETE!");
+        }
         resultText.setFillColor(sf::Color::Green);
     } else {
         resultText.setString("GAME OVER!");
@@ -97,11 +102,28 @@ void VictoryState::setupTexts() {
         instructionsText.setFillColor(sf::Color(180, 180, 180));
     } else {
         instructionsText.setFont(font);
-        if (playerWon) {
-            instructionsText.setString("Press SPACE for next level\nPress M for Menu");
+
+        // ✅ VERSCHILLENDE INSTRUCTIES PER SITUATIE
+        if (level == 0 && playerWon) {
+            // Tutorial complete - speciale opties
+            instructionsText.setString(
+                "Press SPACE to start the game\n"
+                "Press M for Main Menu"
+            );
+        } else if (playerWon) {
+            // Normale level complete
+            instructionsText.setString(
+                "Press SPACE for next level\n"
+                "Press M for Menu"
+            );
         } else {
-            instructionsText.setString("Press SPACE to try again\nPress M for Menu");
+            // Game over
+            instructionsText.setString(
+                "Press SPACE to try again\n"
+                "Press M for Menu"
+            );
         }
+
         instructionsText.setCharacterSize(24);
         instructionsText.setFillColor(sf::Color::White);
     }
@@ -113,55 +135,41 @@ void VictoryState::setupTexts() {
 
 void VictoryState::handleInput(const sf::Event& event) {
     if (enteringName) {
-        // ✅ NAAM INPUT HANDLING
         if (event.type == sf::Event::TextEntered) {
-            if (event.text.unicode == '\b') {  // Backspace
+            if (event.text.unicode == '\b') {
                 if (!playerName.empty()) {
                     playerName.pop_back();
                     nameInputText.setString(playerName);
                 }
-            } else if (event.text.unicode == '\r' || event.text.unicode == '\n') {  // Enter
+            } else if (event.text.unicode == '\r' || event.text.unicode == '\n') {
                 if (!playerName.empty()) {
                     saveHighScore();
                     enteringName = false;
                     finish(StateAction::SWITCH, std::make_unique<MenuState>());
                 }
-            } else if (event.text.unicode < 128 && playerName.size() < 12) {  // Max 12 chars
+            } else if (event.text.unicode < 128 && playerName.size() < 12) {
                 playerName += static_cast<char>(event.text.unicode);
                 nameInputText.setString(playerName);
             }
         }
     } else {
-        // ✅ NORMALE INPUT
         if (event.type == sf::Event::KeyPressed) {
             if (event.key.code == sf::Keyboard::Space) {
                 if (playerWon) {
-                    finish(StateAction::SWITCH, std::make_unique<LevelState>(level + 1));
+                    if (level == 0) {
+                        // ✅ Tutorial complete: start echte game (level 1, map_big.txt)
+                        finish(StateAction::SWITCH, std::make_unique<LevelState>(1, false));
+                    } else {
+                        // ✅ Normale level: volgende level (blijft map_big.txt)
+                        finish(StateAction::SWITCH, std::make_unique<LevelState>(level + 1, false));
+                    }
                 } else {
-                    finish(StateAction::SWITCH, std::make_unique<LevelState>(1));
+                    // Game over: restart level 1
+                    finish(StateAction::SWITCH, std::make_unique<LevelState>(1, false));
                 }
             } else if (event.key.code == sf::Keyboard::M) {
                 finish(StateAction::SWITCH, std::make_unique<MenuState>());
             }
-        }
-    }
-
-    if (event.type == sf::Event::KeyPressed) {
-        if (event.key.code == sf::Keyboard::Space) {
-            if (playerWon) {
-                // ✅ Check of het tutorial was (level 0)
-                if (level == 0) {
-                    // Tutorial complete → terug naar menu
-                    finish(StateAction::SWITCH, std::make_unique<MenuState>());
-                } else {
-                    // Normale level → volgende level
-                    finish(StateAction::SWITCH, std::make_unique<LevelState>(level + 1));
-                }
-            } else {
-                finish(StateAction::SWITCH, std::make_unique<LevelState>(1));
-            }
-        } else if (event.key.code == sf::Keyboard::M) {
-            finish(StateAction::SWITCH, std::make_unique<MenuState>());
         }
     }
 }

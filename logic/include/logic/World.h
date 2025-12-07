@@ -65,6 +65,8 @@ public:
     void activateFearMode();
     float getFearModeDuration() const { return fearModeDuration; }
 
+    bool isPlayingDeathAnimation() const { return deathAnimationPlaying; }
+
 private:
     AbstractFactory* factory;
     Camera* camera = nullptr;

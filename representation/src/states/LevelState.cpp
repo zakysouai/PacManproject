@@ -26,10 +26,10 @@ void LevelState::onEnter() {
     std::string mapFile;
     if (tutorialMode) {
         mapFile = "../resources/maps/map.txt";
-    } else if (currentLevel == 1) {
-        mapFile = "../resources/maps/map.txt";  // Of map_big.txt als je tutorial skip wil
+        std::cout << "Loading tutorial map: map.txt" << std::endl;
     } else {
         mapFile = "../resources/maps/map_big.txt";
+        std::cout << "Loading game map: map_big.txt (Level " << currentLevel << ")" << std::endl;
     }
 
     world->loadLevel(mapFile);
@@ -42,8 +42,25 @@ void LevelState::onEnter() {
     loadFont();
     setupUI();
 
-    // ✅ Reset timer
+    // ✅ SETUP READY TEXT
+    readyText.setFont(font);
+    readyText.setString("READY");
+    readyText.setCharacterSize(72);
+    readyText.setFillColor(sf::Color::Yellow);
+
+    // ✅ CENTER IN VIEWPORT (niet in hele window)
+    sf::FloatRect bounds = readyText.getLocalBounds();
+    readyText.setOrigin(bounds.width / 2.0f, bounds.height / 2.0f);
+
+    float viewportCenterX = camera->getViewportOffsetX() + camera->getViewportWidth() / 2.0f;
+    float viewportCenterY = camera->getViewportOffsetY() + camera->getViewportHeight() / 2.0f;
+    readyText.setPosition(viewportCenterX, viewportCenterY);
+
+    // ✅ RESET TIMERS
     elapsedTime = 0.0f;
+    showingReady = true;
+    readyTimer = 0.0f;
+    wasPlayingDeathAnimation = false;
 }
 
 void LevelState::loadFont() {
@@ -169,7 +186,11 @@ void LevelState::handleInput(const sf::Event& event) {
             finish(StateAction::PUSH, std::make_unique<PausedState>());
         }
     }
-    handlePlayerInput();
+
+    // ✅ BLOCK INPUT TIJDENS READY
+    if (!showingReady) {
+        handlePlayerInput();
+    }
 }
 
 void LevelState::handlePlayerInput() {
@@ -188,10 +209,35 @@ void LevelState::handlePlayerInput() {
 }
 
 void LevelState::update(float deltaTime) {
+    // ✅ CHECK OF DEATH ANIMATION NET AFGELOPEN IS
+    bool isDeathAnimPlaying = world->isPlayingDeathAnimation();
+
+    if (!wasPlayingDeathAnimation && isDeathAnimPlaying) {
+        // Death animation net gestart
+        std::cout << "Death animation started" << std::endl;
+    }
+
+    if (wasPlayingDeathAnimation && !isDeathAnimPlaying) {
+        // Death animation net afgelopen → toon READY
+        std::cout << "Death animation finished - showing READY" << std::endl;
+        showingReady = true;
+        readyTimer = 0.0f;
+    }
+
+    wasPlayingDeathAnimation = isDeathAnimPlaying;
+
+    // ✅ HANDLE READY STATE
+    if (showingReady) {
+        readyTimer += deltaTime;
+        if (readyTimer >= READY_DURATION) {
+            showingReady = false;
+            std::cout << "Game resumed after READY" << std::endl;
+        }
+    }
+
+    // ✅ ALTIJD UPDATE WORLD
     elapsedTime += deltaTime;
-
-    world->update(deltaTime);
-
+    world->update(showingReady ? 0.0f : deltaTime);
     updateUI();
     checkGameState();
 }
@@ -243,23 +289,19 @@ void LevelState::render(sf::RenderWindow& window) {
 
     auto cam = camera.get();
 
-    // ✅ ALLEEN SIDEBARS ALS ER LETTERBOXING IS
     if (hasLetterboxing) {
-        // Left sidebar background
         sf::RectangleShape leftBg;
         leftBg.setSize(sf::Vector2f(cam->getViewportOffsetX(), cam->getWindowHeight()));
         leftBg.setFillColor(sf::Color(20, 20, 30));
         leftBg.setPosition(0, 0);
         window.draw(leftBg);
 
-        // Right sidebar background
         sf::RectangleShape rightBg;
         rightBg.setSize(sf::Vector2f(cam->getViewportOffsetX(), cam->getWindowHeight()));
         rightBg.setFillColor(sf::Color(20, 20, 30));
         rightBg.setPosition(cam->getViewportOffsetX() + cam->getViewportWidth(), 0);
         window.draw(rightBg);
 
-        // Decorative borders
         sf::RectangleShape leftLine(sf::Vector2f(3, cam->getWindowHeight()));
         leftLine.setFillColor(sf::Color(255, 215, 0));
         leftLine.setPosition(cam->getViewportOffsetX() - 3, 0);
@@ -270,7 +312,6 @@ void LevelState::render(sf::RenderWindow& window) {
         rightLine.setPosition(cam->getViewportOffsetX() + cam->getViewportWidth(), 0);
         window.draw(rightLine);
 
-        // Section dividers (left)
         float dividerWidth = cam->getViewportOffsetX() - 40;
         if (dividerWidth > 0) {
             sf::RectangleShape divider1(sf::Vector2f(dividerWidth, 2));
@@ -284,7 +325,6 @@ void LevelState::render(sf::RenderWindow& window) {
             window.draw(divider2);
         }
 
-        // Section dividers (right)
         float rightDividerX = cam->getViewportOffsetX() + cam->getViewportWidth() + 20;
         if (dividerWidth > 0) {
             sf::RectangleShape divider3(sf::Vector2f(dividerWidth, 2));
@@ -298,7 +338,6 @@ void LevelState::render(sf::RenderWindow& window) {
             window.draw(divider4);
         }
 
-        // Draw UI text
         window.draw(scoreTitle);
         window.draw(scoreText);
         window.draw(livesTitle);
@@ -314,10 +353,8 @@ void LevelState::render(sf::RenderWindow& window) {
         window.draw(pointsTitle);
         window.draw(pointsLabelsText);
         window.draw(pointsValuesText);
-    } else {
-        // ✅ GEEN LETTERBOXING - TOON MINIMALE UI OVERLAY
-        // Optioneel: toon score/lives als overlay op het spel zelf
-
+    }
+    else {
         sf::Text compactScore;
         compactScore.setFont(font);
         compactScore.setString("SCORE: " + std::to_string(world->getScore()->getCurrentScore()));
@@ -343,9 +380,19 @@ void LevelState::render(sf::RenderWindow& window) {
         window.draw(compactLevel);
     }
 
-    // Draw game entities (altijd)
+    // Draw game entities
     for (const auto& view : factory->getViews()) {
         view->draw(window);
+    }
+
+    if (showingReady) {
+        sf::RectangleShape overlay;
+        overlay.setSize(sf::Vector2f(cam->getViewportWidth(), cam->getViewportHeight()));
+        overlay.setFillColor(sf::Color(0, 0, 0, 150));  // Semi-transparent
+        overlay.setPosition(cam->getViewportOffsetX(), cam->getViewportOffsetY());
+        window.draw(overlay);
+
+        window.draw(readyText);
     }
 }
 

@@ -118,8 +118,10 @@ void MenuState::handleInput(const sf::Event& event) {
             sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y);
 
             if (playButton.getGlobalBounds().contains(mousePos)) {
-                finish(StateAction::PUSH, std::make_unique<LevelState>(1));
+                // ✅ PLAY = direct naar map_big.txt (level 1, geen tutorial)
+                finish(StateAction::PUSH, std::make_unique<LevelState>(1, false));
             } else if (tutorialButton.getGlobalBounds().contains(mousePos)) {
+                // ✅ TUTORIAL = naar tutorial intro
                 finish(StateAction::PUSH, std::make_unique<TutorialIntroState>());
             }
         }
