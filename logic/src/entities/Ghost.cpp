@@ -56,18 +56,19 @@ void Ghost::update(float deltaTime) {
 
 void Ghost::enterScaredMode(float duration) {
     if (state == GhostState::IN_SPAWN) {
-        return;  // Ghosts in spawn don't get scared
+        return;
     }
 
-    previousState = state;
+    // ✅ FIX: alleen previousState zetten als we NIET al scared zijn
+    if (state != GhostState::SCARED) {
+        previousState = state;
+    }
+
     state = GhostState::SCARED;
-    scaredTimer = duration;
-    speed = normalSpeed * 0.5f;  // ✅ Slower when scared
+    scaredTimer = duration;  // Reset timer
+    speed = normalSpeed * 0.5f;
 
-    // ✅ REVERSE direction immediately
     currentDirection = getOppositeDirection(currentDirection);
-
-    std::cout << "Ghost color " << static_cast<int>(color) << " enters scared mode!" << std::endl;
 
     Event event;
     event.type = EventType::GHOST_STATE_CHANGED;

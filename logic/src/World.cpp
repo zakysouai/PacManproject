@@ -186,7 +186,7 @@ void World::updatePacManWithCollisions(float deltaTime) {
                 pacman->tryChangeDirection(nextDir);
                 currentDir = nextDir;
             }
-        }
+            }
     }
 
     if (currentDir == Direction::NONE) return;
@@ -213,9 +213,14 @@ void World::updatePacManWithCollisions(float deltaTime) {
         }
     }
 
+    float tileSize = 2.0f / mapRows;
+
     if (!collision) {
         pacman->setPosition(testPos);
     } else {
+        // ✅ CORNER SMOOTHING: probeer kleine correctie in perpendicular richting
+        const float CORNER_SMOOTH = tileSize * 0.15f;  // Kleine nudge
+
         if (currentDir == Direction::LEFT || currentDir == Direction::RIGHT) {
             Position xOnlyPos = Position(currentPos.x + movement.x, currentPos.y);
             BoundingBox xBox(
@@ -236,7 +241,52 @@ void World::updatePacManWithCollisions(float deltaTime) {
             if (!xCollision) {
                 pacman->setPosition(xOnlyPos);
             }
+            // ✅ NIEUW: corner smoothing
+            else {
+                // Probeer kleine Y correctie omhoog
+                Position correctedUp = Position(currentPos.x + movement.x, currentPos.y - CORNER_SMOOTH);
+                BoundingBox testUp(
+                    correctedUp.x - pacman->getCollisionRadius(),
+                    correctedUp.y - pacman->getCollisionRadius(),
+                    pacman->getCollisionRadius() * 2.0f,
+                    pacman->getCollisionRadius() * 2.0f
+                );
+
+                bool upWorks = true;
+                for (const auto& wall : walls) {
+                    if (testUp.intersects(wall->getBoundingBox())) {
+                        upWorks = false;
+                        break;
+                    }
+                }
+
+                if (upWorks) {
+                    pacman->setPosition(correctedUp);
+                } else {
+                    // Probeer omlaag
+                    Position correctedDown = Position(currentPos.x + movement.x, currentPos.y + CORNER_SMOOTH);
+                    BoundingBox testDown(
+                        correctedDown.x - pacman->getCollisionRadius(),
+                        correctedDown.y - pacman->getCollisionRadius(),
+                        pacman->getCollisionRadius() * 2.0f,
+                        pacman->getCollisionRadius() * 2.0f
+                    );
+
+                    bool downWorks = true;
+                    for (const auto& wall : walls) {
+                        if (testDown.intersects(wall->getBoundingBox())) {
+                            downWorks = false;
+                            break;
+                        }
+                    }
+
+                    if (downWorks) {
+                        pacman->setPosition(correctedDown);
+                    }
+                }
+            }
         } else {
+            // Hetzelfde voor UP/DOWN movement
             Position yOnlyPos = Position(currentPos.x, currentPos.y + movement.y);
             BoundingBox yBox(
                 yOnlyPos.x - pacman->getCollisionRadius(),
@@ -256,8 +306,53 @@ void World::updatePacManWithCollisions(float deltaTime) {
             if (!yCollision) {
                 pacman->setPosition(yOnlyPos);
             }
+            // ✅ NIEUW: corner smoothing voor vertical movement
+            else {
+                // Probeer links
+                Position correctedLeft = Position(currentPos.x - CORNER_SMOOTH, currentPos.y + movement.y);
+                BoundingBox testLeft(
+                    correctedLeft.x - pacman->getCollisionRadius(),
+                    correctedLeft.y - pacman->getCollisionRadius(),
+                    pacman->getCollisionRadius() * 2.0f,
+                    pacman->getCollisionRadius() * 2.0f
+                );
+
+                bool leftWorks = true;
+                for (const auto& wall : walls) {
+                    if (testLeft.intersects(wall->getBoundingBox())) {
+                        leftWorks = false;
+                        break;
+                    }
+                }
+
+                if (leftWorks) {
+                    pacman->setPosition(correctedLeft);
+                } else {
+                    // Probeer rechts
+                    Position correctedRight = Position(currentPos.x + CORNER_SMOOTH, currentPos.y + movement.y);
+                    BoundingBox testRight(
+                        correctedRight.x - pacman->getCollisionRadius(),
+                        correctedRight.y - pacman->getCollisionRadius(),
+                        pacman->getCollisionRadius() * 2.0f,
+                        pacman->getCollisionRadius() * 2.0f
+                    );
+
+                    bool rightWorks = true;
+                    for (const auto& wall : walls) {
+                        if (testRight.intersects(wall->getBoundingBox())) {
+                            rightWorks = false;
+                            break;
+                        }
+                    }
+
+                    if (rightWorks) {
+                        pacman->setPosition(correctedRight);
+                    }
+                }
+            }
         }
     }
+
 }
 
 bool World::isPositionBlocked(const Position& pos, float radius) const {
@@ -565,15 +660,15 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     std::cout << "Tile size: " << tileSize << std::endl;
 
     if (pacman) {
-        pacman->setCollisionRadius(tileSize * 0.45f);
+        pacman->setCollisionRadius(tileSize * 0.449999f);
     }
 
     for (auto& ghost : ghosts) {
-        ghost->setCollisionRadius(tileSize * 0.45f);
+        ghost->setCollisionRadius(tileSize * 0.40f);
     }
 
     for (auto& wall : walls) {
-        wall->setCollisionRadius(tileSize * 0.50f);
+        wall->setCollisionRadius(tileSize * 0.48f);
     }
 
     for (auto& coin : coins) {
