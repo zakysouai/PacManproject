@@ -2,8 +2,8 @@
 
 namespace pacman::representation {
 
-WallView::WallView(pacman::Wall* model, std::weak_ptr<pacman::Camera> camera)  // ✅ CHANGED signature
-    : EntityView(model, camera), wallModel(model) {
+WallView::WallView(pacman::Wall& model, std::weak_ptr<pacman::Camera> camera)  // & niet *
+    : EntityView(model, camera), wallModel(&model) {
     setupRectangle();
 }
 
@@ -25,7 +25,7 @@ void WallView::draw(sf::RenderWindow& window) {
     auto cam = camera.lock();  // ✅ Lock weak_ptr
     if (!cam) return;
 
-    auto worldPos = model->getPosition();
+    auto worldPos = model.getPosition();
     auto screenPos = cam->worldToScreen(worldPos);
     rectangle.setPosition(screenPos.x, screenPos.y);
     

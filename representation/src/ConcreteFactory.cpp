@@ -19,7 +19,7 @@ ConcreteFactory::ConcreteFactory(std::shared_ptr<pacman::Camera> camera)  // ✅
 std::unique_ptr<pacman::PacMan> ConcreteFactory::createPacMan(const pacman::Position& pos) {
     auto pacman = std::make_unique<pacman::PacMan>(pos);
 
-    auto view = std::make_unique<PacManView>(pacman.get(), camera);  // ✅ Pass weak_ptr
+    auto view = std::make_unique<PacManView>(*pacman, camera);
     pacman->attach(view.get());
     views.push_back(std::move(view));
 
@@ -28,18 +28,16 @@ std::unique_ptr<pacman::PacMan> ConcreteFactory::createPacMan(const pacman::Posi
 
 std::unique_ptr<pacman::Coin> ConcreteFactory::createCoin(const pacman::Position& pos) {
     auto coin = std::make_unique<pacman::Coin>(pos);
-
-    auto view = std::make_unique<CoinView>(coin.get(), camera);  // ✅ Pass weak_ptr
+    auto view = std::make_unique<CoinView>(*coin, camera);  // *coin geeft reference
     coin->attach(view.get());
     views.push_back(std::move(view));
-
     return coin;
 }
 
 std::unique_ptr<pacman::Fruit> ConcreteFactory::createFruit(const pacman::Position& pos) {
     auto fruit = std::make_unique<pacman::Fruit>(pos);
 
-    auto view = std::make_unique<FruitView>(fruit.get(), camera);  // ✅ Pass weak_ptr
+    auto view = std::make_unique<FruitView>(*fruit, camera);  // ✅ Pass weak_ptr
     fruit->attach(view.get());
     views.push_back(std::move(view));
 
@@ -49,7 +47,7 @@ std::unique_ptr<pacman::Fruit> ConcreteFactory::createFruit(const pacman::Positi
 std::unique_ptr<pacman::Wall> ConcreteFactory::createWall(const pacman::Position& pos) {
     auto wall = std::make_unique<pacman::Wall>(pos);
 
-    auto view = std::make_unique<WallView>(wall.get(), camera);  // ✅ Pass weak_ptr
+    auto view = std::make_unique<WallView>(*wall, camera);  // ✅ Pass weak_ptr
     wall->attach(view.get());
     views.push_back(std::move(view));
 
@@ -74,7 +72,7 @@ std::unique_ptr<pacman::Ghost> ConcreteFactory::createGhost(const pacman::Positi
         break;
     }
 
-    auto view = std::make_unique<GhostView>(ghost.get(), camera, color);  // ✅ Pass weak_ptr
+    auto view = std::make_unique<GhostView>(*ghost, camera, color);  // ✅ Pass weak_ptr
     ghost->attach(view.get());
     views.push_back(std::move(view));
 

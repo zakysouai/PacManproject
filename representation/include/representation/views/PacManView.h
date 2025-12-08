@@ -7,7 +7,7 @@ namespace pacman::representation {
 
 class PacManView : public EntityView {
 public:
-    PacManView(pacman::PacMan* model, std::weak_ptr<pacman::Camera> camera);  // ✅ CHANGED
+    PacManView(pacman::PacMan& model, std::weak_ptr<pacman::Camera> camera);  // ✅ CHANGED
     ~PacManView() override = default;
 
     void draw(sf::RenderWindow& window) override;

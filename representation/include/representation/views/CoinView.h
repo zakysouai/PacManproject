@@ -6,7 +6,7 @@ namespace pacman::representation {
 
 class CoinView : public EntityView {
 public:
-    CoinView(pacman::Coin* model, std::weak_ptr<pacman::Camera> camera);  // ✅ CHANGED
+    CoinView(pacman::Coin& model, std::weak_ptr<pacman::Camera> camera);
     ~CoinView() override = default;
 
     void draw(sf::RenderWindow& window) override;

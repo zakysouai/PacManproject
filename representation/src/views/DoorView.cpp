@@ -2,8 +2,16 @@
 
 namespace pacman::representation {
 
-DoorView::DoorView(std::weak_ptr<pacman::Camera> camera, const pacman::Position& doorPos)  // ✅ CHANGED
-    : EntityView(nullptr, camera), doorPosition(doorPos) {
+namespace {
+class DummyModel : public pacman::EntityModel {
+public:
+    DummyModel() : EntityModel(pacman::Position(0, 0), 0) {}
+    void update(float) override {}
+};
+}
+
+DoorView::DoorView(std::weak_ptr<pacman::Camera> camera, const pacman::Position& doorPos)
+    : EntityView(*new DummyModel(), camera), doorPosition(doorPos){
 
     auto cam = camera.lock();  // ✅ Lock weak_ptr
     if (!cam) return;

@@ -6,7 +6,7 @@ namespace pacman::representation {
 
 class FruitView : public EntityView {
 public:
-    FruitView(pacman::Fruit* model, std::weak_ptr<pacman::Camera> camera);  // ✅ CHANGED
+    FruitView(pacman::Fruit& model, std::weak_ptr<pacman::Camera> camera);
     ~FruitView() override = default;
     
     void draw(sf::RenderWindow& window) override;

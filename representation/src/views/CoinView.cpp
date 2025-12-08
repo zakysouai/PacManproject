@@ -3,8 +3,8 @@
 
 namespace pacman::representation {
 
-CoinView::CoinView(pacman::Coin* model, std::weak_ptr<pacman::Camera> camera)  // ✅ CHANGED signature
-    : EntityView(model, camera), coinModel(model) {
+CoinView::CoinView(pacman::Coin& model, std::weak_ptr<pacman::Camera> camera)  // & niet *
+    : EntityView(model, camera), coinModel(&model) {
     setupCircle();
 }
 
@@ -23,7 +23,7 @@ void CoinView::draw(sf::RenderWindow& window) {
         auto cam = camera.lock();  // ✅ Lock weak_ptr
         if (!cam) return;
 
-        auto worldPos = model->getPosition();
+        auto worldPos = model.getPosition();
         auto screenPos = cam->worldToScreen(worldPos);
         circle.setPosition(screenPos.x, screenPos.y);
         

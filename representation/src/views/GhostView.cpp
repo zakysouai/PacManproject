@@ -4,8 +4,8 @@
 
 namespace pacman::representation {
 
-GhostView::GhostView(pacman::Ghost* model, std::weak_ptr<pacman::Camera> camera, pacman::GhostColor color)  // ✅ CHANGED signature
-    : EntityView(model, camera), ghostModel(model), ghostColor(color) {
+GhostView::GhostView(pacman::Ghost& model, std::weak_ptr<pacman::Camera> camera, pacman::GhostColor color)  // & niet *
+    : EntityView(model, camera), ghostModel(&model), ghostColor(color) {
 
     auto& spriteManager = SpriteManager::getInstance();
     sprite.setTexture(spriteManager.getTexture());

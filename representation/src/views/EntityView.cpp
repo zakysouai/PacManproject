@@ -2,9 +2,8 @@
 
 namespace pacman::representation {
 
-EntityView::EntityView(pacman::EntityModel* model, std::weak_ptr<pacman::Camera> camera)  // ✅ CHANGED
-    : model(model), camera(camera) {
-}
+EntityView::EntityView(pacman::EntityModel& model, std::weak_ptr<pacman::Camera> camera)
+    : model(model), camera(camera) {}
 
 void EntityView::onNotify(const pacman::Event& event) {
     if (event.type == pacman::EventType::ENTITY_UPDATED) {
@@ -17,12 +16,10 @@ void EntityView::update(float deltaTime) {
 }
 
 void EntityView::updateSpritePosition() {
-    if (!model) return;
-
-    auto cam = camera.lock();  // ✅ Lock weak_ptr
+    auto cam = camera.lock();
     if (!cam) return;
 
-    auto worldPos = model->getPosition();
+    auto worldPos = model.getPosition();
     auto screenPos = cam->worldToScreen(worldPos);
     
     sprite.setPosition(screenPos.x, screenPos.y);

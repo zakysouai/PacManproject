@@ -4,8 +4,8 @@
 
 namespace pacman::representation {
 
-PacManView::PacManView(pacman::PacMan* model, std::weak_ptr<pacman::Camera> camera)  // ✅ CHANGED signature
-    : EntityView(model, camera), pacmanModel(model) {
+PacManView::PacManView(pacman::PacMan& model, std::weak_ptr<pacman::Camera> camera)
+    : EntityView(model, camera), pacmanModel(&model) {
 
     auto& spriteManager = SpriteManager::getInstance();
     sprite.setTexture(spriteManager.getTexture());

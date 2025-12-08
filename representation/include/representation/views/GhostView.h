@@ -7,7 +7,7 @@ namespace pacman::representation {
 
 class GhostView : public EntityView {
 public:
-    GhostView(pacman::Ghost* model, std::weak_ptr<pacman::Camera> camera, pacman::GhostColor color);  // ✅ CHANGED
+    GhostView(pacman::Ghost& model, std::weak_ptr<pacman::Camera> camera, pacman::GhostColor color);
     ~GhostView() override = default;
 
     void draw(sf::RenderWindow& window) override;
