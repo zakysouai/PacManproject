@@ -9,7 +9,7 @@ public:
     void update(float) override {}
 };
 
-// ✅ STATIC INSTANCE - één keer gealloceerd, nooit gedelete (maar dat is OK)
+// fake model om de parent constructor te 'bypassen'
 DummyModel& getDummyModel() {
     static DummyModel instance;
     return instance;
