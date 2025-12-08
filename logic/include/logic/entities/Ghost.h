@@ -29,7 +29,6 @@ public:
     GhostState getState() const { return state; }
     Direction getCurrentDirection() const { return currentDirection; }
 
-    // ❌ setWorld() WEG - niet meer nodig
     void setNormalSpeed(float speed) { normalSpeed = speed; }
 
     bool hasPassedThroughDoor() const { return hasPassedDoor; }
