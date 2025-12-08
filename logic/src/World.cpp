@@ -378,10 +378,23 @@ void World::reset() {
 }
 
 void World::applyDifficultyScaling() {
-    // ✅ Scale fear duration per level
+    // Fear duration
     fearModeDuration = std::max(2.0f, 5.0f - (currentLevel - 1) * 0.5f);
 
-    std::cout << "Level " << currentLevel << " - Fear duration: " << fearModeDuration << "s" << std::endl;
+    // Ghost speed: +10% per level
+    float speedMultiplier = 1.0f + (currentLevel - 1) * 0.1f;
+    float newSpeed = 0.3f * speedMultiplier;
+
+    for (auto& ghost : ghosts) {
+        ghost->setNormalSpeed(newSpeed);
+        if (ghost->getState() != GhostState::SCARED) {
+            ghost->setSpeed(newSpeed);
+        }
+    }
+
+    std::cout << "Level " << currentLevel
+              << " - Ghost speed: " << newSpeed
+              << ", Fear: " << fearModeDuration << "s" << std::endl;
 }
 
 Position World::gridToWorld(int row, int col, int totalRows, int totalCols) const {
@@ -407,6 +420,7 @@ Position World::gridToWorld(int row, int col, int totalRows, int totalCols) cons
 void World::loadLevel(const std::string& mapFile) {
     parseMap(mapFile);
     this->attach(&score);
+    applyDifficultyScaling();
 }
 
 void World::parseMap(const std::string& mapFile) {
@@ -673,10 +687,13 @@ void World::activateFearMode() {
 }
 
 std::string World::getMapFileForLevel(int level) const {
-    if (level == 1) {
-        return "../resources/maps/map.txt";
+    switch(level) {
+    case 1:  return "../resources/maps/map.txt";
+    case 2:  return "../resources/maps/map_big.txt";
+    case 3:  return "../resources/maps/map_big2.txt";
+    case 4:  return "../resources/maps/map_big3.txt";
+    default: return "../resources/maps/map_big.txt";  // blijf bij normal level
     }
-    return "../resources/maps/map_big.txt";
 }
 
 

@@ -19,7 +19,6 @@ void MenuState::onExit() {
 }
 
 void MenuState::loadFont() {
-    // Try to load a font (you'll need to add a font file to resources/)
     if (!font.loadFromFile("../resources/fonts/Retro.ttf")) {
         std::cerr << "Warning: Could not load font, using default" << std::endl;
     }

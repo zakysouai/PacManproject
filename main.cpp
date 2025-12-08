@@ -25,3 +25,4 @@ int main() {
 // TODO: flickering regelen miss
 // TODO: moeilijkheid fixen (miss minder fruits bij volgende levels)
 // TODO: Code cleanen
+// TODO: Ghosts bug (altijd scared)

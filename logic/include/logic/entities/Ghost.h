@@ -29,6 +29,7 @@ public:
     Direction getCurrentDirection() const { return currentDirection; }
 
     void setWorld(class World* world) { this->world = world; }
+    void setNormalSpeed(float speed) { normalSpeed = speed; }
 
     bool hasPassedThroughDoor() const { return hasPassedDoor; }
     void markPassedDoor() { hasPassedDoor = true; }
