@@ -4,7 +4,7 @@
 
 namespace pacman::representation {
 
-GhostView::GhostView(pacman::Ghost* model, const pacman::Camera& camera, pacman::GhostColor color)
+GhostView::GhostView(pacman::Ghost* model, std::weak_ptr<pacman::Camera> camera, pacman::GhostColor color)  // ✅ CHANGED signature
     : EntityView(model, camera), ghostModel(model), ghostColor(color) {
 
     auto& spriteManager = SpriteManager::getInstance();
@@ -18,7 +18,7 @@ GhostView::GhostView(pacman::Ghost* model, const pacman::Camera& camera, pacman:
 
 void GhostView::onNotify(const pacman::Event& event) {
     switch (event.type) {
-    case pacman::EventType::ENTITY_UPDATED: {  // ✅ BRACES
+    case pacman::EventType::ENTITY_UPDATED: {
         updateSpritePosition();
 
         pacman::Direction currentDir = ghostModel->getCurrentDirection();
@@ -33,7 +33,7 @@ void GhostView::onNotify(const pacman::Event& event) {
         animationController.update(event.deltaTime);
         updateSpriteFromAnimation();
         break;
-    }  // ✅ BRACES
+    }
 
     case pacman::EventType::GHOST_STATE_CHANGED:
         updateAnimation();
@@ -82,6 +82,9 @@ void GhostView::updateAnimation() {
 }
 
 void GhostView::updateSpriteFromAnimation() {
+    auto cam = camera.lock();  // ✅ Lock weak_ptr
+    if (!cam) return;
+
     auto& spriteManager = SpriteManager::getInstance();
     std::string spriteName = animationController.getCurrentSpriteName();
 
@@ -93,7 +96,7 @@ void GhostView::updateSpriteFromAnimation() {
             sprite.setTextureRect(rect);
             sprite.setOrigin(rect.width / 2.0f, rect.height / 2.0f);
 
-            float targetSize = camera.getSpriteSize();
+            float targetSize = cam->getSpriteSize();  // ✅ Use locked camera
             float scaleX = targetSize / rect.width;
             float scaleY = targetSize / rect.height;
             sprite.setScale(scaleX, scaleY);

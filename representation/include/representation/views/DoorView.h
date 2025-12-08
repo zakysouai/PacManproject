@@ -5,7 +5,7 @@ namespace pacman::representation {
 
 class DoorView : public EntityView {
 public:
-    DoorView(const pacman::Camera& camera, const pacman::Position& doorPos);
+    DoorView(std::weak_ptr<pacman::Camera> camera, const pacman::Position& doorPos);  // ✅ CHANGED
     ~DoorView() override = default;
     
     void draw(sf::RenderWindow& window) override;

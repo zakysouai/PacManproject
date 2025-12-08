@@ -1,4 +1,3 @@
-// representation/src/ConcreteFactory.cpp
 #include "representation/ConcreteFactory.h"
 #include "representation/views/PacManView.h"
 #include "representation/views/CoinView.h"
@@ -11,17 +10,16 @@
 #include "logic/entities/BlueGhost.h"
 #include "logic/entities/OrangeGhost.h"
 
-
 namespace pacman::representation {
 
-ConcreteFactory::ConcreteFactory(const pacman::Camera& camera)
+ConcreteFactory::ConcreteFactory(std::shared_ptr<pacman::Camera> camera)  // ✅ CHANGED
     : camera(camera) {
 }
 
 std::unique_ptr<pacman::PacMan> ConcreteFactory::createPacMan(const pacman::Position& pos) {
     auto pacman = std::make_unique<pacman::PacMan>(pos);
 
-    auto view = std::make_unique<PacManView>(pacman.get(), camera);
+    auto view = std::make_unique<PacManView>(pacman.get(), camera);  // ✅ Pass weak_ptr
     pacman->attach(view.get());
     views.push_back(std::move(view));
 
@@ -31,7 +29,7 @@ std::unique_ptr<pacman::PacMan> ConcreteFactory::createPacMan(const pacman::Posi
 std::unique_ptr<pacman::Coin> ConcreteFactory::createCoin(const pacman::Position& pos) {
     auto coin = std::make_unique<pacman::Coin>(pos);
 
-    auto view = std::make_unique<CoinView>(coin.get(), camera);
+    auto view = std::make_unique<CoinView>(coin.get(), camera);  // ✅ Pass weak_ptr
     coin->attach(view.get());
     views.push_back(std::move(view));
 
@@ -41,7 +39,7 @@ std::unique_ptr<pacman::Coin> ConcreteFactory::createCoin(const pacman::Position
 std::unique_ptr<pacman::Fruit> ConcreteFactory::createFruit(const pacman::Position& pos) {
     auto fruit = std::make_unique<pacman::Fruit>(pos);
 
-    auto view = std::make_unique<FruitView>(fruit.get(), camera);
+    auto view = std::make_unique<FruitView>(fruit.get(), camera);  // ✅ Pass weak_ptr
     fruit->attach(view.get());
     views.push_back(std::move(view));
 
@@ -51,7 +49,7 @@ std::unique_ptr<pacman::Fruit> ConcreteFactory::createFruit(const pacman::Positi
 std::unique_ptr<pacman::Wall> ConcreteFactory::createWall(const pacman::Position& pos) {
     auto wall = std::make_unique<pacman::Wall>(pos);
 
-    auto view = std::make_unique<WallView>(wall.get(), camera);
+    auto view = std::make_unique<WallView>(wall.get(), camera);  // ✅ Pass weak_ptr
     wall->attach(view.get());
     views.push_back(std::move(view));
 
@@ -59,7 +57,6 @@ std::unique_ptr<pacman::Wall> ConcreteFactory::createWall(const pacman::Position
 }
 
 std::unique_ptr<pacman::Ghost> ConcreteFactory::createGhost(const pacman::Position& pos, pacman::GhostColor color) {
-    // ✅ Switch op color en maak concrete subclass
     std::unique_ptr<pacman::Ghost> ghost;
 
     switch (color) {
@@ -77,7 +74,7 @@ std::unique_ptr<pacman::Ghost> ConcreteFactory::createGhost(const pacman::Positi
         break;
     }
 
-    auto view = std::make_unique<GhostView>(ghost.get(), camera, color);
+    auto view = std::make_unique<GhostView>(ghost.get(), camera, color);  // ✅ Pass weak_ptr
     ghost->attach(view.get());
     views.push_back(std::move(view));
 

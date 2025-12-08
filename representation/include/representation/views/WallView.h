@@ -6,7 +6,7 @@ namespace pacman::representation {
 
 class WallView : public EntityView {
 public:
-    WallView(pacman::Wall* model, const pacman::Camera& camera);
+    WallView(pacman::Wall* model, std::weak_ptr<pacman::Camera> camera);  // ✅ CHANGED
     ~WallView() override = default;
     
     void draw(sf::RenderWindow& window) override;

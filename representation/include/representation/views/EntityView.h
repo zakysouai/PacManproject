@@ -9,9 +9,9 @@ namespace pacman::representation {
 
 class EntityView : public pacman::Observer {
 public:
-    EntityView(pacman::EntityModel* model, const pacman::Camera& camera);
+    EntityView(pacman::EntityModel* model, std::weak_ptr<pacman::Camera> camera);  // ✅ CHANGED
     virtual ~EntityView() = default;
-    
+
     void onNotify(const pacman::Event& event) override;
     virtual void draw(sf::RenderWindow& window) = 0;
 
@@ -19,7 +19,7 @@ public:
 
 protected:
     pacman::EntityModel* model;
-    const pacman::Camera& camera;
+    std::weak_ptr<pacman::Camera> camera;  // ✅ CHANGED from const Camera&
 
     sf::Sprite sprite;
 

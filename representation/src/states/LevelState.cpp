@@ -17,11 +17,14 @@ LevelState::LevelState(int level, bool isTutorial)
 void LevelState::onEnter() {
     std::cout << "Entering LevelState (Level " << currentLevel << ")" << std::endl;
 
-    camera = std::make_unique<pacman::Camera>(1000, 600);
-    factory = std::make_unique<ConcreteFactory>(*camera);
-    world = std::make_unique<pacman::World>(factory.get());
+    // ✅ Create shared_ptr for Camera
+    camera = std::make_shared<pacman::Camera>(1000, 600);
 
-    world->setCamera(camera.get());
+    // ✅ Create shared_ptr for Factory (passes camera as weak_ptr internally)
+    factory = std::make_shared<ConcreteFactory>(camera);
+
+    // ✅ Create World with shared camera ownership
+    world = std::make_unique<pacman::World>(factory.get(), camera);
 
     std::string mapFile;
     if (tutorialMode) {
@@ -35,20 +38,18 @@ void LevelState::onEnter() {
     world->loadLevel(mapFile);
 
     if (world->hasDoorInMap()) {
-        auto doorView = std::make_unique<DoorView>(*camera, world->getDoorPosition());
+        auto doorView = std::make_unique<DoorView>(camera, world->getDoorPosition());  // ✅ Pass weak_ptr
         factory->addView(std::move(doorView));
     }
 
     loadFont();
     setupUI();
 
-    // ✅ SETUP READY TEXT
     readyText.setFont(font);
     readyText.setString("READY");
     readyText.setCharacterSize(72);
     readyText.setFillColor(sf::Color::Yellow);
 
-    // ✅ CENTER IN VIEWPORT (niet in hele window)
     sf::FloatRect bounds = readyText.getLocalBounds();
     readyText.setOrigin(bounds.width / 2.0f, bounds.height / 2.0f);
 
@@ -56,7 +57,6 @@ void LevelState::onEnter() {
     float viewportCenterY = camera->getViewportOffsetY() + camera->getViewportHeight() / 2.0f;
     readyText.setPosition(viewportCenterX, viewportCenterY);
 
-    // ✅ RESET TIMERS
     elapsedTime = 0.0f;
     showingReady = true;
     readyTimer = 0.0f;
@@ -70,25 +70,22 @@ void LevelState::loadFont() {
 }
 
 void LevelState::setupUI() {
-    auto cam = camera.get();
+    auto cam = camera.get();  // ✅ Direct access to shared_ptr
 
-    // ✅ CHECK OF ER LETTERBOXING IS
-    hasLetterboxing = cam->getViewportOffsetX() > 10.0f;  // Minstens 10px ruimte
+    hasLetterboxing = cam->getViewportOffsetX() > 10.0f;
 
     if (!hasLetterboxing) {
         std::cout << "No letterboxing - hiding sidebars" << std::endl;
-        return;  // Geen UI setup als er geen ruimte is
+        return;
     }
 
     std::cout << "Letterboxing detected - showing sidebars" << std::endl;
 
-    // ✅ DYNAMISCHE PADDING OP BASIS VAN BESCHIKBARE RUIMTE
     float availableSpace = cam->getViewportOffsetX();
-    float leftSidebarX = availableSpace * 0.15f;  // 15% van beschikbare ruimte
+    float leftSidebarX = availableSpace * 0.15f;
     float rightSidebarX = cam->getViewportOffsetX() + cam->getViewportWidth() + availableSpace * 0.15f;
 
-    // ===== LEFT SIDEBAR =====
-
+    // Left sidebar setup (unchanged)
     scoreTitle.setFont(font);
     scoreTitle.setString("SCORE");
     scoreTitle.setCharacterSize(24);
@@ -122,8 +119,7 @@ void LevelState::setupUI() {
     levelText.setFillColor(sf::Color::White);
     levelText.setPosition(leftSidebarX, 385);
 
-    // ===== RIGHT SIDEBAR =====
-
+    // Right sidebar setup (unchanged)
     timerTitle.setFont(font);
     timerTitle.setString("TIME");
     timerTitle.setCharacterSize(24);
@@ -187,7 +183,6 @@ void LevelState::handleInput(const sf::Event& event) {
         }
     }
 
-    // ✅ BLOCK INPUT TIJDENS READY
     if (!showingReady) {
         handlePlayerInput();
     }
@@ -209,16 +204,13 @@ void LevelState::handlePlayerInput() {
 }
 
 void LevelState::update(float deltaTime) {
-    // ✅ CHECK OF DEATH ANIMATION NET AFGELOPEN IS
     bool isDeathAnimPlaying = world->isPlayingDeathAnimation();
 
     if (!wasPlayingDeathAnimation && isDeathAnimPlaying) {
-        // Death animation net gestart
         std::cout << "Death animation started" << std::endl;
     }
 
     if (wasPlayingDeathAnimation && !isDeathAnimPlaying) {
-        // Death animation net afgelopen → toon READY
         std::cout << "Death animation finished - showing READY" << std::endl;
         showingReady = true;
         readyTimer = 0.0f;
@@ -226,7 +218,6 @@ void LevelState::update(float deltaTime) {
 
     wasPlayingDeathAnimation = isDeathAnimPlaying;
 
-    // ✅ HANDLE READY STATE
     if (showingReady) {
         readyTimer += deltaTime;
         if (readyTimer >= READY_DURATION) {
@@ -235,7 +226,6 @@ void LevelState::update(float deltaTime) {
         }
     }
 
-    // ✅ ALTIJD UPDATE WORLD
     elapsedTime += deltaTime;
     world->update(showingReady ? 0.0f : deltaTime);
     updateUI();
@@ -256,7 +246,6 @@ void LevelState::updateUI() {
 
     levelText.setString(std::to_string(currentLevel));
 
-    // ✅ FORMAT TIMER
     int minutes = static_cast<int>(elapsedTime) / 60;
     int seconds = static_cast<int>(elapsedTime) % 60;
     std::ostringstream oss;
@@ -273,10 +262,9 @@ void LevelState::checkGameState() {
     } else if (world->isLevelComplete()) {
         int finalScore = world->getScore()->getCurrentScore();
 
-        // ✅ Na tutorial: terug naar menu ipv volgende level
         if (tutorialMode) {
             finish(StateAction::SWITCH,
-                   std::make_unique<VictoryState>(true, finalScore, 0));  // 0 = tutorial
+                   std::make_unique<VictoryState>(true, finalScore, 0));
         } else {
             finish(StateAction::SWITCH,
                    std::make_unique<VictoryState>(true, finalScore, currentLevel));
@@ -287,7 +275,7 @@ void LevelState::checkGameState() {
 void LevelState::render(sf::RenderWindow& window) {
     window.clear(sf::Color(15, 15, 15));
 
-    auto cam = camera.get();
+    auto cam = camera.get();  // ✅ Direct access to shared_ptr
 
     if (hasLetterboxing) {
         sf::RectangleShape leftBg;
@@ -380,7 +368,6 @@ void LevelState::render(sf::RenderWindow& window) {
         window.draw(compactLevel);
     }
 
-    // Draw game entities
     for (const auto& view : factory->getViews()) {
         view->draw(window);
     }
@@ -388,7 +375,7 @@ void LevelState::render(sf::RenderWindow& window) {
     if (showingReady) {
         sf::RectangleShape overlay;
         overlay.setSize(sf::Vector2f(cam->getViewportWidth(), cam->getViewportHeight()));
-        overlay.setFillColor(sf::Color(0, 0, 0, 150));  // Semi-transparent
+        overlay.setFillColor(sf::Color(0, 0, 0, 150));
         overlay.setPosition(cam->getViewportOffsetX(), cam->getViewportOffsetY());
         window.draw(overlay);
 

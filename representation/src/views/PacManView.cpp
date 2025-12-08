@@ -4,7 +4,7 @@
 
 namespace pacman::representation {
 
-PacManView::PacManView(pacman::PacMan* model, const pacman::Camera& camera)
+PacManView::PacManView(pacman::PacMan* model, std::weak_ptr<pacman::Camera> camera)  // ✅ CHANGED signature
     : EntityView(model, camera), pacmanModel(model) {
 
     auto& spriteManager = SpriteManager::getInstance();
@@ -22,7 +22,7 @@ PacManView::PacManView(pacman::PacMan* model, const pacman::Camera& camera)
 
 void PacManView::onNotify(const pacman::Event& event) {
     switch (event.type) {
-    case pacman::EventType::ENTITY_UPDATED: {  // ✅ BRACES
+    case pacman::EventType::ENTITY_UPDATED: {
         updateSpritePosition();
 
         if (!playingDeathAnimation) {
@@ -48,12 +48,12 @@ void PacManView::onNotify(const pacman::Event& event) {
             }
         }
         break;
-    }  // ✅ BRACES
+    }
 
     case pacman::EventType::DIRECTION_CHANGED:
         break;
 
-    case pacman::EventType::PACMAN_DIED: {  // ✅ BRACES (voor consistency)
+    case pacman::EventType::PACMAN_DIED: {
         std::cout << "PacManView: PacMan died! Playing death animation..." << std::endl;
         playingDeathAnimation = true;
 
@@ -71,7 +71,7 @@ void PacManView::onNotify(const pacman::Event& event) {
             playingDeathAnimation = false;
         }
         break;
-    }  // ✅ BRACES
+    }
 
     default:
         break;
@@ -103,6 +103,9 @@ void PacManView::switchAnimation(pacman::Direction direction) {
 }
 
 void PacManView::updateSpriteFromAnimation() {
+    auto cam = camera.lock();  // ✅ Lock weak_ptr
+    if (!cam) return;
+
     auto& spriteManager = SpriteManager::getInstance();
     std::string spriteName = animationController.getCurrentSpriteName();
 
@@ -114,7 +117,7 @@ void PacManView::updateSpriteFromAnimation() {
             sprite.setTextureRect(rect);
             sprite.setOrigin(rect.width / 2.0f, rect.height / 2.0f);
 
-            float targetSize = camera.getSpriteSize();
+            float targetSize = cam->getSpriteSize();  // ✅ Use locked camera
             float scaleX = targetSize / rect.width;
             float scaleY = targetSize / rect.height;
             sprite.setScale(scaleX, scaleY);

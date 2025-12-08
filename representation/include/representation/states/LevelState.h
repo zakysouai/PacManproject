@@ -20,9 +20,9 @@ public:
     void render(sf::RenderWindow& window) override;
     
 private:
-    std::unique_ptr<ConcreteFactory> factory;
+    std::shared_ptr<ConcreteFactory> factory;  // ✅ CHANGED to shared_ptr
     std::unique_ptr<pacman::World> world;
-    std::unique_ptr<pacman::Camera> camera;
+    std::shared_ptr<pacman::Camera> camera;  // ✅ CHANGED to shared_ptr
     
     int currentLevel;
     float elapsedTime = 0.0f;

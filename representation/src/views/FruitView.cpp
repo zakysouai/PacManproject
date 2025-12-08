@@ -5,21 +5,22 @@
 
 namespace pacman::representation {
 
-FruitView::FruitView(pacman::Fruit* model, const pacman::Camera& camera)
+FruitView::FruitView(pacman::Fruit* model, std::weak_ptr<pacman::Camera> camera)  // ✅ CHANGED signature
     : EntityView(model, camera), fruitModel(model) {
     loadSprite();
 }
 
 void FruitView::loadSprite() {
-    // Get the shared sprite sheet texture from SpriteManager
     auto& spriteManager = SpriteManager::getInstance();
     sprite.setTexture(spriteManager.getTexture());
 
-    // Load the fruit sprite
     updateSpriteFromTexture();
 }
 
 void FruitView::updateSpriteFromTexture() {
+    auto cam = camera.lock();  // ✅ Lock weak_ptr
+    if (!cam) return;
+
     auto& spriteManager = SpriteManager::getInstance();
 
     try {
@@ -27,11 +28,9 @@ void FruitView::updateSpriteFromTexture() {
             sf::IntRect rect = spriteManager.getSpriteRect("fruit");
             sprite.setTextureRect(rect);
 
-            // ✅ Set origin in texture coordinates (center of sprite)
             sprite.setOrigin(rect.width / 2.0f, rect.height / 2.0f);
 
-            // Scale sprite appropriately
-            float targetSize = camera.getSpriteSize();
+            float targetSize = cam->getSpriteSize();  // ✅ Use locked camera
             float scaleX = targetSize / rect.width;
             float scaleY = targetSize / rect.height;
             sprite.setScale(scaleX, scaleY);
@@ -42,12 +41,10 @@ void FruitView::updateSpriteFromTexture() {
 }
 
 void FruitView::update(float deltaTime) {
-    // Update sprite position
     updateSpritePosition();
 }
 
 void FruitView::draw(sf::RenderWindow& window) {
-    // Only draw if not collected
     if (!fruitModel->isCollected()) {
         window.draw(sprite);
     }

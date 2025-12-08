@@ -20,16 +20,15 @@ struct MapDimensions {
 
 class World : public Subject {
 public:
-    explicit World(AbstractFactory* factory);
+    explicit World(AbstractFactory* factory, std::shared_ptr<Camera> camera);  // ✅ CHANGED
     ~World() = default;
 
     struct GridPosition {
         int row;
         int col;
     };
-    
-    void update(float deltaTime);
 
+    void update(float deltaTime);
     void loadLevel(const std::string& mapFile);
     void nextLevel();
     void reset();
@@ -47,7 +46,6 @@ public:
     Score* getScore() { return &score; }
 
     MapDimensions getMapDimensions() const { return {mapRows, mapCols}; }
-    void setCamera(Camera* cam) { camera = cam; }
 
     bool canMoveInDirection(const Position& pos, Direction dir, float radius, const Ghost* ghost = nullptr) const;
     bool wouldCollideWithWall(const Position& pos, float radius, const Ghost* ghost = nullptr) const;
@@ -69,7 +67,7 @@ public:
 
 private:
     AbstractFactory* factory;
-    Camera* camera = nullptr;
+    std::shared_ptr<Camera> camera;  // ✅ CHANGED from Camera*
 
     std::unique_ptr<PacMan> pacman;
     std::vector<std::unique_ptr<Coin>> coins;
@@ -92,16 +90,15 @@ private:
     const float DEATH_ANIMATION_DURATION = 1.2f;
 
     Position doorPosition;
-    bool hasDoor = false;  // Was er een 'D' in de map?
+    bool hasDoor = false;
     GridPosition doorGridPos;
 
-    // Spawn area bounds
     float spawnLeft = -0.2f;
     float spawnRight = 0.2f;
     float spawnTop = -0.1f;
     float spawnBottom = 0.1f;
 
-    float fearModeDuration = 5.0f;  // Base duration, scaled per level
+    float fearModeDuration = 5.0f;
 
     void handleCollisions();
     bool checkWallCollision(const Position& pos, Direction dir) const;

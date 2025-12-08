@@ -2,27 +2,31 @@
 
 namespace pacman::representation {
 
-WallView::WallView(pacman::Wall* model, const pacman::Camera& camera)
+WallView::WallView(pacman::Wall* model, std::weak_ptr<pacman::Camera> camera)  // ✅ CHANGED signature
     : EntityView(model, camera), wallModel(model) {
     setupRectangle();
 }
 
 void WallView::setupRectangle() {
-    float size = camera.getSpriteSize();
+    auto cam = camera.lock();  // ✅ Lock weak_ptr
+    if (!cam) return;
 
-    // Make walls slightly larger to ensure no gaps (add 1 pixel overlap)
+    float size = cam->getSpriteSize();
+
     float sizeWithOverlap = size + 1.0f;
 
     rectangle.setSize(sf::Vector2f(sizeWithOverlap, sizeWithOverlap));
     rectangle.setFillColor(sf::Color::Blue);
 
-    // Center the origin
     rectangle.setOrigin(sizeWithOverlap / 2.0f, sizeWithOverlap / 2.0f);
 }
 
 void WallView::draw(sf::RenderWindow& window) {
+    auto cam = camera.lock();  // ✅ Lock weak_ptr
+    if (!cam) return;
+
     auto worldPos = model->getPosition();
-    auto screenPos = camera.worldToScreen(worldPos);
+    auto screenPos = cam->worldToScreen(worldPos);
     rectangle.setPosition(screenPos.x, screenPos.y);
     
     window.draw(rectangle);

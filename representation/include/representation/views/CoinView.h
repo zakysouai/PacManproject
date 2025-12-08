@@ -6,14 +6,14 @@ namespace pacman::representation {
 
 class CoinView : public EntityView {
 public:
-    CoinView(pacman::Coin* model, const pacman::Camera& camera);
+    CoinView(pacman::Coin* model, std::weak_ptr<pacman::Camera> camera);  // ✅ CHANGED
     ~CoinView() override = default;
-    
+
     void draw(sf::RenderWindow& window) override;
-    
+
 private:
     pacman::Coin* coinModel;
-    sf::CircleShape circle;  // Simple circle for coin
+    sf::CircleShape circle;
     
     void setupCircle();
 };
