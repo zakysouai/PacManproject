@@ -8,22 +8,28 @@ public:
     DummyModel() : EntityModel(pacman::Position(0, 0), 0) {}
     void update(float) override {}
 };
+
+// ✅ STATIC INSTANCE - één keer gealloceerd, nooit gedelete (maar dat is OK)
+DummyModel& getDummyModel() {
+    static DummyModel instance;
+    return instance;
+}
 }
 
 DoorView::DoorView(std::weak_ptr<pacman::Camera> camera, const pacman::Position& doorPos)
-    : EntityView(*new DummyModel(), camera), doorPosition(doorPos){
+    : EntityView(getDummyModel(), camera), doorPosition(doorPos) {  // ✅ Reference naar static
 
-    auto cam = camera.lock();  // ✅ Lock weak_ptr
+    auto cam = camera.lock();
     if (!cam) return;
 
     float size = cam->getSpriteSize() + 1.0f;
     rectangle.setSize(sf::Vector2f(size, size));
-    rectangle.setFillColor(sf::Color(139, 69, 19));  // Brown door
+    rectangle.setFillColor(sf::Color(139, 69, 19));
     rectangle.setOrigin(size / 2.0f, size / 2.0f);
 }
 
 void DoorView::draw(sf::RenderWindow& window) {
-    auto cam = camera.lock();  // ✅ Lock weak_ptr
+    auto cam = camera.lock();
     if (!cam) return;
 
     auto screenPos = cam->worldToScreen(doorPosition);
