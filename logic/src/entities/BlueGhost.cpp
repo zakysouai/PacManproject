@@ -1,23 +1,21 @@
-// logic/src/entities/BlueGhost.cpp
 #include "logic/entities/BlueGhost.h"
 #include "logic/World.h"
 
 namespace pacman {
 
-BlueGhost::BlueGhost(const Position& pos)
-    : Ghost(pos, GhostColor::BLUE, 5.0f) {  // ✅ 5 seconds delay
+BlueGhost::BlueGhost(World& world, const Position& pos)  // ✅ World& parameter
+    : Ghost(world, pos, GhostColor::BLUE, 5.0f) {  // ✅ world doorgeven
 }
 
 Direction BlueGhost::chooseDirection() {
-    if (!world) return currentDirection;
+    // ❌ if (!world) return currentDirection; WEG
     if (!isAtIntersection()) return currentDirection;
 
-    auto* pacman = world->getPacMan();
+    auto* pacman = world.getPacMan();  // world. niet world->
     if (!pacman) {
         return currentDirection;
     }
 
-    // Target position AHEAD of PacMan
     Position pacmanPos = pacman->getPosition();
     Direction pacmanDir = pacman->getDirection();
 

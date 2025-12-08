@@ -20,7 +20,7 @@ struct MapDimensions {
 
 class World : public Subject {
 public:
-    explicit World(AbstractFactory* factory, std::shared_ptr<Camera> camera);  // ✅ CHANGED
+    explicit World(AbstractFactory& factory, std::shared_ptr<Camera> camera);  // ✅ & niet *
     ~World() = default;
 
     struct GridPosition {
@@ -66,8 +66,8 @@ public:
     bool isPlayingDeathAnimation() const { return deathAnimationPlaying; }
 
 private:
-    AbstractFactory* factory;
-    std::shared_ptr<Camera> camera;  // ✅ CHANGED from Camera*
+    AbstractFactory& factory;  // ✅ & niet *
+    std::shared_ptr<Camera> camera;
 
     std::unique_ptr<PacMan> pacman;
     std::vector<std::unique_ptr<Coin>> coins;

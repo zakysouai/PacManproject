@@ -1,6 +1,7 @@
 // logic/include/logic/entities/Ghost.h
 #pragma once
 #include "logic/EntityModel.h"
+#include "logic/World.h"
 
 namespace pacman {
 
@@ -14,12 +15,12 @@ enum class GhostColor {
 enum class GhostState {
     IN_SPAWN,
     ON_MAP,
-    SCARED  // ✅ NIEUW
+    SCARED
 };
 
 class Ghost : public EntityModel {
 public:
-    explicit Ghost(const Position& pos, GhostColor color, float spawnDelay);
+    explicit Ghost(World& world, const Position& pos, GhostColor color, float spawnDelay);  // ✅ World& toegevoegd
     virtual ~Ghost() = default;
 
     void update(float deltaTime) override;
@@ -28,13 +29,12 @@ public:
     GhostState getState() const { return state; }
     Direction getCurrentDirection() const { return currentDirection; }
 
-    void setWorld(class World* world) { this->world = world; }
+    // ❌ setWorld() WEG - niet meer nodig
     void setNormalSpeed(float speed) { normalSpeed = speed; }
 
     bool hasPassedThroughDoor() const { return hasPassedDoor; }
     void markPassedDoor() { hasPassedDoor = true; }
 
-    // ✅ NIEUW: Scared mode
     void enterScaredMode(float duration);
     bool isScared() const { return state == GhostState::SCARED; }
     void respawn();
@@ -47,7 +47,7 @@ protected:
     std::vector<Direction> getViableDirections() const;
     Direction getBestDirectionToTarget(const Position& target, bool maximize = false) const;
 
-    World* world = nullptr;
+    World& world;  // ✅ & niet * (en niet meer = nullptr)
     Direction currentDirection = Direction::RIGHT;
 
 private:
@@ -58,10 +58,9 @@ private:
     float spawnTimer = 0.0f;
     bool hasPassedDoor = false;
 
-    // ✅ NIEUW: Scared mode
     float scaredTimer = 0.0f;
-    float normalSpeed = 0.3f;  // Original speed
-    GhostState previousState = GhostState::ON_MAP;  // State voor scared mode
+    float normalSpeed = 0.3f;
+    GhostState previousState = GhostState::ON_MAP;
     float initialSpawnDelay = 0.0f;
 
     void move(float deltaTime);

@@ -1,19 +1,17 @@
-// logic/src/entities/OrangeGhost.cpp
 #include "logic/entities/OrangeGhost.h"
 #include "logic/World.h"
 #include "logic/utils/Random.h"
 
 namespace pacman {
 
-OrangeGhost::OrangeGhost(const Position& pos)
-    : Ghost(pos, GhostColor::ORANGE, 10.0f) {  // 10 second delay
+OrangeGhost::OrangeGhost(World& world, const Position& pos)  // ✅ World& parameter
+    : Ghost(world, pos, GhostColor::ORANGE, 10.0f) {  // ✅ world doorgeven
 }
 
 Direction OrangeGhost::chooseDirection() {
-    if (!world) return lockedDirection;
+    // ❌ if (!world) return lockedDirection; WEG
     if (!isAtIntersection()) return lockedDirection;
 
-    // At intersection: p=0.5 choose new random direction
     if (Random::getInstance().getBool(0.5f)) {
         auto viable = getViableDirections();
         if (!viable.empty()) {
@@ -21,7 +19,6 @@ Direction OrangeGhost::chooseDirection() {
             lockedDirection = viable[index];
         }
     }
-    // Else: keep current lockedDirection
 
     return lockedDirection;
 }

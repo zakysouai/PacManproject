@@ -12,7 +12,7 @@
 
 namespace pacman::representation {
 
-ConcreteFactory::ConcreteFactory(std::shared_ptr<pacman::Camera> camera)  // ✅ CHANGED
+ConcreteFactory::ConcreteFactory(std::shared_ptr<pacman::Camera> camera)
     : camera(camera) {
 }
 
@@ -28,7 +28,7 @@ std::unique_ptr<pacman::PacMan> ConcreteFactory::createPacMan(const pacman::Posi
 
 std::unique_ptr<pacman::Coin> ConcreteFactory::createCoin(const pacman::Position& pos) {
     auto coin = std::make_unique<pacman::Coin>(pos);
-    auto view = std::make_unique<CoinView>(*coin, camera);  // *coin geeft reference
+    auto view = std::make_unique<CoinView>(*coin, camera);
     coin->attach(view.get());
     views.push_back(std::move(view));
     return coin;
@@ -37,7 +37,7 @@ std::unique_ptr<pacman::Coin> ConcreteFactory::createCoin(const pacman::Position
 std::unique_ptr<pacman::Fruit> ConcreteFactory::createFruit(const pacman::Position& pos) {
     auto fruit = std::make_unique<pacman::Fruit>(pos);
 
-    auto view = std::make_unique<FruitView>(*fruit, camera);  // ✅ Pass weak_ptr
+    auto view = std::make_unique<FruitView>(*fruit, camera);
     fruit->attach(view.get());
     views.push_back(std::move(view));
 
@@ -47,32 +47,32 @@ std::unique_ptr<pacman::Fruit> ConcreteFactory::createFruit(const pacman::Positi
 std::unique_ptr<pacman::Wall> ConcreteFactory::createWall(const pacman::Position& pos) {
     auto wall = std::make_unique<pacman::Wall>(pos);
 
-    auto view = std::make_unique<WallView>(*wall, camera);  // ✅ Pass weak_ptr
+    auto view = std::make_unique<WallView>(*wall, camera);
     wall->attach(view.get());
     views.push_back(std::move(view));
 
     return wall;
 }
 
-std::unique_ptr<pacman::Ghost> ConcreteFactory::createGhost(const pacman::Position& pos, pacman::GhostColor color) {
+std::unique_ptr<pacman::Ghost> ConcreteFactory::createGhost(pacman::World& world, const pacman::Position& pos, pacman::GhostColor color) {  // ✅ World& parameter
     std::unique_ptr<pacman::Ghost> ghost;
 
     switch (color) {
     case pacman::GhostColor::RED:
-        ghost = std::make_unique<pacman::RedGhost>(pos);
+        ghost = std::make_unique<pacman::RedGhost>(world, pos);  // ✅ world doorgeven
         break;
     case pacman::GhostColor::PINK:
-        ghost = std::make_unique<pacman::PinkGhost>(pos);
+        ghost = std::make_unique<pacman::PinkGhost>(world, pos);  // ✅ world doorgeven
         break;
     case pacman::GhostColor::BLUE:
-        ghost = std::make_unique<pacman::BlueGhost>(pos);
+        ghost = std::make_unique<pacman::BlueGhost>(world, pos);  // ✅ world doorgeven
         break;
     case pacman::GhostColor::ORANGE:
-        ghost = std::make_unique<pacman::OrangeGhost>(pos);
+        ghost = std::make_unique<pacman::OrangeGhost>(world, pos);  // ✅ world doorgeven
         break;
     }
 
-    auto view = std::make_unique<GhostView>(*ghost, camera, color);  // ✅ Pass weak_ptr
+    auto view = std::make_unique<GhostView>(*ghost, camera, color);
     ghost->attach(view.get());
     views.push_back(std::move(view));
 

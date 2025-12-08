@@ -11,14 +11,14 @@ namespace pacman::representation {
 
 class ConcreteFactory : public pacman::AbstractFactory {
 public:
-    explicit ConcreteFactory(std::shared_ptr<pacman::Camera> camera);  // ✅ CHANGED
+    explicit ConcreteFactory(std::shared_ptr<pacman::Camera> camera);
     ~ConcreteFactory() override = default;
 
     std::unique_ptr<pacman::PacMan> createPacMan(const pacman::Position& pos) override;
     std::unique_ptr<pacman::Coin> createCoin(const pacman::Position& pos) override;
     std::unique_ptr<pacman::Fruit> createFruit(const pacman::Position& pos) override;
     std::unique_ptr<pacman::Wall> createWall(const pacman::Position& pos) override;
-    std::unique_ptr<pacman::Ghost> createGhost(const pacman::Position& pos, pacman::GhostColor color) override;
+    std::unique_ptr<pacman::Ghost> createGhost(pacman::World& world, const pacman::Position& pos, pacman::GhostColor color) override;  // ✅ World& toegevoegd
 
     const std::vector<std::unique_ptr<EntityView>>& getViews() const { return views; }
     void clearViews() { views.clear(); }
@@ -28,7 +28,7 @@ public:
     }
 
 private:
-    std::weak_ptr<pacman::Camera> camera;  // ✅ CHANGED from const Camera&
+    std::weak_ptr<pacman::Camera> camera;
     std::vector<std::unique_ptr<EntityView>> views;
 
     template<typename ViewType, typename ModelType>

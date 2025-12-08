@@ -1,31 +1,27 @@
-// logic/src/entities/PinkGhost.cpp
 #include "logic/entities/PinkGhost.h"
 #include "logic/World.h"
 
 namespace pacman {
 
-PinkGhost::PinkGhost(const Position& pos)
-    : Ghost(pos, GhostColor::PINK, 0.0f) {  // Leaves immediately
+PinkGhost::PinkGhost(World& world, const Position& pos)  // ✅ World& parameter
+    : Ghost(world, pos, GhostColor::PINK, 0.0f) {  // ✅ world doorgeven
 }
 
 Direction PinkGhost::chooseDirection() {
-    if (!world) return currentDirection;
+    // ❌ if (!world) return currentDirection; WEG
     if (!isAtIntersection()) return currentDirection;
 
-    auto* pacman = world->getPacMan();
+    auto* pacman = world.getPacMan();  // world. niet world->
     if (!pacman) {
         return currentDirection;
     }
 
-    // ✅ PREDICTOR: target position AHEAD of PacMan
     Position pacmanPos = pacman->getPosition();
     Direction pacmanDir = pacman->getDirection();
 
-    // Calculate target position
     Position dirVec = getDirectionVector(pacmanDir);
     Position target = pacmanPos + dirVec * PREDICT_DISTANCE;
 
-    // Minimize distance to predicted position
     return getBestDirectionToTarget(target, false);
 }
 

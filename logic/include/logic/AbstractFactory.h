@@ -9,10 +9,10 @@ class Coin;
 class Fruit;
 class Wall;
 class Ghost;
+class World;  // ✅ NIEUW
 struct Position;
 
-// ✅ VOEG TOE: GhostColor enum
-enum class GhostColor;  // Forward declaration
+enum class GhostColor;
 
 class AbstractFactory {
 public:
@@ -22,7 +22,7 @@ public:
     virtual std::unique_ptr<Coin> createCoin(const Position& pos) = 0;
     virtual std::unique_ptr<Fruit> createFruit(const Position& pos) = 0;
     virtual std::unique_ptr<Wall> createWall(const Position& pos) = 0;
-    virtual std::unique_ptr<Ghost> createGhost(const Position& pos, GhostColor color) = 0;
+    virtual std::unique_ptr<Ghost> createGhost(World& world, const Position& pos, GhostColor color) = 0;  // ✅ World& toegevoegd
 };
 
 } // namespace pacman

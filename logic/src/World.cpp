@@ -10,8 +10,8 @@
 
 namespace pacman {
 
-World::World(AbstractFactory* factory, std::shared_ptr<Camera> camera)  // ✅ CHANGED
-    : factory(factory), camera(camera) {  // ✅ CHANGED
+World::World(AbstractFactory& factory, std::shared_ptr<Camera> camera)  // ✅ & niet *
+    : factory(factory), camera(camera) {
 }
 
 void World::update(float deltaTime) {
@@ -550,13 +550,13 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
             switch (tile) {
             case 'x':
             case 'X':
-                walls.push_back(factory->createWall(worldPos));
+                walls.push_back(factory.createWall(worldPos));
                 wallCount++;
                 break;
 
             case ' ':
             case '.':
-                coins.push_back(factory->createCoin(worldPos));
+                coins.push_back(factory.createCoin(worldPos));
                 coins.back()->attach(&score);
                 coinCount++;
                 break;
@@ -570,7 +570,7 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
 
             case 'c':
             case 'C':
-                fruits.push_back(factory->createFruit(worldPos));
+                fruits.push_back(factory.createFruit(worldPos));
                 fruits.back()->attach(&score);
                 std::cout << "Found Fruit spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
@@ -621,7 +621,7 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
 
     if (pacmanSpawned) {
         pacmanSpawnPosition = pacmanSpawnPos;
-        pacman = factory->createPacMan(pacmanSpawnPos);
+        pacman = factory.createPacMan(pacmanSpawnPos);
         pacman->attach(&score);
         std::cout << "Created PacMan at (" << pacmanSpawnPos.x << ", " << pacmanSpawnPos.y << ")" << std::endl;
     } else {
@@ -629,29 +629,25 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     }
 
     if (redSpawned) {
-        auto ghost = factory->createGhost(redPos, GhostColor::RED);
-        ghost->setWorld(this);
+        auto ghost = factory.createGhost(*this, redPos, GhostColor::RED);  // *this = World&
         ghost->attach(&score);
         ghosts.push_back(std::move(ghost));
     }
 
     if (pinkSpawned) {
-        auto ghost = factory->createGhost(pinkPos, GhostColor::PINK);
-        ghost->setWorld(this);
+        auto ghost = factory.createGhost(*this, pinkPos, GhostColor::PINK);  // *this
         ghost->attach(&score);
         ghosts.push_back(std::move(ghost));
     }
 
     if (cyanSpawned) {
-        auto ghost = factory->createGhost(cyanPos, GhostColor::BLUE);
-        ghost->setWorld(this);
+        auto ghost = factory.createGhost(*this, cyanPos, GhostColor::BLUE);  // *this
         ghost->attach(&score);
         ghosts.push_back(std::move(ghost));
     }
 
     if (orangeSpawned) {
-        auto ghost = factory->createGhost(orangePos, GhostColor::ORANGE);
-        ghost->setWorld(this);
+        auto ghost = factory.createGhost(*this, orangePos, GhostColor::ORANGE);  // *this
         ghost->attach(&score);
         ghosts.push_back(std::move(ghost));
     }

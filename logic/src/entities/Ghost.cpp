@@ -5,14 +5,15 @@
 
 namespace pacman {
 
-Ghost::Ghost(const Position& pos, GhostColor color, float spawnDelay)
-    : EntityModel(pos, 0.3f), color(color), spawnPosition(pos),
-      spawnTimer(spawnDelay), initialSpawnDelay(spawnDelay) {  // ✅ Bewaar
+Ghost::Ghost(World& world, const Position& pos, GhostColor color, float spawnDelay)  // ✅ World& parameter
+    : EntityModel(pos, 0.3f), world(world), color(color), spawnPosition(pos),  // ✅ world(world)
+      spawnTimer(spawnDelay), initialSpawnDelay(spawnDelay) {
     normalSpeed = 0.3f;
 }
 
 void Ghost::update(float deltaTime) {
-    // Handle spawn timer
+    // ❌ if (!world) return; WEG
+
     if (state == GhostState::IN_SPAWN) {
         spawnTimer -= deltaTime;
         if (spawnTimer <= 0.0f) {
@@ -23,7 +24,6 @@ void Ghost::update(float deltaTime) {
             event.type = EventType::GHOST_STATE_CHANGED;
             notify(event);
         }
-        // ✅ NOTIFY zelfs in spawn
         Event updateEvent;
         updateEvent.type = EventType::ENTITY_UPDATED;
         updateEvent.deltaTime = deltaTime;
@@ -31,7 +31,6 @@ void Ghost::update(float deltaTime) {
         return;
     }
 
-    // Handle scared timer
     if (state == GhostState::SCARED) {
         scaredTimer -= deltaTime;
         if (scaredTimer <= 0.0f) {
@@ -47,7 +46,6 @@ void Ghost::update(float deltaTime) {
 
     move(deltaTime);
 
-    // ✅ NOTIFY observers
     Event event;
     event.type = EventType::ENTITY_UPDATED;
     event.deltaTime = deltaTime;
@@ -59,13 +57,12 @@ void Ghost::enterScaredMode(float duration) {
         return;
     }
 
-    // ✅ FIX: alleen previousState zetten als we NIET al scared zijn
     if (state != GhostState::SCARED) {
         previousState = state;
     }
 
     state = GhostState::SCARED;
-    scaredTimer = duration;  // Reset timer
+    scaredTimer = duration;
     speed = normalSpeed * 0.5f;
 
     currentDirection = getOppositeDirection(currentDirection);
@@ -78,11 +75,11 @@ void Ghost::enterScaredMode(float duration) {
 void Ghost::respawn() {
     position = spawnPosition;
     currentDirection = Direction::RIGHT;
-    state = GhostState::IN_SPAWN;  // ✅ Terug naar spawn
+    state = GhostState::IN_SPAWN;
     speed = normalSpeed;
     hasPassedDoor = false;
     scaredTimer = 0.0f;
-    spawnTimer = initialSpawnDelay;  // ✅ Reset timer
+    spawnTimer = initialSpawnDelay;
 
     std::cout << "Ghost color " << static_cast<int>(color) << " respawned!" << std::endl;
 
@@ -92,7 +89,6 @@ void Ghost::respawn() {
 }
 
 void Ghost::die() {
-    // ✅ NOTIFY observers (Score krijgt GHOST_EATEN)
     Event event;
     event.type = EventType::GHOST_EATEN;
     event.value = 200;
@@ -102,7 +98,7 @@ void Ghost::die() {
 }
 
 void Ghost::move(float deltaTime) {
-    if (!world) return;
+    // ❌ if (!world) return; WEG
 
     if (isAtIntersection()) {
         Direction newDir = chooseDirectionAtIntersection();
@@ -116,7 +112,7 @@ void Ghost::move(float deltaTime) {
 
     if (currentDirection == Direction::LEFT || currentDirection == Direction::RIGHT) {
         Position testPos = Position(position.x + movement.x, position.y);
-        if (!world->wouldCollideWithWall(testPos, getCollisionRadius(), this)) {
+        if (!world.wouldCollideWithWall(testPos, getCollisionRadius(), this)) {  // world. niet world->
             position = testPos;
         } else {
             handleWallCollision();
@@ -125,16 +121,16 @@ void Ghost::move(float deltaTime) {
 
     if (currentDirection == Direction::UP || currentDirection == Direction::DOWN) {
         Position testPos = Position(position.x, position.y + movement.y);
-        if (!world->wouldCollideWithWall(testPos, getCollisionRadius(), this)) {
+        if (!world.wouldCollideWithWall(testPos, getCollisionRadius(), this)) {  // world. niet world->
             position = testPos;
         } else {
             handleWallCollision();
         }
     }
 
-    if (!hasPassedDoor && world->hasDoorInMap()) {
-        auto ghostGrid = world->worldToGrid(position);
-        auto doorGrid = world->getDoorGridPosition();
+    if (!hasPassedDoor && world.hasDoorInMap()) {  // world. niet world->
+        auto ghostGrid = world.worldToGrid(position);  // world. niet world->
+        auto doorGrid = world.getDoorGridPosition();  // world. niet world->
 
         if (ghostGrid.row == doorGrid.row - 1 && ghostGrid.col == doorGrid.col) {
             markPassedDoor();
@@ -144,7 +140,7 @@ void Ghost::move(float deltaTime) {
 }
 
 bool Ghost::isAtIntersection() const {
-    if (!world) return false;
+    // ❌ if (!world) return false; WEG
 
     int viableCount = 0;
     std::vector<Direction> allDirections = {
@@ -152,7 +148,7 @@ bool Ghost::isAtIntersection() const {
     };
 
     for (Direction dir : allDirections) {
-        if (world->canMoveInDirection(position, dir, getCollisionRadius(), this)) {
+        if (world.canMoveInDirection(position, dir, getCollisionRadius(), this)) {  // world. niet world->
             viableCount++;
         }
     }
@@ -161,13 +157,11 @@ bool Ghost::isAtIntersection() const {
 }
 
 Direction Ghost::chooseDirectionAtIntersection() {
-    // ✅ SCARED MODE: maximize distance
-    if (state == GhostState::SCARED && world && world->getPacMan()) {
-        Position pacmanPos = world->getPacMan()->getPosition();
-        return getBestDirectionToTarget(pacmanPos, true);  // true = MAXIMIZE
+    if (state == GhostState::SCARED && world.getPacMan()) {  // world. niet world->
+        Position pacmanPos = world.getPacMan()->getPosition();  // world. niet world->
+        return getBestDirectionToTarget(pacmanPos, true);
     }
 
-    // Normal mode: use subclass AI
     return chooseDirection();
 }
 
@@ -186,7 +180,7 @@ float Ghost::calculateManhattanDistance(const Position& from, const Position& to
 }
 
 void Ghost::handleWallCollision() {
-    if (!world) return;
+    // ❌ if (!world) return; WEG
 
     std::vector<Direction> viable;
     std::vector<Direction> allDirections = {
@@ -195,7 +189,7 @@ void Ghost::handleWallCollision() {
 
     for (Direction dir : allDirections) {
         if (isOpposite(dir, currentDirection)) continue;
-        if (world->canMoveInDirection(position, dir, getCollisionRadius(), this)) {
+        if (world.canMoveInDirection(position, dir, getCollisionRadius(), this)) {  // world. niet world->
             viable.push_back(dir);
         }
     }
@@ -216,7 +210,7 @@ bool Ghost::isOpposite(Direction dir1, Direction dir2) const {
 }
 
 std::vector<Direction> Ghost::getViableDirections() const {
-    if (!world) return {};
+    // ❌ if (!world) return {}; WEG
 
     std::vector<Direction> viable;
     std::vector<Direction> allDirections = {
@@ -225,7 +219,7 @@ std::vector<Direction> Ghost::getViableDirections() const {
 
     for (Direction dir : allDirections) {
         if (isOpposite(dir, currentDirection)) continue;
-        if (world->canMoveInDirection(position, dir, getCollisionRadius(), this)) {
+        if (world.canMoveInDirection(position, dir, getCollisionRadius(), this)) {  // world. niet world->
             viable.push_back(dir);
         }
     }

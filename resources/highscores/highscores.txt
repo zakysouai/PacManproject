@@ -1,5 +1,5 @@
 test2,5830
 souf,1260
+valgrindtest,1170
 testtxt,1040
 test4,700
-test3,460

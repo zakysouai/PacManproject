@@ -24,7 +24,7 @@ void LevelState::onEnter() {
     factory = std::make_shared<ConcreteFactory>(camera);
 
     // ✅ Create World with shared camera ownership
-    world = std::make_unique<pacman::World>(factory.get(), camera);
+    world = std::make_unique<pacman::World>(*factory, camera);
 
     std::string mapFile;
     if (tutorialMode) {

@@ -1,26 +1,23 @@
-// logic/src/entities/RedGhost.cpp
 #include "logic/entities/RedGhost.h"
 #include "logic/World.h"
 
 namespace pacman {
 
-RedGhost::RedGhost(const Position& pos)
-    : Ghost(pos, GhostColor::RED, 0.0f) {  // Leaves immediately
+RedGhost::RedGhost(World& world, const Position& pos)  // ✅ World& parameter
+    : Ghost(world, pos, GhostColor::RED, 0.0f) {  // ✅ world doorgeven
 }
 
 Direction RedGhost::chooseDirection() {
-    if (!world) return currentDirection;
+    // ❌ if (!world) return currentDirection; WEG
     if (!isAtIntersection()) return currentDirection;
 
-    auto* pacman = world->getPacMan();
+    auto* pacman = world.getPacMan();  // world. niet world->
     if (!pacman) {
-        // No PacMan? Keep current direction
         return currentDirection;
     }
 
-    // ✅ PURE CHASER: minimize distance to PacMan's actual position
     Position pacmanPos = pacman->getPosition();
-    return getBestDirectionToTarget(pacmanPos, false);  // false = minimize
+    return getBestDirectionToTarget(pacmanPos, false);
 }
 
 } // namespace pacman
