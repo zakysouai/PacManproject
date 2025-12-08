@@ -21,3 +21,7 @@ int main() {
 // TODO: checken voor correcte use of smart pointers
 // TODO: bug in 1 van de hoeken waar pacman vast zit
 // TODO: eerst een bevroren beeld van de map. met READY in het midden voor 2 seconden ofzo
+// TODO: ghosts moeten in spawn ook scared zijn als pacman een fruit opeet
+// TODO: flickering regelen miss
+// TODO: moeilijkheid fixen (miss minder fruits bij volgende levels)
+// TODO: Code cleanen
