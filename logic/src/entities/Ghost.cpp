@@ -12,31 +12,46 @@ Ghost::Ghost(World& world, const Position& pos, GhostColor color, float spawnDel
 }
 
 void Ghost::update(float deltaTime) {
-    // ❌ if (!world) return; WEG
+    // ✅ SPAWN TIMER - werkt ook in scared mode
+    if (previousState == GhostState::IN_SPAWN ||
+        (state == GhostState::IN_SPAWN)) {
 
-    if (state == GhostState::IN_SPAWN) {
         spawnTimer -= deltaTime;
         if (spawnTimer <= 0.0f) {
-            state = GhostState::ON_MAP;
-            std::cout << "Ghost color " << static_cast<int>(color) << " left spawn!" << std::endl;
+            // Ghost mag spawn verlaten
+            if (state == GhostState::SCARED) {
+                // Als nog scared, ga naar ON_MAP maar blijf scared
+                previousState = GhostState::ON_MAP;
+                std::cout << "Ghost color " << static_cast<int>(color)
+                         << " left spawn (still scared)!" << std::endl;
+            } else {
+                // Normaal verlaten
+                state = GhostState::ON_MAP;
+                std::cout << "Ghost color " << static_cast<int>(color)
+                         << " left spawn!" << std::endl;
 
-            Event event;
-            event.type = EventType::GHOST_STATE_CHANGED;
-            notify(event);
+                Event event;
+                event.type = EventType::GHOST_STATE_CHANGED;
+                notify(event);
+            }
         }
+
+        // ✅ Update ENTITY_UPDATED event (voor animatie)
         Event updateEvent;
         updateEvent.type = EventType::ENTITY_UPDATED;
         updateEvent.deltaTime = deltaTime;
         notify(updateEvent);
-        return;
-    }
+        return;  // Blijf in spawn, beweeg niet
+        }
 
+    // ✅ SCARED TIMER
     if (state == GhostState::SCARED) {
         scaredTimer -= deltaTime;
         if (scaredTimer <= 0.0f) {
             state = previousState;
             speed = normalSpeed;
-            std::cout << "Ghost color " << static_cast<int>(color) << " exits scared mode!" << std::endl;
+            std::cout << "Ghost color " << static_cast<int>(color)
+                     << " exits scared mode!" << std::endl;
 
             Event event;
             event.type = EventType::GHOST_STATE_CHANGED;
@@ -53,9 +68,6 @@ void Ghost::update(float deltaTime) {
 }
 
 void Ghost::enterScaredMode(float duration) {
-    if (state == GhostState::IN_SPAWN) {
-        return;
-    }
 
     if (state != GhostState::SCARED) {
         previousState = state;
@@ -65,7 +77,9 @@ void Ghost::enterScaredMode(float duration) {
     scaredTimer = duration;
     speed = normalSpeed * 0.5f;
 
-    currentDirection = getOppositeDirection(currentDirection);
+    if (previousState == GhostState::ON_MAP) {
+        currentDirection = getOppositeDirection(currentDirection);
+    }
 
     Event event;
     event.type = EventType::GHOST_STATE_CHANGED;

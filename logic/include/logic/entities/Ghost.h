@@ -28,6 +28,7 @@ public:
     GhostColor getColor() const { return color; }
     GhostState getState() const { return state; }
     Direction getCurrentDirection() const { return currentDirection; }
+    float getScaredTimeRemaining() const { return scaredTimer; }
 
     void setNormalSpeed(float speed) { normalSpeed = speed; }
 

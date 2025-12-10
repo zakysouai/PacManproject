@@ -20,8 +20,12 @@ private:
     pacman::Direction lastDirection = pacman::Direction::NONE;
     pacman::GhostState lastState = pacman::GhostState::IN_SPAWN;
 
+    float flickerTimer = 0.0f;
+    bool flickerState = false;
+
     void updateAnimation();
     void updateSpriteFromAnimation();
+    void updateSpriteFromScared();
 };
 
 } // namespace pacman::representation
