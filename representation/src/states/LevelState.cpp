@@ -176,7 +176,7 @@ void LevelState::onExit() {
     std::cout << "Exiting LevelState" << std::endl;
 }
 
-void LevelState::handleInput(const sf::Event& event) {
+void LevelState::handleInput(const sf::Event& event, sf::RenderWindow& window) {
     if (event.type == sf::Event::KeyPressed) {
         if (event.key.code == sf::Keyboard::Escape) {
             finish(StateAction::PUSH, std::make_unique<PausedState>());

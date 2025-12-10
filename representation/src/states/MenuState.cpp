@@ -1,3 +1,4 @@
+// representation/src/states/MenuState.cpp
 #include "representation/states/MenuState.h"
 #include "representation/states/LevelState.h"
 #include <iostream>
@@ -25,9 +26,8 @@ void MenuState::loadFont() {
 }
 
 void MenuState::setupTexts() {
-    float centerX = 500.0f;
+    float centerX = 500.0f;  // ✅ Fixed coordinate system
 
-    // Title (blijft hetzelfde)
     titleText.setFont(font);
     titleText.setString("PAC-MAN");
     titleText.setCharacterSize(80);
@@ -36,11 +36,10 @@ void MenuState::setupTexts() {
     titleText.setOrigin(titleBounds.width / 2.0f, titleBounds.height / 2.0f);
     titleText.setPosition(centerX, 100);
 
-    // ✅ PLAY BUTTON (verschuif omhoog)
     playButton.setSize(sf::Vector2f(250, 70));
     playButton.setFillColor(sf::Color(30, 30, 200));
     playButton.setOrigin(125, 35);
-    playButton.setPosition(centerX, 220);  // Was 250
+    playButton.setPosition(centerX, 220);
 
     playButtonText.setFont(font);
     playButtonText.setString("PLAY");
@@ -50,7 +49,6 @@ void MenuState::setupTexts() {
     playButtonText.setOrigin(playBounds.width / 2.0f, playBounds.height / 2.0f);
     playButtonText.setPosition(centerX, 220);
 
-    // ✅ TUTORIAL BUTTON (nieuw)
     tutorialButton.setSize(sf::Vector2f(250, 70));
     tutorialButton.setFillColor(sf::Color(30, 30, 200));
     tutorialButton.setOrigin(125, 35);
@@ -64,14 +62,13 @@ void MenuState::setupTexts() {
     tutorialButtonText.setOrigin(tutBounds.width / 2.0f, tutBounds.height / 2.0f);
     tutorialButtonText.setPosition(centerX, 310);
 
-    // High scores title (verschuif omlaag)
     highScoresTitle.setFont(font);
     highScoresTitle.setString("HIGH SCORES");
     highScoresTitle.setCharacterSize(32);
     highScoresTitle.setFillColor(sf::Color(255, 215, 0));
     sf::FloatRect scoreTitleBounds = highScoresTitle.getLocalBounds();
     highScoresTitle.setOrigin(scoreTitleBounds.width / 2.0f, 0);
-    highScoresTitle.setPosition(centerX, 400);  // Was 370
+    highScoresTitle.setPosition(centerX, 400);
 }
 
 void MenuState::loadHighScores() {
@@ -79,7 +76,7 @@ void MenuState::loadHighScores() {
     auto scores = tempScore.getHighScores();
 
     float centerX = 500.0f;
-    float yPos = 450;  // Was 420
+    float yPos = 450;
 
     highScoreTexts.clear();
 
@@ -87,12 +84,10 @@ void MenuState::loadHighScores() {
         sf::Text text;
         text.setFont(font);
 
-        // ✅ PADDING VOOR UITLIJNING
         std::string rank = std::to_string(i + 1) + ".";
         std::string name = scores[i].name;
         std::string score = std::to_string(scores[i].score);
 
-        // Pad name to 12 chars, score to 6 chars
         while (name.length() < 12) name += " ";
         while (score.length() < 6) score = " " + score;
 
@@ -111,30 +106,33 @@ void MenuState::loadHighScores() {
     }
 }
 
-void MenuState::handleInput(const sf::Event& event) {
+sf::Vector2f MenuState::mapPixelToCoords(const sf::RenderWindow& window, sf::Vector2i pixel) {
+    return window.mapPixelToCoords(pixel);
+}
+
+void MenuState::handleInput(const sf::Event& event, sf::RenderWindow& window) {
     if (event.type == sf::Event::MouseButtonPressed) {
         if (event.mouseButton.button == sf::Mouse::Left) {
-            sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y);
+            sf::Vector2i pixelPos(event.mouseButton.x, event.mouseButton.y);
+            sf::Vector2f mousePos = window.mapPixelToCoords(pixelPos);  // ✅ Use window reference
 
             if (playButton.getGlobalBounds().contains(mousePos)) {
-                // ✅ PLAY = direct naar map_big.txt (level 1, geen tutorial)
                 finish(StateAction::PUSH, std::make_unique<LevelState>(1, false));
             } else if (tutorialButton.getGlobalBounds().contains(mousePos)) {
-                // ✅ TUTORIAL = naar tutorial intro
                 finish(StateAction::PUSH, std::make_unique<TutorialIntroState>());
             }
         }
     }
 
     if (event.type == sf::Event::MouseMoved) {
-        sf::Vector2f mousePos(event.mouseMove.x, event.mouseMove.y);
+        sf::Vector2i pixelPos(event.mouseMove.x, event.mouseMove.y);
+        sf::Vector2f mousePos = window.mapPixelToCoords(pixelPos);  // ✅ Use window reference
         playButtonHovered = playButton.getGlobalBounds().contains(mousePos);
         tutorialButtonHovered = tutorialButton.getGlobalBounds().contains(mousePos);
     }
 }
 
 void MenuState::update(float deltaTime) {
-    // Play button hover
     if (playButtonHovered) {
         playButton.setFillColor(sf::Color(60, 60, 255));
         playButton.setScale(1.05f, 1.05f);
@@ -145,7 +143,6 @@ void MenuState::update(float deltaTime) {
         playButtonText.setScale(1.0f, 1.0f);
     }
 
-    // Tutorial button hover
     if (tutorialButtonHovered) {
         tutorialButton.setFillColor(sf::Color(60, 60, 255));
         tutorialButton.setScale(1.05f, 1.05f);
@@ -158,8 +155,10 @@ void MenuState::update(float deltaTime) {
 }
 
 void MenuState::render(sf::RenderWindow& window) {
+    sf::View view(sf::FloatRect(0, 0, 1000, 600));
+    window.setView(view);
+
     window.clear(sf::Color::Black);
-    
     window.draw(titleText);
     window.draw(playButton);
     window.draw(playButtonText);

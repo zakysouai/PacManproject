@@ -1,3 +1,4 @@
+// representation/include/representation/states/MenuState.h
 #pragma once
 #include "State.h"
 #include <SFML/Graphics.hpp>
@@ -13,7 +14,7 @@ public:
 
     void onEnter() override;
     void onExit() override;
-    void handleInput(const sf::Event& event) override;
+    void handleInput(const sf::Event& event, sf::RenderWindow& window) override;
     void update(float deltaTime) override;
     void render(sf::RenderWindow& window) override;
 
@@ -32,9 +33,11 @@ private:
     bool playButtonHovered = false;
 
     void loadFont();
-    void setupTexts();
-    void loadHighScores();
+    void setupTexts();  // ✅ Terug zonder parameters
+    void loadHighScores();  // ✅ Terug zonder parameters
     bool isMouseOverButton(const sf::Vector2f& mousePos) const;
+
+    sf::Vector2f mapPixelToCoords(const sf::RenderWindow& window, sf::Vector2i pixel);  // ✅ NIEUW
 };
 
 } // namespace pacman::representation

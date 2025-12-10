@@ -1,3 +1,4 @@
+// representation/src/states/StateManager.cpp
 #include "representation/states/StateManager.h"
 
 namespace pacman::representation {
@@ -29,9 +30,9 @@ State* StateManager::getCurrentState() const {
     return states.top().get();
 }
 
-void StateManager::handleInput(const sf::Event& event) {
+void StateManager::handleInput(const sf::Event& event, sf::RenderWindow& window) {  // ✅ ADD window param
     if (auto* state = getCurrentState()) {
-        state->handleInput(event);
+        state->handleInput(event, window);  // ✅ PASS window
         processStateChanges();
     }
 }

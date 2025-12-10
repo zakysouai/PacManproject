@@ -56,7 +56,7 @@ void PausedState::setupTexts() {
     instructionsText.setPosition(centerX, centerY + 40);
 }
 
-void PausedState::handleInput(const sf::Event& event) {
+void PausedState::handleInput(const sf::Event& event, sf::RenderWindow& window) {
     if (event.type == sf::Event::KeyPressed) {
         if (event.key.code == sf::Keyboard::Escape) {
             finish(StateAction::POP);

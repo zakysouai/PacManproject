@@ -133,7 +133,7 @@ void VictoryState::setupTexts() {
     instructionsText.setPosition(centerX, 420);
 }
 
-void VictoryState::handleInput(const sf::Event& event) {
+void VictoryState::handleInput(const sf::Event& event, sf::RenderWindow& window) {
     if (enteringName) {
         if (event.type == sf::Event::TextEntered) {
             if (event.text.unicode == '\b') {
@@ -157,14 +157,11 @@ void VictoryState::handleInput(const sf::Event& event) {
             if (event.key.code == sf::Keyboard::Space) {
                 if (playerWon) {
                     if (level == 0) {
-                        // ✅ Tutorial complete: start echte game (level 1, map_big.txt)
                         finish(StateAction::SWITCH, std::make_unique<LevelState>(1, false));
                     } else {
-                        // ✅ Normale level: volgende level (blijft map_big.txt)
                         finish(StateAction::SWITCH, std::make_unique<LevelState>(level + 1, false));
                     }
                 } else {
-                    // Game over: restart level 1
                     finish(StateAction::SWITCH, std::make_unique<LevelState>(1, false));
                 }
             } else if (event.key.code == sf::Keyboard::M) {

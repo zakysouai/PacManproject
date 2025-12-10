@@ -54,7 +54,7 @@ void Game::processEvents() {
             window.close();
         }
         
-        stateManager.handleInput(event);
+        stateManager.handleInput(event, window);  // ✅ PASS window
     }
 }
 

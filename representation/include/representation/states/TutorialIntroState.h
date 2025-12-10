@@ -11,7 +11,7 @@ public:
     
     void onEnter() override;
     void onExit() override;
-    void handleInput(const sf::Event& event) override;
+    void handleInput(const sf::Event& event, sf::RenderWindow& window) override;
     void update(float deltaTime) override;
     void render(sf::RenderWindow& window) override;
     
