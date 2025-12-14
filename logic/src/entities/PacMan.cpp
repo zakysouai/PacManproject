@@ -4,7 +4,7 @@
 namespace pacman {
 
 PacMan::PacMan(const Position& pos)
-    : EntityModel(pos, 0.5f), startPosition(pos) {
+    : EntityModel(pos, 0.4f), startPosition(pos) {
 }
 
 void PacMan::update(float deltaTime) {

@@ -444,8 +444,15 @@ void World::reset() {
 void World::applyDifficultyScaling() {
     fearModeDuration = std::max(2.0f, 5.0f - (currentLevel - 1) * 0.5f);
 
-    float speedMultiplier = 1.0f + (currentLevel - 1) * 0.1f;
-    float newSpeed = 0.3f * speedMultiplier;
+    // ✅ NIEUWE FORMULE: 20% sneller per level
+    // Level 1: 0.25 * 1.0 = 0.25
+    // Level 2: 0.25 * 1.2 = 0.30
+    // Level 3: 0.25 * 1.44 = 0.36
+    // Level N: 0.25 * (1.2)^(N-1)
+
+    const float BASE_GHOST_SPEED = 0.25f;  // Trager dan voorheen (was 0.3f)
+    float speedMultiplier = std::pow(1.2f, currentLevel - 1);  // 20% per level
+    float newSpeed = BASE_GHOST_SPEED * speedMultiplier;
 
     for (auto& ghost : ghosts) {
         ghost->setNormalSpeed(newSpeed);
