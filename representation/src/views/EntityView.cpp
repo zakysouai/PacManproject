@@ -5,6 +5,10 @@ namespace pacman::representation {
 EntityView::EntityView(pacman::EntityModel& model, std::weak_ptr<pacman::Camera> camera)
     : model(model), camera(camera) {}
 
+EntityView::~EntityView() {
+    model.detach(this);
+}
+
 void EntityView::onNotify(const pacman::Event& event) {
     if (event.type == pacman::EventType::ENTITY_UPDATED) {
         updateSpritePosition();

@@ -14,6 +14,11 @@ LevelState::LevelState(int level, bool isTutorial)
     : currentLevel(level), tutorialMode(isTutorial) {
 }
 
+LevelState::~LevelState() {
+    factory.reset();  // ✅ Destroy views FIRST (detach from models)
+    world.reset();    // ✅ Then destroy models
+}
+
 void LevelState::onEnter() {
     std::cout << "Entering LevelState (Level " << currentLevel << ")" << std::endl;
 
