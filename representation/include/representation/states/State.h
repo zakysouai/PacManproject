@@ -20,7 +20,7 @@ public:
 
     virtual void onEnter() = 0;
     virtual void onExit() = 0;
-    virtual void handleInput(const sf::Event& event, sf::RenderWindow& window) = 0;  // ✅ ADD window param
+    virtual void handleInput(const sf::Event& event, sf::RenderWindow& window) = 0;
     virtual void update(float deltaTime) = 0;
     virtual void render(sf::RenderWindow& window) = 0;
 
