@@ -20,7 +20,7 @@ struct MapDimensions {
 
 class World : public Subject {
 public:
-    explicit World(AbstractFactory& factory, std::shared_ptr<Camera> camera);  // ✅ & niet *
+    explicit World(AbstractFactory& factory, std::shared_ptr<Camera> camera, int startLevel = 1);
     ~World() = default;
 
     struct GridPosition {

@@ -10,8 +10,8 @@
 
 namespace pacman {
 
-World::World(AbstractFactory& factory, std::shared_ptr<Camera> camera)  // ✅ & niet *
-    : factory(factory), camera(camera) {
+World::World(AbstractFactory& factory, std::shared_ptr<Camera> camera, int startLevel)
+    : factory(factory), camera(camera), currentLevel(startLevel) {
 }
 
 void World::update(float deltaTime) {
@@ -460,10 +460,6 @@ void World::applyDifficultyScaling() {
             ghost->setSpeed(newSpeed);
         }
     }
-
-    std::cout << "Level " << currentLevel
-              << " - Ghost speed: " << newSpeed
-              << ", Fear: " << fearModeDuration << "s" << std::endl;
 }
 
 Position World::gridToWorld(int row, int col, int totalRows, int totalCols) const {
