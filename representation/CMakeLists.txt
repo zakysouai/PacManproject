@@ -15,7 +15,6 @@ set(REPRESENTATION_SOURCES
         src/SpriteManager.cpp
 
         # States
-        src/states/State.cpp
         src/states/StateManager.cpp
         src/states/MenuState.cpp
         src/states/LevelState.cpp

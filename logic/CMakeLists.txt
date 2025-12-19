@@ -3,17 +3,12 @@ cmake_minimum_required(VERSION 3.22)
 # Collect all source files
 set(LOGIC_SOURCES
         src/World.cpp
-        src/EntityModel.cpp
         src/Score.cpp
         src/Camera.cpp
         src/entities/PacMan.cpp
         src/entities/Coin.cpp
         src/entities/Fruit.cpp
         src/entities/Wall.cpp
-        src/patterns/Observer.cpp
-        src/patterns/Subject.cpp
-        src/utils/Stopwatch.cpp
-        src/utils/Random.cpp
         src/entities/Ghost.cpp
         src/entities/RedGhost.cpp
         src/entities/PinkGhost.cpp

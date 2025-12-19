@@ -71,7 +71,7 @@ Position Camera::screenToWorld(int screenX, int screenY) const {
 
 float Camera::getSpriteSize() const {
     const float approximateTileSize = 2.0f * worldHeight / mapRows;
-    return scale * approximateTileSize * 0.9f;
+    return scale * approximateTileSize * 0.91f;
 }
 
 void Camera::setWindowSize(int width, int height) {
