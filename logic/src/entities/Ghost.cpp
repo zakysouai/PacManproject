@@ -89,13 +89,29 @@ void Ghost::enterScaredMode(float duration) {
 void Ghost::respawn() {
     position = spawnPosition;
     currentDirection = Direction::RIGHT;
-    state = GhostState::IN_SPAWN;
+    state = GhostState::ON_MAP;  // ✅ Direct op map
     speed = normalSpeed;
     hasPassedDoor = false;
     scaredTimer = 0.0f;
-    spawnTimer = initialSpawnDelay;
+    spawnTimer = 0.0f;  // ✅ Geen delay
 
-    std::cout << "Ghost color " << static_cast<int>(color) << " respawned!" << std::endl;
+    std::cout << "Ghost color " << static_cast<int>(color) << " respawned (instant)!" << std::endl;
+
+    Event event;
+    event.type = EventType::GHOST_STATE_CHANGED;
+    notify(event);
+}
+
+void Ghost::reset() {
+    position = spawnPosition;
+    currentDirection = Direction::RIGHT;
+    state = GhostState::IN_SPAWN;  // ✅ In spawn met delay
+    speed = normalSpeed;
+    hasPassedDoor = false;
+    scaredTimer = 0.0f;
+    spawnTimer = initialSpawnDelay;  // ✅ Wel delay
+
+    std::cout << "Ghost color " << static_cast<int>(color) << " reset with delay!" << std::endl;
 
     Event event;
     event.type = EventType::GHOST_STATE_CHANGED;

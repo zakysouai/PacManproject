@@ -37,7 +37,8 @@ public:
 
     void enterScaredMode(float duration);
     bool isScared() const { return state == GhostState::SCARED; }
-    void respawn();
+    void respawn();     // Direct terug (geen delay)
+    void reset();       // Met delay (level start)
     void die();
 
 protected:

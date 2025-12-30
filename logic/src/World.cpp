@@ -28,7 +28,7 @@ void World::update(float deltaTime) {
 
             pacman->reset(pacmanSpawnPosition);
             for (auto& g : ghosts) {
-                g->respawn();
+                g->reset();
             }
         }
         return;
