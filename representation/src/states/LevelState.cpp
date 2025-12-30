@@ -15,12 +15,11 @@ LevelState::LevelState(int level, bool isTutorial)
 }
 
 LevelState::~LevelState() {
-    factory.reset();  // ✅ Destroy views FIRST (detach from models)
-    world.reset();    // ✅ Then destroy models
+    factory.reset();  //  Destroy views FIRST (detach from models)
+    world.reset();    //  Then destroy models
 }
 
 void LevelState::onEnter() {
-    std::cout << "Entering LevelState (Level " << currentLevel << ")" << std::endl;
 
     camera = std::make_shared<pacman::Camera>(1000, 600);
     factory = std::make_shared<ConcreteFactory>(camera);
@@ -29,10 +28,8 @@ void LevelState::onEnter() {
     std::string mapFile;
     if (tutorialMode) {
         mapFile = "../resources/maps/map.txt";
-        std::cout << "Loading tutorial map: map.txt" << std::endl;
     } else {
         mapFile = "../resources/maps/map_big.txt";
-        std::cout << "Loading game map: map_big.txt (Level " << currentLevel << ")" << std::endl;
     }
 
     world->loadLevel(mapFile);
@@ -73,13 +70,6 @@ void LevelState::setupUI() {
     auto cam = camera.get();  // ✅ Direct access to shared_ptr
 
     hasLetterboxing = cam->getViewportOffsetX() > 10.0f;
-
-    if (!hasLetterboxing) {
-        std::cout << "No letterboxing - hiding sidebars" << std::endl;
-        return;
-    }
-
-    std::cout << "Letterboxing detected - showing sidebars" << std::endl;
 
     float availableSpace = cam->getViewportOffsetX();
     float leftSidebarX = availableSpace * 0.15f;
@@ -206,12 +196,7 @@ void LevelState::handlePlayerInput() {
 void LevelState::update(float deltaTime) {
     bool isDeathAnimPlaying = world->isPlayingDeathAnimation();
 
-    if (!wasPlayingDeathAnimation && isDeathAnimPlaying) {
-        std::cout << "Death animation started" << std::endl;
-    }
-
     if (wasPlayingDeathAnimation && !isDeathAnimPlaying) {
-        std::cout << "Death animation finished - showing READY" << std::endl;
         showingReady = true;
         readyTimer = 0.0f;
     }
@@ -222,7 +207,6 @@ void LevelState::update(float deltaTime) {
         readyTimer += deltaTime;
         if (readyTimer >= READY_DURATION) {
             showingReady = false;
-            std::cout << "Game resumed after READY" << std::endl;
         }
     }
 
@@ -233,12 +217,10 @@ void LevelState::update(float deltaTime) {
 }
 
 void LevelState::updateUI() {
-    auto* score = world->getScore();
+    auto& score = world->getScore();
     auto* pacman = world->getPacMan();
 
-    if (score) {
-        scoreText.setString(std::to_string(score->getCurrentScore()));
-    }
+    scoreText.setString(std::to_string(score.getCurrentScore()));
 
     if (pacman) {
         livesText.setString(std::to_string(pacman->getLives()));
@@ -256,11 +238,11 @@ void LevelState::updateUI() {
 
 void LevelState::checkGameState() {
     if (world->isGameOver()) {
-        int finalScore = world->getScore()->getCurrentScore();
+        int finalScore = world->getScore().getCurrentScore();
         finish(StateAction::SWITCH,
                std::make_unique<VictoryState>(false, finalScore, currentLevel));
     } else if (world->isLevelComplete()) {
-        int finalScore = world->getScore()->getCurrentScore();
+        int finalScore = world->getScore().getCurrentScore();
 
         if (tutorialMode) {
             finish(StateAction::SWITCH,
@@ -275,7 +257,7 @@ void LevelState::checkGameState() {
 void LevelState::render(sf::RenderWindow& window) {
     window.clear(sf::Color(15, 15, 15));
 
-    auto cam = camera.get();  // ✅ Direct access to shared_ptr
+    auto cam = camera.get();  // Direct access to shared_ptr
 
     if (hasLetterboxing) {
         sf::RectangleShape leftBg;
@@ -345,7 +327,7 @@ void LevelState::render(sf::RenderWindow& window) {
     else {
         sf::Text compactScore;
         compactScore.setFont(font);
-        compactScore.setString("SCORE: " + std::to_string(world->getScore()->getCurrentScore()));
+        compactScore.setString("SCORE: " + std::to_string(world->getScore().getCurrentScore()));
         compactScore.setCharacterSize(20);
         compactScore.setFillColor(sf::Color::Yellow);
         compactScore.setPosition(10, 10);

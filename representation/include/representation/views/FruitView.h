@@ -13,7 +13,7 @@ public:
     void update(float deltaTime) override;
 
 private:
-    pacman::Fruit* fruitModel;
+    pacman::Fruit& fruitModel;
 
     void loadSprite();
     void updateSpriteFromTexture();

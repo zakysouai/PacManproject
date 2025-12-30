@@ -9,10 +9,6 @@ SpriteManager::SpriteManager() {
 }
 
 void SpriteManager::loadSpriteSheet(const std::string& path) {
-    if (textureLoaded) {
-        std::cout << "Warning: Sprite sheet already loaded, reloading..." << std::endl;
-    }
-
     if (!spriteSheet.loadFromFile(path)) {
         throw std::runtime_error("Failed to load sprite sheet: " + path);
     }
@@ -20,16 +16,9 @@ void SpriteManager::loadSpriteSheet(const std::string& path) {
     spriteSheet.setSmooth(false);
 
     textureLoaded = true;
-    std::cout << "Sprite sheet loaded: " << path << std::endl;
-    std::cout << "Texture size: " << spriteSheet.getSize().x << "x"
-              << spriteSheet.getSize().y << " pixels" << std::endl;
 }
 
 void SpriteManager::defineSpriteRect(const std::string& name, const sf::IntRect& rect) {
-    if (spriteRects.count(name) > 0) {
-        std::cout << "Warning: Sprite '" << name << "' already defined, overwriting" << std::endl;
-    }
-
     spriteRects[name] = rect;
 }
 
@@ -52,10 +41,6 @@ void SpriteManager::defineAnimation(const std::string& name, const Animation& an
         return;
     }
 
-    if (animations.count(name) > 0) {
-        std::cout << "Warning: Animation '" << name << "' already defined, overwriting" << std::endl;
-    }
-
     animations[name] = animation;
 }
 
@@ -73,19 +58,9 @@ bool SpriteManager::hasAnimation(const std::string& name) const {
 }
 
 void SpriteManager::initialize() {
-    std::cout << "Initializing sprites and animations..." << std::endl;
-
     defineAllSprites();
     defineAllAnimations();
-
-    std::cout << "Defined " << spriteRects.size() << " sprites" << std::endl;
-    std::cout << "Defined " << animations.size() << " animations" << std::endl;
 }
-
-// ========================================
-// UPDATED SpriteManager::defineAllSprites()
-// Replace the existing method in representation/src/SpriteManager.cpp
-// ========================================
 
 void SpriteManager::defineAllSprites() {
     // ===== PACMAN SPRITES =====
@@ -199,7 +174,6 @@ void SpriteManager::defineAllSprites() {
 void SpriteManager::defineAllAnimations() {
     // ===== PACMAN ANIMATIONS =====
     // Using closed → open → closed for smooth animation
-
     defineAnimation("pacman_walk_right", Animation{
         {"pacman_right_closed", "pacman_right_half", "pacman_right_open", "pacman_right_half"},
         0.1f,  // 10 FPS
@@ -223,10 +197,6 @@ void SpriteManager::defineAllAnimations() {
         0.1f,
         true
     });
-
-    // ===== GHOST ANIMATIONS =====
-    // Note: Ghosts have no animation frames in this sprite sheet
-    // So we just use the same sprite twice for consistency with existing code
 
     // Ghost RED
     defineAnimation("ghost_red_walk_right", Animation{

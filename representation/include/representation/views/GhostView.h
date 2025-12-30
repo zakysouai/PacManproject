@@ -14,7 +14,7 @@ public:
     void onNotify(const pacman::Event& event) override;
 
 private:
-    pacman::Ghost* ghostModel;
+    pacman::Ghost& ghostModel;
     pacman::GhostColor ghostColor;
     AnimationController animationController;
     pacman::Direction lastDirection = pacman::Direction::NONE;

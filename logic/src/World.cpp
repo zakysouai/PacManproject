@@ -411,16 +411,13 @@ void World::nextLevel() {
 void World::reset() {
     if (pacman) {
         pacman->reset(pacmanSpawnPosition);
-        std::cout << "Reset PacMan to spawn position ("
-                  << pacmanSpawnPosition.x << ", "
-                  << pacmanSpawnPosition.y << ")" << std::endl;
     }
 }
 
 void World::applyDifficultyScaling() {
     fearModeDuration = std::max(2.0f, 5.0f - (currentLevel - 1) * 0.5f);
 
-    // ✅ NIEUWE FORMULE: 20% sneller per level
+    // NIEUWE FORMULE: 20% sneller per level
     // Level 1: 0.25 * 1.0 = 0.25
     // Level 2: 0.25 * 1.2 = 0.30
     // Level 3: 0.25 * 1.44 = 0.36
@@ -467,7 +464,6 @@ void World::parseMap(const std::string& mapFile) {
     while (std::getline(file, line)) {
         if (!line.empty()) {
             mapData.push_back(line);
-            std::cout << "Map line " << mapData.size() << ": " << line << std::endl;
         }
     }
     file.close();
@@ -475,8 +471,6 @@ void World::parseMap(const std::string& mapFile) {
     if (mapData.empty()) {
         throw std::runtime_error("Map file is empty: " + mapFile);
     }
-
-    std::cout << "Loaded map with " << mapData.size() << " rows" << std::endl;
 
     spawnEntities(mapData);
 }
@@ -494,11 +488,9 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     mapRows = totalRows;
     mapCols = totalCols;
 
-    if (camera) {  // ✅ Camera is now shared_ptr, direct access OK
+    if (camera) {  // Camera is now shared_ptr, direct access OK
         camera->setMapDimensions(mapRows, mapCols);
     }
-
-    std::cout << "Map size: " << totalRows << "x" << totalCols << std::endl;
 
     walls.clear();
     coins.clear();
@@ -544,42 +536,36 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
             case 'P':
                 pacmanSpawnPos = worldPos;
                 pacmanSpawned = true;
-                std::cout << "Found PacMan spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
 
             case 'c':
             case 'C':
                 fruits.push_back(factory.createFruit(worldPos));
                 fruits.back()->attach(&score);
-                std::cout << "Found Fruit spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
 
             case 'r':
             case 'R':
                 redPos = worldPos;
                 redSpawned = true;
-                std::cout << "Found Red ghost spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
 
             case 'i':
             case 'I':
                 pinkPos = worldPos;
                 pinkSpawned = true;
-                std::cout << "Found Pink ghost spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
 
             case 'b':
             case 'B':
                 cyanPos = worldPos;
                 cyanSpawned = true;
-                std::cout << "Found Cyan ghost spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
 
             case 'o':
             case 'O':
                 orangePos = worldPos;
                 orangeSpawned = true;
-                std::cout << "Found Orange ghost spawn at grid(" << row << "," << col << ")" << std::endl;
                 break;
 
             case 'd':
@@ -587,7 +573,6 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
                 doorPosition = worldPos;
                 doorGridPos = {row, col};
                 hasDoor = true;
-                std::cout << "Found Door at grid(" << row << "," << col << ")" << std::endl;
                 break;
 
             default:
@@ -596,43 +581,39 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
         }
     }
 
-    std::cout << "Created " << wallCount << " walls and " << coinCount << " coins" << std::endl;
-
     if (pacmanSpawned) {
         pacmanSpawnPosition = pacmanSpawnPos;
         pacman = factory.createPacMan(pacmanSpawnPos);
         pacman->attach(&score);
-        std::cout << "Created PacMan at (" << pacmanSpawnPos.x << ", " << pacmanSpawnPos.y << ")" << std::endl;
     } else {
-        std::cout << "WARNING: No PacMan ('p' or 'P') found in map - no PacMan spawned!" << std::endl;
+        std::cerr << "WARNING: No PacMan ('p' or 'P') found in map - no PacMan spawned!" << std::endl;
     }
 
     if (redSpawned) {
-        auto ghost = factory.createGhost(*this, redPos, GhostColor::RED);  // *this = World&
+        auto ghost = factory.createGhost(*this, redPos, GhostColor::RED);
         ghost->attach(&score);
         ghosts.push_back(std::move(ghost));
     }
 
     if (pinkSpawned) {
-        auto ghost = factory.createGhost(*this, pinkPos, GhostColor::PINK);  // *this
+        auto ghost = factory.createGhost(*this, pinkPos, GhostColor::PINK);
         ghost->attach(&score);
         ghosts.push_back(std::move(ghost));
     }
 
     if (cyanSpawned) {
-        auto ghost = factory.createGhost(*this, cyanPos, GhostColor::BLUE);  // *this
+        auto ghost = factory.createGhost(*this, cyanPos, GhostColor::BLUE);
         ghost->attach(&score);
         ghosts.push_back(std::move(ghost));
     }
 
     if (orangeSpawned) {
-        auto ghost = factory.createGhost(*this, orangePos, GhostColor::ORANGE);  // *this
+        auto ghost = factory.createGhost(*this, orangePos, GhostColor::ORANGE);
         ghost->attach(&score);
         ghosts.push_back(std::move(ghost));
     }
 
     float tileSize = 2.0f / mapRows;
-    std::cout << "Tile size: " << tileSize << std::endl;
 
     if (pacman) {
         pacman->setCollisionRadius(tileSize * 0.4555f);
@@ -653,10 +634,6 @@ void World::spawnEntities(const std::vector<std::string>& mapData) {
     for (auto& fruit : fruits) {
         fruit->setCollisionRadius(tileSize * 0.30f);
     }
-
-    std::cout << "Created " << fruits.size() << " fruits from map" << std::endl;
-    std::cout << "Created " << ghosts.size() << " ghosts from map" << std::endl;
-    std::cout << "Map loading complete!" << std::endl;
 }
 
 bool World::isDoorPosition(const Position& pos) const {
@@ -691,7 +668,6 @@ World::GridPosition World::worldToGrid(const Position& worldPos) const {
 }
 
 void World::activateFearMode() {
-    std::cout << "FEAR MODE ACTIVATED! Duration: " << fearModeDuration << "s" << std::endl;
 
     for (auto& ghost : ghosts) {
         ghost->enterScaredMode(fearModeDuration);

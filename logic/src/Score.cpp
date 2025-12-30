@@ -58,10 +58,6 @@ bool Score::isHighScore(int score) const {
 }
 
 void Score::saveHighScore(const std::string& playerName, int score, const std::string& filename) {
-    std::cout << "=== SAVING HIGHSCORE ===" << std::endl;
-    std::cout << "Player: " << playerName << std::endl;
-    std::cout << "Score: " << score << std::endl;
-    std::cout << "Filepath: " << filename << std::endl;
 
     highScores.emplace_back(playerName, score);
 
@@ -74,33 +70,24 @@ void Score::saveHighScore(const std::string& playerName, int score, const std::s
         highScores.erase(highScores.begin() + 5, highScores.end());
     }
 
-    // ✅ DEBUG: Print working directory
-    std::cout << "Attempting to open file..." << std::endl;
-
     std::ofstream file(filename);
     if (file.is_open()) {
-        std::cout << "✅ File opened successfully!" << std::endl;
         for (const auto& entry : highScores) {
             file << entry.name << "," << entry.score << "\n";
-            std::cout << "  Written: " << entry.name << " - " << entry.score << std::endl;
         }
         file.close();
-        std::cout << "✅ File saved successfully!" << std::endl;
-    } else {
-        std::cerr << "❌ FAILED TO OPEN FILE: " << filename << std::endl;
-        std::cerr << "Check if directory exists and you have write permissions" << std::endl;
+    } if (!file.is_open()) {
+        std::cerr << " FAILED TO OPEN FILE" << std::endl;
+        throw std::runtime_error("Failed to save highscore to: " + filename);
     }
 }
 
 void Score::loadHighScores(const std::string& filename) {
-    std::cout << "=== LOADING HIGHSCORES ===" << std::endl;
-    std::cout << "Filepath: " << filename << std::endl;
 
     highScores.clear();
 
     std::ifstream file(filename);
     if (file.is_open()) {
-        std::cout << "✅ File opened successfully!" << std::endl;
         std::string line;
         while (std::getline(file, line)) {
             size_t commaPos = line.find(',');
@@ -108,13 +95,11 @@ void Score::loadHighScores(const std::string& filename) {
                 std::string name = line.substr(0, commaPos);
                 int score = std::stoi(line.substr(commaPos + 1));
                 highScores.emplace_back(name, score);
-                std::cout << "  Loaded: " << name << " - " << score << std::endl;
             }
         }
-        std::cout << "Loaded " << highScores.size() << " highscores" << std::endl;
     } else {
-        std::cout << "⚠️ No highscore file found at: " << filename << std::endl;
-        std::cout << "Starting with empty highscores" << std::endl;
+        std::cerr << "Highscores file couldn't open!" << std::endl;
+        throw std::runtime_error("Failed to open highscore file: " + filename);
     }
 
     while (highScores.size() < 5) {

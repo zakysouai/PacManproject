@@ -20,7 +20,6 @@ private:
     bool playerWon;
     int score;
     int level;
-    pacman::Score* scoreManager;
 
     // ✅ NAAM INPUT
     bool isHighScore;

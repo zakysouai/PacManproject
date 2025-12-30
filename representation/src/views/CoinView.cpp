@@ -4,7 +4,7 @@
 namespace pacman::representation {
 
 CoinView::CoinView(pacman::Coin& model, std::weak_ptr<pacman::Camera> camera)  // & niet *
-    : EntityView(model, camera), coinModel(&model) {
+    : EntityView(model, camera), coinModel(model) {
     setupCircle();
 }
 
@@ -19,7 +19,7 @@ void CoinView::setupCircle() {
 }
 
 void CoinView::draw(sf::RenderWindow& window) {
-    if (!coinModel->isCollected()) {
+    if (!coinModel.isCollected()) {
         auto cam = camera.lock();  // ✅ Lock weak_ptr
         if (!cam) return;
 

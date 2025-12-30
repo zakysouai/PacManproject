@@ -43,8 +43,9 @@ public:
     bool isLevelComplete() const;
     bool isGameOver() const;
 
-    Score* getScore() { return &score; }
-
+    Score& getScore() { return score; }
+    const Score& getScore() const { return score; }
+    
     MapDimensions getMapDimensions() const { return {mapRows, mapCols}; }
 
     bool canMoveInDirection(const Position& pos, Direction dir, float radius, const Ghost* ghost = nullptr) const;

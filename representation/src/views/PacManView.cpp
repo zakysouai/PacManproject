@@ -12,7 +12,6 @@ PacManView::PacManView(pacman::PacMan& model, std::weak_ptr<pacman::Camera> came
 
     try {
         animationController.play(spriteManager.getAnimation("pacman_walk_right"));
-        std::cout << "PacManView: Started with walk_right animation" << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "PacManView: Failed to load default animation: " << e.what() << std::endl;
     }
@@ -54,14 +53,12 @@ void PacManView::onNotify(const pacman::Event& event) {
         break;
 
     case pacman::EventType::PACMAN_DIED: {
-        std::cout << "PacManView: PacMan died! Playing death animation..." << std::endl;
         playingDeathAnimation = true;
 
         try {
             auto& spriteManager = SpriteManager::getInstance();
             if (spriteManager.hasAnimation("pacman_death")) {
                 animationController.play(spriteManager.getAnimation("pacman_death"));
-                std::cout << "PacManView: Death animation started" << std::endl;
             } else {
                 std::cerr << "PacManView: Death animation not found!" << std::endl;
                 playingDeathAnimation = false;
@@ -93,7 +90,6 @@ void PacManView::switchAnimation(pacman::Direction direction) {
     try {
         if (spriteManager.hasAnimation(animationName)) {
             animationController.play(spriteManager.getAnimation(animationName));
-            std::cout << "PacManView: Switched to animation: " << animationName << std::endl;
         } else {
             std::cerr << "PacManView: Animation not found: " << animationName << std::endl;
         }

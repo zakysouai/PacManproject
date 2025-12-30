@@ -18,10 +18,6 @@ void Camera::setMapDimensions(int rows, int cols) {
     worldHeight = 1.0f;
 
     calculateScale();
-
-    std::cout << "Camera: Map " << rows << "x" << cols
-              << " → World bounds [" << -worldWidth << "," << worldWidth
-              << "] x [" << -worldHeight << "," << worldHeight << "]" << std::endl;
 }
 
 void Camera::calculateScale() {
@@ -33,7 +29,7 @@ void Camera::calculateScale() {
     float windowAspect = static_cast<float>(windowWidth) / windowHeight;
     float worldAspect = worldPixelWidth / worldPixelHeight;
 
-    // ✅ MAXIMALE SCHAAL ZONDER VERVORMING
+    // MAXIMALE SCHAAL ZONDER VERVORMING
     if (windowAspect > worldAspect) {
         // Window is breder → letterbox links/rechts
         scale = windowHeight / worldPixelHeight;
@@ -49,14 +45,10 @@ void Camera::calculateScale() {
         viewportOffsetX = 0.0f;
         viewportOffsetY = (windowHeight - viewportHeight) / 2.0f;
     }
-
-    std::cout << "Camera: Scale = " << scale << " pixels/unit" << std::endl;
-    std::cout << "Viewport: offset(" << viewportOffsetX << ", " << viewportOffsetY
-              << ") size(" << viewportWidth << "x" << viewportHeight << ")" << std::endl;
 }
 
 Position Camera::worldToScreen(const Position& worldPos) const {
-    // ✅ MAP NAAR VIEWPORT + OFFSET
+    // MAP NAAR VIEWPORT + OFFSET
     float screenX = viewportOffsetX + (viewportWidth / 2.0f) + worldPos.x * scale;
     float screenY = viewportOffsetY + (viewportHeight / 2.0f) + worldPos.y * scale;
 

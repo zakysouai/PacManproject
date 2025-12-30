@@ -12,7 +12,7 @@ public:
     void draw(sf::RenderWindow& window) override;
     
 private:
-    pacman::Wall* wallModel;
+    pacman::Wall& wallModel;
     sf::RectangleShape rectangle;
     
     void setupRectangle();

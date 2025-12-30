@@ -6,7 +6,7 @@
 namespace pacman::representation {
 
 FruitView::FruitView(pacman::Fruit& model, std::weak_ptr<pacman::Camera> camera)  // & niet *
-    : EntityView(model, camera), fruitModel(&model) {
+    : EntityView(model, camera), fruitModel(model) {
     loadSprite();
 }
 
@@ -45,7 +45,7 @@ void FruitView::update(float deltaTime) {
 }
 
 void FruitView::draw(sf::RenderWindow& window) {
-    if (!fruitModel->isCollected()) {
+    if (!fruitModel.isCollected()) {
         window.draw(sprite);
     }
 }

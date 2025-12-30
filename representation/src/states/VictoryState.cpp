@@ -23,9 +23,7 @@ VictoryState::VictoryState(bool won, int finalScore, int currentLevel)
 }
 
 void VictoryState::onEnter() {
-    std::cout << (playerWon ? "Level Complete!" : "Game Over!") << std::endl;
     if (isHighScore) {
-        std::cout << "NEW HIGH SCORE!" << std::endl;
         enteringName = true;
     }
 }
@@ -172,10 +170,9 @@ void VictoryState::handleInput(const sf::Event& event, sf::RenderWindow& window)
 }
 
 void VictoryState::saveHighScore() {
-    // ✅ MAAK NIEUW SCORE OBJECT OM TE SAVEN
+    // MAAK NIEUW SCORE OBJECT OM TE SAVEN
     pacman::Score scoreManager;
     scoreManager.saveHighScore(playerName, score);
-    std::cout << "Saved highscore: " << playerName << " - " << score << std::endl;
 }
 
 void VictoryState::update(float deltaTime) {

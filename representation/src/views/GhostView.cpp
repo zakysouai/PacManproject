@@ -5,13 +5,13 @@
 namespace pacman::representation {
 
 GhostView::GhostView(pacman::Ghost& model, std::weak_ptr<pacman::Camera> camera, pacman::GhostColor color)  // & niet *
-    : EntityView(model, camera), ghostModel(&model), ghostColor(color) {
+    : EntityView(model, camera), ghostModel(model), ghostColor(color) {
 
     auto& spriteManager = SpriteManager::getInstance();
     sprite.setTexture(spriteManager.getTexture());
 
-    lastDirection = ghostModel->getCurrentDirection();
-    lastState = ghostModel->getState();
+    lastDirection = ghostModel.getCurrentDirection();
+    lastState = ghostModel.getState();
 
     updateAnimation();
 }
@@ -21,8 +21,8 @@ void GhostView::onNotify(const pacman::Event& event) {
     case pacman::EventType::ENTITY_UPDATED: {
         updateSpritePosition();
 
-        pacman::Direction currentDir = ghostModel->getCurrentDirection();
-        pacman::GhostState currentState = ghostModel->getState();
+        pacman::Direction currentDir = ghostModel.getCurrentDirection();
+        pacman::GhostState currentState = ghostModel.getState();
 
         if (currentDir != lastDirection || currentState != lastState) {
             updateAnimation();
@@ -30,8 +30,8 @@ void GhostView::onNotify(const pacman::Event& event) {
             lastState = currentState;
         }
 
-        if (ghostModel->isScared()) {
-            float remainingTime = ghostModel->getScaredTimeRemaining();
+        if (ghostModel.isScared()) {
+            float remainingTime = ghostModel.getScaredTimeRemaining();
 
             // Bepaal flicker interval (exponentieel sneller)
             float flickerInterval;
@@ -102,7 +102,7 @@ void GhostView::updateAnimation() {
     std::string animationName;
 
     // Scared heeft voorrang boven kleur
-    if (ghostModel->isScared()) {
+    if (ghostModel.isScared()) {
         animationName = "ghost_scared";
     } else {
         std::string colorPrefix;
@@ -113,7 +113,7 @@ void GhostView::updateAnimation() {
         case pacman::GhostColor::ORANGE: colorPrefix = "ghost_orange"; break;
         }
 
-        pacman::Direction dir = ghostModel->getCurrentDirection();
+        pacman::Direction dir = ghostModel.getCurrentDirection();
         std::string dirSuffix;
         switch (dir) {
         case pacman::Direction::UP:    dirSuffix = "_walk_up"; break;

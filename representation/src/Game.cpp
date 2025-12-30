@@ -11,8 +11,6 @@ Game::Game()
 
     window.setFramerateLimit(FPS_LIMIT);
 
-    // ✨ IMPORTANT: Initialize sprite system BEFORE creating states
-    std::cout << "Initializing sprite system..." << std::endl;
     auto& spriteManager = SpriteManager::getInstance();
 
     try {
@@ -22,7 +20,6 @@ Game::Game()
         // Initialize all sprites and animations
         spriteManager.initialize();
 
-        std::cout << "Sprite system initialized successfully!" << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "ERROR: Failed to initialize sprite system: " << e.what() << std::endl;
         std::cerr << "Make sure sprite.png is in resources/sprites/ folder!" << std::endl;

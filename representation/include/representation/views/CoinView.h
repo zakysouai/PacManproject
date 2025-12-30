@@ -12,7 +12,7 @@ public:
     void draw(sf::RenderWindow& window) override;
 
 private:
-    pacman::Coin* coinModel;
+    pacman::Coin& coinModel;
     sf::CircleShape circle;
     
     void setupCircle();

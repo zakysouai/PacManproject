@@ -3,7 +3,7 @@
 namespace pacman::representation {
 
 WallView::WallView(pacman::Wall& model, std::weak_ptr<pacman::Camera> camera)  // & niet *
-    : EntityView(model, camera), wallModel(&model) {
+    : EntityView(model, camera), wallModel(model) {
     setupRectangle();
 }
 
