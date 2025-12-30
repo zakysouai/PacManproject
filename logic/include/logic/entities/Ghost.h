@@ -48,7 +48,7 @@ protected:
     std::vector<Direction> getViableDirections() const;
     Direction getBestDirectionToTarget(const Position& target, bool maximize = false) const;
 
-    World& world;  // ✅ & niet * (en niet meer = nullptr)
+    World& world;  // & niet * (en niet meer = nullptr)
     Direction currentDirection = Direction::RIGHT;
 
 private:
@@ -60,7 +60,7 @@ private:
     bool hasPassedDoor = false;
 
     float scaredTimer = 0.0f;
-    float normalSpeed = 0.3f;
+    float normalSpeed = 0.15f;
     GhostState previousState = GhostState::ON_MAP;
     float initialSpawnDelay = 0.0f;
 

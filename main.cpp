@@ -20,3 +20,5 @@ int main() {
 // TODO: checken voor correcte use of smart pointers
 // TODO: moeilijkheid fixen (miss minder fruits bij volgende levels)
 // TODO: Code cleanen
+// TODO: Zorg er voor dat gy uitlegt waar je problemen had en hoe je die hebt opgelost.
+// TODO: clean jouw code en zorg er voor dat die er professioneel uit ziet

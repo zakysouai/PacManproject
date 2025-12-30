@@ -30,7 +30,6 @@ void GhostView::onNotify(const pacman::Event& event) {
             lastState = currentState;
         }
 
-        // ✅ SCARED MODE FLICKER LOGIC
         if (ghostModel->isScared()) {
             float remainingTime = ghostModel->getScaredTimeRemaining();
 
@@ -102,7 +101,7 @@ void GhostView::updateAnimation() {
     auto& spriteManager = SpriteManager::getInstance();
     std::string animationName;
 
-    // ✅ Scared heeft voorrang boven kleur
+    // Scared heeft voorrang boven kleur
     if (ghostModel->isScared()) {
         animationName = "ghost_scared";
     } else {

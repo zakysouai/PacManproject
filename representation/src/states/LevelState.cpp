@@ -14,17 +14,17 @@ LevelState::LevelState(int level, bool isTutorial)
     : currentLevel(level), tutorialMode(isTutorial) {
 }
 
+LevelState::~LevelState() {
+    factory.reset();  // ✅ Destroy views FIRST (detach from models)
+    world.reset();    // ✅ Then destroy models
+}
+
 void LevelState::onEnter() {
     std::cout << "Entering LevelState (Level " << currentLevel << ")" << std::endl;
 
-    // ✅ Create shared_ptr for Camera
     camera = std::make_shared<pacman::Camera>(1000, 600);
-
-    // ✅ Create shared_ptr for Factory (passes camera as weak_ptr internally)
     factory = std::make_shared<ConcreteFactory>(camera);
-
-    // ✅ Create World with shared camera ownership
-    world = std::make_unique<pacman::World>(*factory, camera);
+    world = std::make_unique<pacman::World>(*factory, camera, currentLevel);  // ✅ PASS LEVEL
 
     std::string mapFile;
     if (tutorialMode) {
@@ -38,7 +38,7 @@ void LevelState::onEnter() {
     world->loadLevel(mapFile);
 
     if (world->hasDoorInMap()) {
-        auto doorView = std::make_unique<DoorView>(camera, world->getDoorPosition());  // ✅ Pass weak_ptr
+        auto doorView = std::make_unique<DoorView>(camera, world->getDoorPosition());
         factory->addView(std::move(doorView));
     }
 

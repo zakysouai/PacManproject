@@ -11,7 +11,7 @@ namespace pacman::representation {
 class LevelState : public State {
 public:
     LevelState(int level = 1, bool isTutorial = false);
-    ~LevelState() override = default;
+    ~LevelState() override ;
     
     void onEnter() override;
     void onExit() override;
@@ -20,9 +20,9 @@ public:
     void render(sf::RenderWindow& window) override;
     
 private:
-    std::shared_ptr<ConcreteFactory> factory;  // ✅ CHANGED to shared_ptr
+    std::shared_ptr<pacman::Camera> camera;
+    std::shared_ptr<ConcreteFactory> factory;
     std::unique_ptr<pacman::World> world;
-    std::shared_ptr<pacman::Camera> camera;  // ✅ CHANGED to shared_ptr
     
     int currentLevel;
     float elapsedTime = 0.0f;
