@@ -7,168 +7,160 @@
 namespace pacman::representation {
 
 /**
- * @brief Singleton manager for all sprites and animations
- * 
- * The SpriteManager is responsible for:
- * - Loading the sprite sheet texture (once)
- * - Storing sprite rectangle definitions (where each sprite is in the sheet)
- * - Storing animation definitions (which sprites make up each animation)
- * - Providing access to all of the above for Views
- * 
- * Usage:
- *   auto& mgr = SpriteManager::getInstance();
- *   
- *   // In initialization:
- *   mgr.loadSpriteSheet("resources/sprites/pacman.png");
- *   mgr.defineSpriteRect("pacman_right_open", sf::IntRect(0, 0, 16, 16));
- *   mgr.defineAnimation("pacman_walk", animation);
- *   
- *   // In Views:
- *   sprite.setTexture(mgr.getTexture());
- *   sprite.setTextureRect(mgr.getSpriteRect("pacman_right_open"));
- *   controller.play(mgr.getAnimation("pacman_walk"));
+ * @brief Singleton manager voor sprites en animaties
+ *
+ * === VERANTWOORDELIJKHEDEN ===
+ * 1. Sprite sheet loading (1x bij startup)
+ * 2. Sprite rectangle definitions (positie van sprites in sheet)
+ * 3. Animation definitions (welke sprites maken animatie)
+ * 4. Centralized access voor alle Views
+ *
+ * === SINGLETON PATTERN ===
+ * Waarom singleton:
+ * - Sprite sheet moet 1x geladen (memory efficiency)
+ * - Alle Views gebruiken dezelfde texture
+ * - Global definitions voor sprites/animations
+ *
+ * === USAGE ===
+ * ```cpp
+ * // In Game::Game():
+ * auto& mgr = SpriteManager::getInstance();
+ * mgr.loadSpriteSheet("../resources/sprites/sprite.png");
+ * mgr.initialize();  // Roept defineAll{Sprites,Animations} aan
+ *
+ * // In View constructor:
+ * sprite.setTexture(mgr.getTexture());
+ * sprite.setTextureRect(mgr.getSpriteRect("pacman_right_open"));
+ *
+ * // In View animation:
+ * animController.play(mgr.getAnimation("pacman_walk_right"));
+ * ```
+ *
+ * === SPRITE SHEET FORMAT ===
+ * Eén PNG met alle sprites in grid layout.
+ * Sprite rectangles gedefinieerd via sf::IntRect(left, top, width, height).
+ * Coördinaten handmatig extracted via spritecow.com.
  */
 class SpriteManager {
 public:
     /**
-     * @brief Get the singleton instance
-     * 
-     * Uses the Meyer's Singleton pattern (thread-safe in C++11+)
+     * @brief Verkrijg singleton instance (Meyers Singleton)
+     * @return Reference naar enige SpriteManager instance
      */
     static SpriteManager& getInstance() {
         static SpriteManager instance;
         return instance;
     }
-    
-    // Delete copy and move constructors/operators
+
+    // Delete copy/move (singleton)
     SpriteManager(const SpriteManager&) = delete;
     SpriteManager& operator=(const SpriteManager&) = delete;
     SpriteManager(SpriteManager&&) = delete;
     SpriteManager& operator=(SpriteManager&&) = delete;
-    
+
     /**
-     * @brief Load the sprite sheet texture from file
-     * 
-     * This should be called once at game initialization.
-     * 
-     * @param path Path to the PNG file (e.g., "resources/sprites/pacman.png")
-     * @throws std::runtime_error if the file cannot be loaded
+     * @brief Laad sprite sheet texture
+     * @param path Pad naar PNG file
+     * @throws std::runtime_error als file niet geladen kan worden
+     *
+     * Roep 1x aan bij game startup.
+     * Texture blijft in memory voor duur van game.
      */
     void loadSpriteSheet(const std::string& path);
-    
+
     /**
-     * @brief Get the loaded sprite sheet texture
-     * 
-     * All sprites share this single texture for efficiency.
-     * 
-     * @return Reference to the sprite sheet texture
+     * @brief Verkrijg sprite sheet texture
+     * @return Const reference naar texture
+     *
+     * Alle Views sharen deze texture (memory efficient).
      */
     const sf::Texture& getTexture() const { return spriteSheet; }
-    
-    /**
-     * @brief Check if the texture has been loaded
-     * 
-     * @return true if loadSpriteSheet() has been called successfully
-     */
+
     bool isTextureLoaded() const { return textureLoaded; }
-    
+
     /**
-     * @brief Define a sprite rectangle
-     * 
-     * This tells the manager where a specific sprite is located in the sprite sheet.
-     * 
-     * @param name Unique name for this sprite (e.g., "pacman_right_open")
-     * @param rect Rectangle defining position and size in the sprite sheet
-     *             IntRect(left, top, width, height) in pixels
+     * @brief Definieer sprite rectangle
+     * @param name Unieke naam (e.g., "pacman_right_open")
+     * @param rect Positie in sprite sheet (pixels)
+     *
+     * IntRect format: (left, top, width, height)
+     * Coördinaten komen van spritecow.com.
      */
     void defineSpriteRect(const std::string& name, const sf::IntRect& rect);
-    
+
     /**
-     * @brief Get a sprite rectangle by name
-     * 
-     * @param name Name of the sprite
-     * @return The rectangle for this sprite
-     * @throws std::out_of_range if sprite name not found
+     * @brief Verkrijg sprite rectangle
+     * @param name Sprite naam
+     * @return Rectangle voor deze sprite
+     * @throws std::out_of_range als sprite niet bestaat
      */
     sf::IntRect getSpriteRect(const std::string& name) const;
-    
-    /**
-     * @brief Check if a sprite has been defined
-     * 
-     * @param name Sprite name to check
-     * @return true if the sprite exists
-     */
+
     bool hasSpriteRect(const std::string& name) const;
-    
+
     /**
-     * @brief Define an animation
-     * 
-     * This stores an animation definition that can be used by AnimationControllers.
-     * 
-     * @param name Unique name for this animation (e.g., "pacman_walk_right")
-     * @param animation The animation definition
+     * @brief Definieer animation
+     * @param name Unieke naam (e.g., "pacman_walk_right")
+     * @param animation Animation object (frame sequence + timing)
      */
     void defineAnimation(const std::string& name, const Animation& animation);
-    
+
     /**
-     * @brief Get an animation by name
-     * 
-     * @param name Name of the animation
-     * @return Reference to the animation
-     * @throws std::out_of_range if animation name not found
+     * @brief Verkrijg animation
+     * @param name Animation naam
+     * @return Const reference naar animation
+     * @throws std::out_of_range als animation niet bestaat
      */
     const Animation& getAnimation(const std::string& name) const;
-    
-    /**
-     * @brief Check if an animation has been defined
-     * 
-     * @param name Animation name to check
-     * @return true if the animation exists
-     */
+
     bool hasAnimation(const std::string& name) const;
-    
+
     /**
-     * @brief Initialize all sprite rectangles and animations
-     * 
-     * This is called automatically by the constructor to set up all sprites.
-     * Can also be called manually if you want to re-initialize.
+     * @brief Initialiseer alle sprites en animaties
+     *
+     * Roept aan:
+     * - defineAllSprites() (alle sprite rectangles)
+     * - defineAllAnimations() (alle animations)
+     *
+     * Wordt automatisch aangeroepen in constructor,
+     * maar kan ook manueel voor re-initialization.
      */
     void initialize();
 
 private:
     /**
-     * @brief Private constructor (Singleton pattern)
-     * 
-     * Automatically calls initialize() to set up sprites and animations.
+     * @brief Private constructor (singleton)
      */
     SpriteManager();
-    
-    /**
-     * @brief Destructor
-     */
     ~SpriteManager() = default;
-    
+
     /**
-     * @brief Define all sprite rectangles (positions in the sprite sheet)
-     * 
-     * This is where we'll add all our sprite definitions.
-     * Called by initialize().
+     * @brief Definieer alle sprite rectangles
+     *
+     * Hard-coded sprite positions extracted via spritecow.com.
+     * Sprites voor:
+     * - PacMan (4 directions × 3 frames + death animation)
+     * - Ghosts (4 colors × 4 directions × 2 frames + scared)
+     * - Collectibles (coin, fruit)
      */
     void defineAllSprites();
-    
+
     /**
-     * @brief Define all animations
-     * 
-     * This is where we'll add all our animation definitions.
-     * Called by initialize().
+     * @brief Definieer alle animations
+     *
+     * Animations voor:
+     * - PacMan walking (4 directions)
+     * - PacMan death (11 frames, non-looping)
+     * - Ghost walking (4 colors × 4 directions)
+     * - Ghost scared (1 animation voor alle ghosts)
      */
     void defineAllAnimations();
-    
-    // Data members
-    sf::Texture spriteSheet;                           // The sprite sheet texture
-    bool textureLoaded = false;                        // Has the texture been loaded?
-    std::map<std::string, sf::IntRect> spriteRects;    // Sprite name → rectangle
-    std::map<std::string, Animation> animations;       // Animation name → animation
+
+    // Data
+    sf::Texture spriteSheet;                           // Loaded sprite sheet
+    bool textureLoaded = false;
+    std::map<std::string, sf::IntRect> spriteRects;    // name → rectangle mapping
+    std::map<std::string, Animation> animations;       // name → animation mapping
 };
 
 } // namespace pacman::representation

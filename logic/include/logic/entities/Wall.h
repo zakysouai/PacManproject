@@ -3,24 +3,18 @@
 
 namespace pacman {
 
+/**
+ * @brief Wall - collision obstacle
+ *
+ * Statisch, blokkeert movement van PacMan en ghosts.
+ * Collision radius: ~0.49 * tileSize (vrijwel volledige tile)
+ */
 class Wall : public EntityModel {
 public:
     explicit Wall(const Position& pos);
     ~Wall() override = default;
-    
+
     void update(float deltaTime) override;
-    
-    /**
-     * @brief Get Wall's collision radius
-     *
-     * Wall collision radius is set to exactly one tile size.
-     * A tile is approximately 0.182 world units (2.0 / 11), so the
-     * radius is 0.091 (half a tile). This ensures walls fill their
-     * entire grid cell and provides consistent collision detection.
-     *
-     * @return Collision radius = 0.091 (exactly half a tile)
-     */
-    // float getCollisionRadius() const override { return 0.091f; }
 };
 
 } // namespace pacman

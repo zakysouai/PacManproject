@@ -2,6 +2,7 @@
 #include "representation/states/MenuState.h"
 #include "representation/states/LevelState.h"
 #include <iostream>
+#include <representation/states/TutorialIntroState.h>
 
 namespace pacman::representation {
 

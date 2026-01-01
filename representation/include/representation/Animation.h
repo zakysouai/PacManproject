@@ -5,66 +5,69 @@
 namespace pacman::representation {
 
 /**
- * @brief Animation definition - describes a sequence of sprite frames
- * 
- * An Animation is simply a list of sprite names that should be displayed
- * in sequence, along with timing information.
- * 
- * Example:
- *   Animation pacmanWalk {
- *       .frameNames = {"pacman_right_closed", "pacman_right_open"},
- *       .frameDuration = 0.1f,
- *       .loop = true
- *   };
+ * @brief Animation definitie - sequence van sprite frames
+ *
+ * === CONCEPT ===
+ * Animation = lijst van sprite namen + timing info
+ *
+ * Voorbeeld:
+ * ```cpp
+ * Animation pacmanWalk {
+ *     .frameNames = {"pacman_right_closed", "pacman_right_half", "pacman_right_open", "pacman_right_half"},
+ *     .frameDuration = 0.1f,  // 10 FPS
+ *     .loop = true
+ * };
+ * ```
+ *
+ * === TYPES ===
+ * - Looping: Movement animaties (pacman walk, ghost walk)
+ * - Non-looping: One-shot animaties (pacman death)
+ *
+ * === STORAGE ===
+ * Animations worden gedefinieerd in SpriteManager::defineAllAnimations()
+ * en opgehaald via SpriteManager::getAnimation(name).
  */
 struct Animation {
     /**
-     * @brief List of sprite names that make up this animation
-     * 
-     * Each string should correspond to a sprite name registered in SpriteManager.
-     * The animation will cycle through these frames in order.
-     * 
-     * Example: {"pacman_r_0", "pacman_r_1", "pacman_r_2", "pacman_r_1"}
+     * @brief Frame sequence (sprite namen in volgorde)
+     *
+     * Elke string komt overeen met sprite naam in SpriteManager.
+     * Animatie cyclet door deze frames op basis van frameDuration.
      */
     std::vector<std::string> frameNames;
-    
+
     /**
-     * @brief Duration of each frame in seconds
-     * 
-     * How long each frame should be displayed before moving to the next.
-     * Example: 0.1f means 10 frames per second
+     * @brief Duur van elk frame in seconden
+     *
+     * Hoe lang elk frame getoond wordt voordat naar volgende.
+     * Voorbeeld: 0.1f = 10 frames per seconde
      */
     float frameDuration;
-    
+
     /**
-     * @brief Whether the animation should loop
-     * 
-     * - true: After the last frame, go back to frame 0 (walking animations)
-     * - false: After the last frame, stay on last frame (death animations)
+     * @brief Loop gedrag
+     *
+     * - true: Na laatste frame terug naar frame 0 (walk animaties)
+     * - false: Na laatste frame blijf op laatste frame (death animatie)
      */
     bool loop;
-    
-    /**
-     * @brief Default constructor - creates empty animation
-     */
+
+    // Constructors
     Animation() : frameDuration(0.1f), loop(true) {}
-    
-    /**
-     * @brief Constructor with parameters
-     */
+
     Animation(const std::vector<std::string>& frames, float duration, bool shouldLoop)
         : frameNames(frames), frameDuration(duration), loop(shouldLoop) {}
-    
+
     /**
-     * @brief Check if animation is valid
-     * @return true if animation has at least one frame
+     * @brief Validatie check
+     * @return true als animation minimaal 1 frame heeft en duration > 0
      */
     bool isValid() const {
         return !frameNames.empty() && frameDuration > 0.0f;
     }
-    
+
     /**
-     * @brief Get number of frames in this animation
+     * @brief Verkrijg aantal frames
      */
     size_t getFrameCount() const {
         return frameNames.size();
