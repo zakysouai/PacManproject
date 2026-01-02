@@ -209,8 +209,9 @@ void LevelState::update(float deltaTime) {
             showingReady = false;
         }
     }
-
-    elapsedTime += deltaTime;
+    else {
+        elapsedTime += deltaTime;
+    }
     world->update(showingReady ? 0.0f : deltaTime);
     updateUI();
     checkGameState();
