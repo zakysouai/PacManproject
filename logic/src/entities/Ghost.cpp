@@ -12,10 +12,21 @@ Ghost::Ghost(World& world, const Position& pos, GhostColor color, float spawnDel
 }
 
 void Ghost::update(float deltaTime) {
+    if (state == GhostState::SCARED) {
+        scaredTimer -= deltaTime;
+        if (scaredTimer <= 0.0f) {
+            state = previousState;
+            speed = normalSpeed;
+
+            Event event;
+            event.type = EventType::GHOST_STATE_CHANGED;
+            notify(event);
+        }
+    }
+
     // SPAWN TIMER
     if (previousState == GhostState::IN_SPAWN ||
         (state == GhostState::IN_SPAWN)) {
-
         spawnTimer -= deltaTime;
         if (spawnTimer <= 0.0f) {
             // Ghost mag spawn verlaten
@@ -39,19 +50,6 @@ void Ghost::update(float deltaTime) {
         notify(updateEvent);
         return;  // Blijf in spawn, beweeg niet
         }
-
-    // SCARED TIMER
-    if (state == GhostState::SCARED) {
-        scaredTimer -= deltaTime;
-        if (scaredTimer <= 0.0f) {
-            state = previousState;
-            speed = normalSpeed;
-
-            Event event;
-            event.type = EventType::GHOST_STATE_CHANGED;
-            notify(event);
-        }
-    }
 
     move(deltaTime);
 
