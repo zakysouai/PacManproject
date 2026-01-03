@@ -8,7 +8,6 @@ RedGhost::RedGhost(World& world, const Position& pos)  // ✅ World& parameter
 }
 
 Direction RedGhost::chooseDirection() {
-    // ❌ if (!world) return currentDirection; WEG
     if (!isAtIntersection()) return currentDirection;
 
     auto* pacman = world.getPacMan();  // world. niet world->

@@ -423,7 +423,7 @@ void World::applyDifficultyScaling() {
     // Level 3: 0.25 * 1.44 = 0.36
     // Level N: 0.25 * (1.2)^(N-1)
 
-    const float BASE_GHOST_SPEED = 0.25f;  // Trager dan voorheen (was 0.3f)
+    const float BASE_GHOST_SPEED = 0.25f;
     float speedMultiplier = std::pow(1.2f, currentLevel - 1);  // 20% per level
     float newSpeed = BASE_GHOST_SPEED * speedMultiplier;
 

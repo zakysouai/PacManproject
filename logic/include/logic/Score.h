@@ -76,7 +76,7 @@ public:
      * Voegt entry toe, sorteert, houdt top 5.
      */
     void saveHighScore(const std::string& playerName, int score,
-                      const std::string& filename = "../resources/highscores/highscores.txt");
+                      const std::string& filename = "resources/highscores/highscores.txt");
 
     /**
      * @brief Laad highscores vanuit file
