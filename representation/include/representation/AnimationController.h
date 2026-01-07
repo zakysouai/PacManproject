@@ -13,14 +13,14 @@ namespace pacman::representation {
  * - Provide current sprite naam (voor View rendering)
  *
  * === USAGE IN VIEW ===
- * ```cpp
+ *
  * // In View constructor:
  * animationController.play(SpriteManager::getInstance().getAnimation("pacman_walk_right"));
  *
  * // In View::onNotify(ENTITY_UPDATED):
  * animationController.update(event.deltaTime);
  * updateSpriteFromAnimation();  // Haal huidige sprite naam op
- * ```
+ *
  *
  * === STATE MACHINE ===
  * playing = false:
@@ -66,11 +66,11 @@ public:
      * @return Sprite naam voor huidige frame (empty als niet playing)
      *
      * Gebruikt door View om correct sprite rect te laden:
-     * ```cpp
+     *
      * std::string spriteName = animationController.getCurrentSpriteName();
      * sf::IntRect rect = SpriteManager::getInstance().getSpriteRect(spriteName);
      * sprite.setTextureRect(rect);
-     * ```
+     *
      */
     std::string getCurrentSpriteName() const;
 

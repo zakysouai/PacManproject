@@ -155,12 +155,12 @@ void VictoryState::handleInput(const sf::Event& event, sf::RenderWindow& window)
             if (event.key.code == sf::Keyboard::Space) {
                 if (playerWon) {
                     if (level == 0) {
-                        finish(StateAction::SWITCH, std::make_unique<LevelState>(1, false));
+                        finish(StateAction::SWITCH, std::make_unique<LevelState>(1, false, score));  // ← ADD score
                     } else {
-                        finish(StateAction::SWITCH, std::make_unique<LevelState>(level + 1, false));
+                        finish(StateAction::SWITCH, std::make_unique<LevelState>(level + 1, false, score));  // ← ADD score
                     }
                 } else {
-                    finish(StateAction::SWITCH, std::make_unique<LevelState>(1, false));
+                    finish(StateAction::SWITCH, std::make_unique<LevelState>(1, false, 0));  // game over = reset
                 }
             } else if (event.key.code == sf::Keyboard::M) {
                 finish(StateAction::SWITCH, std::make_unique<MenuState>());

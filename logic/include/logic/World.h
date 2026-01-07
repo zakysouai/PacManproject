@@ -54,7 +54,8 @@ public:
      * @param camera Shared pointer naar camera voor coordinate conversie
      * @param startLevel Initial level (default 1)
      */
-    explicit World(AbstractFactory& factory, std::shared_ptr<Camera> camera, int startLevel = 1);
+    explicit World(AbstractFactory& factory, std::shared_ptr<Camera> camera,
+               int startLevel = 1, int initialScore = 0);
     ~World() = default;
 
     struct GridPosition {

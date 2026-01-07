@@ -10,8 +10,8 @@
 
 namespace pacman::representation {
 
-LevelState::LevelState(int level, bool isTutorial)
-    : currentLevel(level), tutorialMode(isTutorial) {
+LevelState::LevelState(int level, bool isTutorial, int startScore)
+    : currentLevel(level), tutorialMode(isTutorial), carryScore(startScore) {
 }
 
 LevelState::~LevelState() {
@@ -23,7 +23,7 @@ void LevelState::onEnter() {
 
     camera = std::make_shared<pacman::Camera>(1000, 600);
     factory = std::make_shared<ConcreteFactory>(camera);
-    world = std::make_unique<pacman::World>(*factory, camera, currentLevel);  // ✅ PASS LEVEL
+    world = std::make_unique<pacman::World>(*factory, camera, currentLevel, carryScore);
 
     std::string mapFile;
     if (tutorialMode) {
@@ -243,7 +243,7 @@ void LevelState::checkGameState() {
         finish(StateAction::SWITCH,
                std::make_unique<VictoryState>(false, finalScore, currentLevel));
     } else if (world->isLevelComplete()) {
-        int finalScore = world->getScore().getCurrentScore();
+        int finalScore = world->getScore().getCurrentScore();  // ← krijg score VOOR world destroy
 
         if (tutorialMode) {
             finish(StateAction::SWITCH,

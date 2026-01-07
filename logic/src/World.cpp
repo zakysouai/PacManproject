@@ -10,8 +10,12 @@
 
 namespace pacman {
 
-World::World(AbstractFactory& factory, std::shared_ptr<Camera> camera, int startLevel)
+World::World(AbstractFactory& factory, std::shared_ptr<Camera> camera,
+             int startLevel, int initialScore)
     : factory(factory), camera(camera), currentLevel(startLevel) {
+    if (initialScore > 0) {
+        score.addPoints(initialScore);  // of score = Score(initialScore) als je constructor hebt
+    }
 }
 
 void World::update(float deltaTime) {

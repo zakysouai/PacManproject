@@ -57,7 +57,7 @@ public:
      * @param level Level nummer (1-based)
      * @param isTutorial true = tutorial map, false = normal map
      */
-    LevelState(int level = 1, bool isTutorial = false);
+    LevelState(int level = 1, bool isTutorial = false, int carriedScore = 0);
 
     /**
      * @brief Destructor - CRITICAL ORDER
@@ -79,6 +79,8 @@ private:
     std::unique_ptr<pacman::World> world;
 
     int currentLevel;
+    int carryScore = 0;
+    int startingScore = 0;
     float elapsedTime = 0.0f;
     bool hasLetterboxing = false;  // UI layout flag
 
