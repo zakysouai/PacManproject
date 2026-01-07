@@ -4,12 +4,11 @@
 
 namespace pacman {
 
-OrangeGhost::OrangeGhost(World& world, const Position& pos)  // ✅ World& parameter
-    : Ghost(world, pos, GhostColor::ORANGE, 10.0f) {  // ✅ world doorgeven
+OrangeGhost::OrangeGhost(World& world, const Position& pos)
+    : Ghost(world, pos, GhostColor::ORANGE, 10.0f) {
 }
 
 Direction OrangeGhost::chooseDirection() {
-    // ❌ if (!world) return lockedDirection; WEG
     if (!isAtIntersection()) return lockedDirection;
 
     if (Random::getInstance().getBool(0.5f)) {

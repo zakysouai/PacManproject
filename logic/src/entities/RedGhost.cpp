@@ -3,8 +3,8 @@
 
 namespace pacman {
 
-RedGhost::RedGhost(World& world, const Position& pos)  // ✅ World& parameter
-    : Ghost(world, pos, GhostColor::RED, 0.0f) {  // ✅ world doorgeven
+RedGhost::RedGhost(World& world, const Position& pos)
+    : Ghost(world, pos, GhostColor::RED, 0.0f) {
 }
 
 Direction RedGhost::chooseDirection() {

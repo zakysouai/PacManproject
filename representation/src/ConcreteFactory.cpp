@@ -54,21 +54,21 @@ std::unique_ptr<pacman::Wall> ConcreteFactory::createWall(const pacman::Position
     return wall;
 }
 
-std::unique_ptr<pacman::Ghost> ConcreteFactory::createGhost(pacman::World& world, const pacman::Position& pos, pacman::GhostColor color) {  // ✅ World& parameter
+std::unique_ptr<pacman::Ghost> ConcreteFactory::createGhost(pacman::World& world, const pacman::Position& pos, pacman::GhostColor color) {
     std::unique_ptr<pacman::Ghost> ghost;
 
     switch (color) {
     case pacman::GhostColor::RED:
-        ghost = std::make_unique<pacman::RedGhost>(world, pos);  // ✅ world doorgeven
+        ghost = std::make_unique<pacman::RedGhost>(world, pos);
         break;
     case pacman::GhostColor::PINK:
-        ghost = std::make_unique<pacman::PinkGhost>(world, pos);  // ✅ world doorgeven
+        ghost = std::make_unique<pacman::PinkGhost>(world, pos);
         break;
     case pacman::GhostColor::BLUE:
-        ghost = std::make_unique<pacman::BlueGhost>(world, pos);  // ✅ world doorgeven
+        ghost = std::make_unique<pacman::BlueGhost>(world, pos);
         break;
     case pacman::GhostColor::ORANGE:
-        ghost = std::make_unique<pacman::OrangeGhost>(world, pos);  // ✅ world doorgeven
+        ghost = std::make_unique<pacman::OrangeGhost>(world, pos);
         break;
     }
 
