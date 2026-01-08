@@ -3,7 +3,7 @@
 **Student:** Zaky Souai s0226844  
 **Course:** Advanced Programming 2025-2026  
 **University:** University of Antwerp  
-**GitHub:** [Link to repository]
+**GitHub:** https://github.com/zakysouai/PacManproject
 
 ---
 
