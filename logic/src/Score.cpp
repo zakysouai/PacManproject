@@ -76,7 +76,7 @@ void Score::saveHighScore(const std::string& playerName, int score, const std::s
             file << entry.name << "," << entry.score << "\n";
         }
         file.close();
-    } if (!file.is_open()) {
+    } else {
         std::cerr << " FAILED TO OPEN FILE" << std::endl;
         throw std::runtime_error("Failed to save highscore to: " + filename);
     }
