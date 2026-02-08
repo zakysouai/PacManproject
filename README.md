@@ -495,33 +495,6 @@ EntityModel (abstract)
 └── Wall
 ```
 
----
-
-### Project Defence Video (0/10 points)
-
-#### ❌ 3-minute Gameplay Demo
-**Status:** Not yet created
-
-#### ❌ 7-minute Technical Explanation
-**Status:** Not yet created
-
----
-
-### Documentation (0/10 points)
-
-#### ❌ ~2 Page Report
-**Status:** Not yet created  
-**Required content:**
-- Design rationale
-- Pattern usage justification
-- Architecture overview
-
-#### ⚠️ Comments & API Documentation
-**Status:** Partially implemented  
-**Evidence:** Headers have some documentation, but could be more comprehensive
-
----
-
 ### Bonus Features (6/10 points estimated)
 
 #### ✅ Tutorial System
@@ -564,30 +537,6 @@ All entities have directional sprite animations
 
 #### ✅ Professional UI
 **Status:** Fully implemented
-
-Features:
-- Letterboxed gameplay area
-- Sidebar information panels
-- Score, lives, level, timer display
-- "READY" screen before gameplay
-- Smooth state transitions
-
-#### ❌ Sounds/Music
-**Status:** Not implemented
-
-#### ❌ Advanced AI (BFS/A*)
-**Status:** Not implemented  
-**Current:** Uses Manhattan distance heuristic
-
-#### ❌ Procedural Maps
-**Status:** Not implemented  
-**Current:** Uses predefined map files
-
-#### ❌ Multithreading
-**Status:** Not implemented
-
-#### ❌ Additional Design Patterns
-**Status:** Not implemented beyond required patterns
 
 ---
 
@@ -729,47 +678,9 @@ resources/
 └── CMakeLists.txt           # Root build config
 ```
 
----
-
-## Known Issues & Future Work
-
-### TODO Items (from main.cpp)
-```cpp
-// TODO: UI regelen en mooier maken
-// TODO: checken of we wel correct werken met observers etc...
-// TODO: checken voor memleaks (valgrind)
-// TODO: checken voor correcte use of smart pointers
-// TODO: moeilijkheid fixen (miss minder fruits bij volgende levels)
-// TODO: Code cleanen
-```
-
-### Potential Improvements
-1. Add sound effects and background music
-2. Implement BFS/A* pathfinding for ghosts
-3. Add procedural map generation
-4. Create comprehensive test suite
-5. Add more visual polish and effects
-6. Implement additional bonus features for extra points
-
----
-
-## Estimated Grade Breakdown
-
-| Category | Points | Estimated Score | Notes |
-|----------|--------|----------------|-------|
-| Core Game Requirements | 40 | 40 | All features implemented |
-| Software Design & Architecture | 40 | 40 | Clean MVC, all patterns correctly used |
-| Project Defence Video | 10 | 0 | Not yet created |
-| Documentation | 10 | 0 | Not yet created |
-| **Subtotal** | **100** | **80** | |
-| Bonus Features | +10 | +6 | Tutorial, high scores, animations, UI |
-| **Total** | **110** | **86** | |
-
----
 
 ## Contact
 
 For questions about this project:
 - Student: Zaky Souai s0226844
 - Course: Advanced Programming 2025-2026
-- Instructor: Guillermo.Perez@uantwerpen.be
